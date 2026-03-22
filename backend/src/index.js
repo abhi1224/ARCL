@@ -2,6 +2,9 @@ import app from './app.js';
 import { connectDB } from './config/db.js';
 import categoryRoutes from './routes/categoryRoutes.js'
 
+app.use('/api/categories', categoryRoutes)
+
+
 connectDB()
 .then(() => {
     app.listen(process.env.PORT, () => {
@@ -12,8 +15,6 @@ connectDB()
     console.log(`Database connection failed !`);    
 })
 
-
-app.use('api/categories', categoryRoutes)
 
 app.get('/', (req, res) => {
     res.end('Hello from server')
