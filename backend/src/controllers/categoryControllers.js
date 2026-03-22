@@ -75,3 +75,19 @@ export const updateCategory = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+/* DELETE (SOFT) */
+export const deleteCategory = async (req, res) => {
+  try {
+    const category = await Category.findById(req.params.id);
+
+    if (!category) return res.status(404).json({ message: "Not found" });
+
+    category.isActive = false;
+    await category.save();
+
+    res.json({ message: "Category deleted" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
