@@ -29,3 +29,26 @@ export const createCategory = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+/* GET ALL */
+export const getCategories = async (req, res) => {
+  try {
+    const categories = await Category.find({ isActive: true });
+    res.json(categories);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/* GET SINGLE */
+export const getCategory = async (req, res) => {
+  try {
+    const category = await Category.findOne({ slug: req.params.slug });
+
+    if (!category) return res.status(404).json({ message: "Not found" });
+
+    res.json(category);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
