@@ -52,3 +52,26 @@ export const getCategory = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+
+/* UPDATE */
+export const updateCategory = async (req, res) => {
+  try {
+    const { name, description, filters } = req.body;
+
+    const category = await Category.findById(req.params.id);
+
+    if (!category) return res.status(404).json({ message: "Not found" });
+
+    category.name = name || category.name;
+    category.slug = name ? slugify(name, { lower: true }) : category.slug;
+    category.description = description || category.description;
+    category.filters = filters || category.filters;
+
+    const updated = await category.save();
+
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
