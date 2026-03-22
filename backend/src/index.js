@@ -1,5 +1,6 @@
 import app from './app.js';
 import { connectDB } from './config/db.js';
+import categoryRoutes from './routes/categoryRoutes.js'
 
 connectDB()
 .then(() => {
@@ -11,6 +12,8 @@ connectDB()
     console.log(`Database connection failed !`);    
 })
 
+
+app.use('api/categories', categoryRoutes)
 
 app.get('/', (req, res) => {
     res.end('Hello from server')
