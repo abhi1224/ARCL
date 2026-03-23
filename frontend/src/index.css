@@ -1,1 +1,51 @@
 @import "tailwindcss";
+
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* hide scrollbar for IE, Edge and Firefox */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+
+.border-style {
+  position: relative;
+  width: fit-content;
+}
+
+.border-style::after {
+  content: "";
+  width: 50%;
+  height: 6px;
+  position: absolute;
+  left: 0px;
+  bottom:2px;
+  padding-left: 4px;
+  background: linear-gradient(to right, #FFA500, #FFD700, #32CD32);
+  z-index: 1;
+  border-radius: 0.1375rem; 
+}
+
+.button-style{
+  background-color:#021C57;
+  color: white;
+  cursor: pointer;
+  transition: all;
+}
+.button-style:hover{
+  background-color: #021b57ce;
+}
+
+
+.stroke-text {
+  color: transparent;                /* no fill */
+  -webkit-text-stroke: 1px #ffffffa9;  /* white border */
+  font-weight: bold;
+}
+.floating-button{
+  background: linear-gradient(to right, #FFA500, #FFD700, #32CD32);
+
+}
