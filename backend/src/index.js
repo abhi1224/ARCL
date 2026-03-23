@@ -1,9 +1,11 @@
+import e from 'express';
 import app from './app.js';
 import { connectDB } from './config/db.js';
 import categoryRoutes from './routes/categoryRoutes.js'
+import equipmentTypeRoutes from './routes/equipmentTypeRoutes.js'
 
 app.use('/api/categories', categoryRoutes)
-
+app.use('/api/equipment-types', equipmentTypeRoutes)
 
 connectDB()
 .then(() => {
