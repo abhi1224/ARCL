@@ -4,10 +4,12 @@ import slugify from "slugify";
 /* CREATE CATEGORY */
 export const createCategory = async (req, res) => {
   try {
-    const { name, description, filters } = req.body;
+    const { name, description, filters, equipmentType } = req.body;
 
-    if (!name) {
-      return res.status(400).json({ message: "Name is required" });
+    if (!name || !equipmentType) {
+      return res.status(400).json({
+        message: "Name and equipmentType are required"
+      });
     }
 
     const slug = slugify(name, { lower: true });
@@ -17,11 +19,19 @@ export const createCategory = async (req, res) => {
       return res.status(400).json({ message: "Category already exists" });
     }
 
+    // validate filters
+    const formattedFilters = filters?.map((f) => ({
+      name: f.name,
+      key: f.key || f.name.toLowerCase().replace(/\s+/g, "_"),
+      values: f.values || []
+    }));
+
     const category = await Category.create({
       name,
       slug,
       description,
-      filters,
+      equipmentType,
+      filters: formattedFilters
     });
 
     res.status(201).json(category);
@@ -33,7 +43,10 @@ export const createCategory = async (req, res) => {
 /* GET ALL */
 export const getCategories = async (req, res) => {
   try {
-    const categories = await Category.find({ isActive: true });
+    const categories = await Category.find({ isActive: true })
+      .populate("equipmentType", "name slug")
+      .sort({ createdAt: -1 });
+
     res.json(categories);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -43,9 +56,14 @@ export const getCategories = async (req, res) => {
 /* GET SINGLE */
 export const getCategory = async (req, res) => {
   try {
-    const category = await Category.findOne({ slug: req.params.slug });
+    const category = await Category.findOne({
+      slug: req.params.slug,
+      isActive: true
+    }).populate("equipmentType", "name slug");
 
-    if (!category) return res.status(404).json({ message: "Not found" });
+    if (!category) {
+      return res.status(404).json({ message: "Not found" });
+    }
 
     res.json(category);
   } catch (error) {
@@ -57,16 +75,43 @@ export const getCategory = async (req, res) => {
 /* UPDATE */
 export const updateCategory = async (req, res) => {
   try {
-    const { name, description, filters } = req.body;
+    const { name, description, filters, equipmentType, isFeatured, isActive } =
+      req.body;
 
     const category = await Category.findById(req.params.id);
 
-    if (!category) return res.status(404).json({ message: "Not found" });
+    if (!category) {
+      return res.status(404).json({ message: "Not found" });
+    }
 
-    category.name = name || category.name;
-    category.slug = name ? slugify(name, { lower: true }) : category.slug;
-    category.description = description || category.description;
-    category.filters = filters || category.filters;
+    if (name) {
+      category.name = name;
+      category.slug = slugify(name, { lower: true });
+    }
+
+    if (description !== undefined) {
+      category.description = description;
+    }
+
+    if (equipmentType) {
+      category.equipmentType = equipmentType;
+    }
+
+    if (typeof isFeatured !== "undefined") {
+      category.isFeatured = isFeatured;
+    }
+
+    if (typeof isActive !== "undefined") {
+      category.isActive = isActive;
+    }
+
+    if (filters) {
+      category.filters = filters.map((f) => ({
+        name: f.name,
+        key: f.key || f.name.toLowerCase().replace(/\s+/g, "_"),
+        values: f.values || []
+      }));
+    }
 
     const updated = await category.save();
 
@@ -81,12 +126,14 @@ export const deleteCategory = async (req, res) => {
   try {
     const category = await Category.findById(req.params.id);
 
-    if (!category) return res.status(404).json({ message: "Not found" });
+    if (!category) {
+      return res.status(404).json({ message: "Not found" });
+    }
 
     category.isActive = false;
     await category.save();
 
-    res.json({ message: "Category deleted" });
+    res.json({ message: "Category deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

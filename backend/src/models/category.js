@@ -3,11 +3,16 @@ import mongoose from "mongoose";
 const filterSchema = new mongoose.Schema(
   {
     name: {
-      type: String, // e.g. Capacity
+      type: String,
       required: true,
     },
 
-    values: [String], // e.g. 100L, 200L, 300L
+    key: {
+      type: String,
+      required: true
+    },
+
+    values: [String],
   },
   { _id: false }
 );
@@ -29,12 +34,23 @@ const categorySchema = new mongoose.Schema(
 
     description: String,
 
+    equipmentType: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "EquipmentType",
+      required: true
+    },
+
     isActive: {
       type: Boolean,
       default: true,
     },
 
-    filters: [filterSchema], 
+    isFeatured: {
+      type: Boolean,
+      default: false
+    },
+
+    filters: [filterSchema],
   },
   { timestamps: true }
 );
