@@ -11,6 +11,9 @@ import App from './App.jsx'
 import Home from './pages/Home.jsx'
 import About from './pages/About.jsx'
 import Contact from './pages/Contact.jsx'
+import Layout from './components/admin/layout/Layout.jsx'
+import Dashboard from './pages/admin/Dashboard.jsx'
+import EquipmentTypeList from './pages/admin/EquipmentTypeList.jsx'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -21,6 +24,12 @@ const router = createBrowserRouter(
         <Route path="about" element={<About />} />
         <Route path="contact" element={<Contact />} />
       </Route>
+
+      {/* Admin Panel Layout */}
+        <Route path='/admin' element={true ? <Layout /> : <h1>Login</h1>}>
+          <Route index element = {<Dashboard />}/>
+          <Route path='equipment-types' element = {<EquipmentTypeList />}/>
+        </Route>
     </>
   )
 )
