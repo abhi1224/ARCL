@@ -5,15 +5,17 @@ import {
 } from "../../api/equipmentTypeApi.js";
 import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import EquipmentTypeModal from "../../components/admin/equipmentType/EquipmentTypeModal.jsx";
 
 const EquipmentTypeList = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState(null);
+  const [openModal, setOpenModal] = useState(false);
 
   useEffect(() => {
-    fetchData();
+    fetchData(); 
   }, []);
 
   const fetchData = async () => {
@@ -54,12 +56,12 @@ const EquipmentTypeList = () => {
           Equipment Types
         </h1>
 
-        <Link
-          to="/equipment-types/create"
-          className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
-        >
-          <FaPlus /> Add Equipment Type
-        </Link>
+        <button
+            onClick={() => setOpenModal(true)}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
+          >
+            + Add Equipment Type
+          </button>
       </div>
 
       {/* Loading */}
@@ -84,12 +86,12 @@ const EquipmentTypeList = () => {
           <p className="text-gray-500 mb-3">
             No equipment types found.
           </p>
-          <Link
-            to="/equipment-types/create"
-            className="text-blue-500 hover:underline"
+          <button
+            onClick={() => setOpenModal(true)}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
           >
             Create your first one →
-          </Link>
+          </button>
         </div>
       )}
 
@@ -155,6 +157,11 @@ const EquipmentTypeList = () => {
               ))}
             </tbody>
           </table>
+           <EquipmentTypeModal
+            isOpen={openModal}
+            onClose={() => setOpenModal(false)}
+            onSuccess={fetchData}
+          />
         </div>
       )}
     </div>
