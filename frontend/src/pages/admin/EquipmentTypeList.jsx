@@ -1,39 +1,162 @@
 import { useEffect, useState } from "react";
-import { getEquipmentTypes } from "../../api/equipmentTypeApi.js";
+import {
+  getEquipmentTypes,
+  deleteEquipmentType,
+} from "../../api/equipmentTypeApi.js";
+import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 const EquipmentTypeList = () => {
   const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     fetchData();
   }, []);
 
   const fetchData = async () => {
-    const res = await getEquipmentTypes();
-    setData(res.data);
+    try {
+      setLoading(true);
+      setError("");
+
+      const res = await getEquipmentTypes();
+      setData(res.data.data);
+    } catch (err) {
+      setError("Failed to load equipment types. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm("Are you sure you want to delete?")) return;
+
+    try {
+      setDeletingId(id);
+      await deleteEquipmentType(id);
+
+      setData((prev) => prev.filter((item) => item._id !== id));
+    } catch (err) {
+      alert("Delete failed. Try again.");
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   return (
-    <div>
-      <h1 className="text-xl font-bold mb-4">Equipment Types</h1>
+    <div className="space-y-4">
 
-      <table className="w-full bg-white shadow">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Status</th>
-          </tr>
-        </thead>
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-gray-800">
+          Equipment Types
+        </h1>
 
-        <tbody>
-          {data.map((item) => (
-            <tr key={item._id}>
-              <td>{item.name}</td>
-              <td>{item.isActive ? "Active" : "Inactive"}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+        <Link
+          to="/equipment-types/create"
+          className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
+        >
+          <FaPlus /> Add Equipment Type
+        </Link>
+      </div>
+
+      {/* Loading */}
+      {loading && (
+        <div className="bg-white p-6 rounded-xl shadow text-center">
+          <p className="text-gray-500 animate-pulse">
+            Loading equipment types...
+          </p>
+        </div>
+      )}
+
+      {/* Error */}
+      {error && (
+        <div className="bg-red-100 text-red-600 p-4 rounded-lg">
+          {error}
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!loading && !error && data.length === 0 && (
+        <div className="bg-white p-6 rounded-xl shadow text-center">
+          <p className="text-gray-500 mb-3">
+            No equipment types found.
+          </p>
+          <Link
+            to="/equipment-types/create"
+            className="text-blue-500 hover:underline"
+          >
+            Create your first one →
+          </Link>
+        </div>
+      )}
+
+      {/* Table */}
+      {!loading && !error && data.length > 0 && (
+        <div className="bg-white rounded-xl shadow overflow-hidden">
+
+          <table className="w-full text-left">
+            <thead className="bg-gray-100 text-gray-600 text-sm uppercase">
+              <tr>
+                <th className="p-4">Name</th>
+                <th className="p-4">Status</th>
+                <th className="p-4 text-center">Actions</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {data.map((item) => (
+                <tr
+                  key={item._id}
+                  className="border-t hover:bg-gray-50 transition"
+                >
+                  {/* Name */}
+                  <td className="p-4 font-medium text-gray-800">
+                    {item.name}
+                  </td>
+
+                  {/* Status */}
+                  <td className="p-4">
+                    <span
+                      className={`px-3 py-1 text-xs rounded-full font-medium ${
+                        item.isActive
+                          ? "bg-green-100 text-green-600"
+                          : "bg-red-100 text-red-600"
+                      }`}
+                    >
+                      {item.isActive ? "Active" : "Inactive"}
+                    </span>
+                  </td>
+
+                  {/* Actions */}
+                  <td className="p-4 flex justify-center gap-4">
+
+                    {/* Edit */}
+                    <Link
+                      to={`/equipment-types/edit/${item._id}`}
+                      className="text-blue-500 hover:text-blue-700 transition"
+                    >
+                      <FaEdit size={18} />
+                    </Link>
+
+                    {/* Delete */}
+                    <button
+                      onClick={() => handleDelete(item._id)}
+                      disabled={deletingId === item._id}
+                      className="text-red-500 hover:text-red-700 transition disabled:opacity-50"
+                    >
+                      {deletingId === item._id ? "..." : <FaTrash size={18} />}
+                    </button>
+
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };
