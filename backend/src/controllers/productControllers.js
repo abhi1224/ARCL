@@ -11,9 +11,11 @@ export const createProduct = async (req, res) => {
       applications,
       features,
       category,
-      images,
       isFeatured
     } = req.body;
+
+    const imageFile = req.imageFile
+    
 
     if (!name || !category) {
       return res.status(400).json({

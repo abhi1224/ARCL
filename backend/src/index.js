@@ -4,10 +4,12 @@ import { connectDB } from './config/db.js';
 import categoryRoutes from './routes/categoryRoutes.js'
 import equipmentTypeRoutes from './routes/equipmentTypeRoutes.js'
 import productRoutes from './routes/productRoutes.js'
+import connectCloudinary from './config/cloudinary.js';
 
 app.use('/api/categories', categoryRoutes)
 app.use('/api/equipment-types', equipmentTypeRoutes)
 app.use('/api/products', productRoutes)
+connectCloudinary()
 
 connectDB()
 .then(() => {
