@@ -1,10 +1,11 @@
 import Product from "../models/product.js";
 import slugify from "slugify";
+import cloudinary from "../config/cloudinary.js";
+import fs from "fs";
 
-/* CREATE PRODUCT */
 export const createProduct = async (req, res) => {
   try {
-    const {
+    let {
       name,
       description,
       specifications,
@@ -14,23 +15,42 @@ export const createProduct = async (req, res) => {
       isFeatured
     } = req.body;
 
-    const imageFile = req.imageFile
-    
-
+    // Validation
     if (!name || !category) {
       return res.status(400).json({
         message: "Name and category are required"
       });
     }
 
+    // Convert JSON strings → actual objects
+    if (specifications) specifications = JSON.parse(specifications);
+    if (applications) applications = JSON.parse(applications);
+    if (features) features = JSON.parse(features);
+
+    // Convert string → boolean
+    isFeatured = isFeatured === "true";
+
     const slug = slugify(name, { lower: true });
 
-    // check duplicate name (optional safety)
     const exists = await Product.findOne({ slug });
     if (exists) {
       return res.status(400).json({
         message: "Product already exists"
       });
+    }
+
+    let imageUrl = "";
+
+    // Upload to Cloudinary
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "products"
+      });
+
+      imageUrl = result.secure_url;
+
+      // Delete local file after upload
+      fs.unlinkSync(req.file.path);
     }
 
     const product = await Product.create({
@@ -41,16 +61,17 @@ export const createProduct = async (req, res) => {
       applications,
       features,
       category,
-      images,
+      images: imageUrl ? [imageUrl] : [],
       isFeatured
     });
 
     res.status(201).json(product);
+
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: error.message });
   }
 };
-
 
 export const getProducts = async (req, res) => {
   try {
