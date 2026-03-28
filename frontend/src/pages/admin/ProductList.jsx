@@ -22,7 +22,7 @@ const ProductList = () => {
       setError("");
 
       const res = await getProducts();
-      setProducts(res.data); // ✅ matches your backend
+      setProducts(res.data); 
     } catch (err) {
       setError("Failed to load products. Please try again.");
     } finally {
@@ -56,7 +56,7 @@ const ProductList = () => {
         </h1>
 
         <Link
-          to="/products/create"
+          to="/admin/products/create"
           className="flex items-center gap-2 bg-blue-500 text-white px-5 py-2 rounded-lg hover:bg-blue-600 transition"
         >
           <FaPlus /> Add Product

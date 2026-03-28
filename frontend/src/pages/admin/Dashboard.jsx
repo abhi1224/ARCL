@@ -116,7 +116,7 @@ const Dashboard = () => {
 
             <div className="flex gap-4 flex-wrap">
               <Link
-                to="/products/create"
+                to="/admin/products/create"
                 className="bg-blue-500 text-white px-5 py-2 rounded-lg hover:bg-blue-600 transition"
               >
                 + Add Product
