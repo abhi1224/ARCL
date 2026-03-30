@@ -104,3 +104,27 @@ export const deleteEquipmentType = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const toggleEquipmentTypeStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const type = await EquipmentType.findById(id);
+
+    if (!type) {
+      return res.status(404).json({ message: "Not found" });
+    }
+
+    // toggle
+    type.isActive = !type.isActive;
+
+    await type.save();
+
+    res.json({
+      success: true,
+      data: type,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
