@@ -35,7 +35,6 @@ const router = createBrowserRouter(
           <Route path='categories' element = {<CategoryList />}/>
           <Route path='products' element = {<ProductList />}/>
           <Route path='products/create' element = {<ProductForm />}/>
-
         </Route>
     </>
   )

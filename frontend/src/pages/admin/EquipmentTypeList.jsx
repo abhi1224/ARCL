@@ -10,6 +10,7 @@ import Toggle from "../../components/admin/common/Toggle.jsx";
 import { toggleEquipmentTypeStatus } from "../../api/equipmentTypeApi.js";
 import Tooltip from "../../components/admin/common/Tooltip.jsx";
 import SkeletonLoader from "../../components/admin/common/SkeletonLoader.jsx";
+import EquipmentTypeEditModal from "../../components/admin/equipmentType/EquipmentTypeEditModal.jsx";
 
 const EquipmentTypeList = () => {
   const [data, setData] = useState([]);
@@ -19,6 +20,15 @@ const EquipmentTypeList = () => {
   const [openModal, setOpenModal] = useState(false);
   const [togglingId, setTogglingId] = useState(null);
 
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+
+
+  const handleEdit = (item) => {
+    setSelectedItem(item);
+    setEditModalOpen(true);
+  };
+  
   useEffect(() => {
     fetchData(); 
   }, []);
@@ -164,12 +174,12 @@ const EquipmentTypeList = () => {
 
                     {/* Edit */}
                     <Tooltip text="Edit">
-                      <Link
-                        to={`/equipment-types/edit/${item._id}`}
-                        className="text-blue-500 hover:text-blue-700 transition"
+                      <button
+                        onClick={() => handleEdit(item)}
+                        className="text-blue-500 cursor-pointer"
                       >
-                        <FaEdit size={18} />
-                      </Link>
+                        <FaEdit size={18}/>
+                      </button>
                     </Tooltip>
 
 
@@ -189,10 +199,19 @@ const EquipmentTypeList = () => {
                 </tr>
               ))}
             </tbody>
+
           </table>
+
            <EquipmentTypeModal
             isOpen={openModal}
             onClose={() => setOpenModal(false)}
+            onSuccess={fetchData}
+          />
+          
+          <EquipmentTypeEditModal
+            isOpen={editModalOpen}
+            onClose={() => setEditModalOpen(false)}
+            selected={selectedItem}
             onSuccess={fetchData}
           />
         </div>

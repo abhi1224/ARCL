@@ -74,7 +74,7 @@ const EquipmentTypeModal = ({ isOpen, onClose, onSuccess }) => {
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 border rounded"
+            className="px-4 py-2 border rounded cursor-pointer"
           >
             Cancel
           </button>
@@ -82,7 +82,7 @@ const EquipmentTypeModal = ({ isOpen, onClose, onSuccess }) => {
           <button
             type="submit"
             disabled={loading}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            className="bg-blue-500 text-white px-4 py-2 rounded cursor-pointer hover:bg-blue-600"
           >
             {loading ? "Creating..." : "Create"}
           </button>
