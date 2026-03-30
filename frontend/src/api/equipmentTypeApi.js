@@ -6,3 +6,6 @@ export const updateEquipmentType = (id, data) =>
   API.put(`/equipment-types/${id}`, data);
 export const deleteEquipmentType = (id) =>
   API.delete(`/equipment-types/${id}`);
+
+export const toggleEquipmentTypeStatus = (id) =>
+  API.patch(`/equipment-types/${id}/toggle`);
