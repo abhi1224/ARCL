@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import EquipmentTypeModal from "../../components/admin/equipmentType/EquipmentTypeModal.jsx";
 import Toggle from "../../components/admin/common/Toggle.jsx";
 import { toggleEquipmentTypeStatus } from "../../api/equipmentTypeApi.js";
+import Tooltip from "../../components/admin/common/Tooltip.jsx";
 
 const EquipmentTypeList = () => {
   const [data, setData] = useState([]);
@@ -79,7 +80,7 @@ const EquipmentTypeList = () => {
 
         <button
             onClick={() => setOpenModal(true)}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
+            className="bg-blue-500 text-white px-4 py-2 rounded cursor-pointer hover:bg-blue-600 transition"
           >
             + Add Equipment Type
           </button>
@@ -165,21 +166,27 @@ const EquipmentTypeList = () => {
                   <td className="p-4 flex justify-center gap-4">
 
                     {/* Edit */}
-                    <Link
-                      to={`/equipment-types/edit/${item._id}`}
-                      className="text-blue-500 hover:text-blue-700 transition"
-                    >
-                      <FaEdit size={18} />
-                    </Link>
+                    <Tooltip text="Edit">
+                      <Link
+                        to={`/equipment-types/edit/${item._id}`}
+                        className="text-blue-500 hover:text-blue-700 transition"
+                      >
+                        <FaEdit size={18} />
+                      </Link>
+                    </Tooltip>
+
 
                     {/* Delete */}
-                    <button
-                      onClick={() => handleDelete(item._id)}
-                      disabled={deletingId === item._id}
-                      className="text-red-500 hover:text-red-700 transition disabled:opacity-50"
-                    >
-                      {deletingId === item._id ? "..." : <FaTrash size={18} />}
-                    </button>
+                    <Tooltip text="Delete">
+                      <button
+                        onClick={() => handleDelete(item._id)}
+                        disabled={deletingId === item._id}
+                        className="text-red-500 hover:text-red-700 transition cursor-pointer disabled:opacity-50"
+                      >
+                        {deletingId === item._id ? "..." : <FaTrash size={18} />}
+                      </button>
+                    </Tooltip>
+
 
                   </td>
                 </tr>
