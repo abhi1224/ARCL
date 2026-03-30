@@ -6,6 +6,8 @@ import {
 import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import EquipmentTypeModal from "../../components/admin/equipmentType/EquipmentTypeModal.jsx";
+import Toggle from "../../components/admin/common/Toggle.jsx";
+import { toggleEquipmentTypeStatus } from "../../api/equipmentTypeApi.js";
 
 const EquipmentTypeList = () => {
   const [data, setData] = useState([]);
@@ -13,6 +15,7 @@ const EquipmentTypeList = () => {
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState(null);
   const [openModal, setOpenModal] = useState(false);
+  const [togglingId, setTogglingId] = useState(null);
 
   useEffect(() => {
     fetchData(); 
@@ -29,6 +32,24 @@ const EquipmentTypeList = () => {
       setError("Failed to load equipment types. Please try again.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggle = async (id) => {
+    try {
+      setTogglingId(id);
+
+      const res = await toggleEquipmentTypeStatus(id);
+
+      setData((prev) =>
+        prev.map((item) =>
+          item._id === id ? res.data.data : item
+        )
+      );
+    } catch (err) {
+      alert("Failed to update");
+    } finally {
+      setTogglingId(null);
     }
   };
 
@@ -121,15 +142,23 @@ const EquipmentTypeList = () => {
 
                   {/* Status */}
                   <td className="p-4">
-                    <span
-                      className={`px-3 py-1 text-xs rounded-full font-medium ${
-                        item.isActive
-                          ? "bg-green-100 text-green-600"
-                          : "bg-red-100 text-red-600"
-                      }`}
-                    >
-                      {item.isActive ? "Active" : "Inactive"}
-                    </span>
+                    <div className="flex items-center gap-3">
+
+                      <Toggle
+                        checked={item.isActive}
+                        onChange={() => handleToggle(item._id)}
+                        disabled={togglingId === item._id}
+                      />
+
+                      <span
+                        className={`text-sm font-medium ${
+                          item.isActive ? "text-green-600" : "text-gray-400"
+                        }`}
+                      >
+                        {item.isActive ? "Active" : "Inactive"}
+                      </span>
+
+                    </div>
                   </td>
 
                   {/* Actions */}
