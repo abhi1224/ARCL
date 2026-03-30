@@ -9,6 +9,7 @@ import EquipmentTypeModal from "../../components/admin/equipmentType/EquipmentTy
 import Toggle from "../../components/admin/common/Toggle.jsx";
 import { toggleEquipmentTypeStatus } from "../../api/equipmentTypeApi.js";
 import Tooltip from "../../components/admin/common/Tooltip.jsx";
+import SkeletonLoader from "../../components/admin/common/SkeletonLoader.jsx";
 
 const EquipmentTypeList = () => {
   const [data, setData] = useState([]);
@@ -88,11 +89,7 @@ const EquipmentTypeList = () => {
 
       {/* Loading */}
       {loading && (
-        <div className="bg-white p-6 rounded-xl shadow text-center">
-          <p className="text-gray-500 animate-pulse">
-            Loading equipment types...
-          </p>
-        </div>
+        <SkeletonLoader />
       )}
 
       {/* Error */}
