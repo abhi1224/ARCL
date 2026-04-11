@@ -133,7 +133,7 @@ const EquipmentTypeList = () => {
                       />
 
                       <span
-                        className={`text-sm font-medium ${
+                        className={`text-sm font-medium w-[70px] ${
                           item.isActive
                             ? "text-green-600"
                             : "text-gray-400"
