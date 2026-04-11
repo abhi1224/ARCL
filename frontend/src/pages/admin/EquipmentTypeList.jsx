@@ -1,62 +1,35 @@
 import { useEffect, useState } from "react";
 import { FaEdit, FaTrash } from "react-icons/fa";
 
-import { useEquipmentTypeStore } from "../../store/useEquipmentTypeStore";
 
 import EquipmentTypeModal from "../../components/admin/equipmentType/EquipmentTypeModal.jsx";
 import EquipmentTypeEditModal from "../../components/admin/equipmentType/EquipmentTypeEditModal.jsx";
 import Toggle from "../../components/admin/common/Toggle.jsx";
 import Tooltip from "../../components/admin/common/Tooltip.jsx";
 import SkeletonLoader from "../../components/admin/common/SkeletonLoader.jsx";
+import useEquipmentType from "../../hooks/useEquipmentType.js";
 
 const EquipmentTypeList = () => {
+
   const {
     equipmentTypes,
     fetchEquipmentTypes,
-    removeEquipmentType,
-    toggleStatus,
     loading,
     error,
-  } = useEquipmentTypeStore();
+    selectedItem,
+    deletingId,
+    togglingId,
+    handleEdit,
+    handleToggle,
+    handleDelete,
+  } = useEquipmentType();
 
   const [openModal, setOpenModal] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
-
-  const [deletingId, setDeletingId] = useState(null);
-  const [togglingId, setTogglingId] = useState(null);
 
   useEffect(() => {
     fetchEquipmentTypes();
   }, []);
-
-  // EDIT
-  const handleEdit = (item) => {
-    setSelectedItem(item);
-    setEditModalOpen(true);
-  };
-
-  // TOGGLE
-  const handleToggle = async (id) => {
-    try {
-      setTogglingId(id);
-      await toggleStatus(id);
-    } finally {
-      setTogglingId(null);
-    }
-  };
-
-  // DELETE
-  const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete?")) return;
-
-    try {
-      setDeletingId(id);
-      await removeEquipmentType(id);
-    } finally {
-      setDeletingId(null);
-    }
-  };
 
   return (
     <div className="space-y-4">
@@ -150,7 +123,7 @@ const EquipmentTypeList = () => {
 
                     <Tooltip text="Edit">
                       <button
-                        onClick={() => handleEdit(item)}
+                        onClick={() => handleEdit(item, setEditModalOpen)}
                         className="text-blue-500 cursor-pointer"
                       >
                         <FaEdit size={18} />
