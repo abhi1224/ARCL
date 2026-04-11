@@ -1,80 +1,58 @@
 import { useEffect, useState } from "react";
-import {
-  getEquipmentTypes,
-  deleteEquipmentType,
-} from "../../api/equipmentTypeApi.js";
-import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { FaEdit, FaTrash } from "react-icons/fa";
+
+import { useEquipmentTypeStore } from "../../store/useEquipmentTypeStore";
+
 import EquipmentTypeModal from "../../components/admin/equipmentType/EquipmentTypeModal.jsx";
+import EquipmentTypeEditModal from "../../components/admin/equipmentType/EquipmentTypeEditModal.jsx";
 import Toggle from "../../components/admin/common/Toggle.jsx";
-import { toggleEquipmentTypeStatus } from "../../api/equipmentTypeApi.js";
 import Tooltip from "../../components/admin/common/Tooltip.jsx";
 import SkeletonLoader from "../../components/admin/common/SkeletonLoader.jsx";
-import EquipmentTypeEditModal from "../../components/admin/equipmentType/EquipmentTypeEditModal.jsx";
 
 const EquipmentTypeList = () => {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [deletingId, setDeletingId] = useState(null);
-  const [openModal, setOpenModal] = useState(false);
-  const [togglingId, setTogglingId] = useState(null);
+  const {
+    equipmentTypes,
+    fetchEquipmentTypes,
+    removeEquipmentType,
+    toggleStatus,
+    loading,
+    error,
+  } = useEquipmentTypeStore();
 
+  const [openModal, setOpenModal] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
+  const [deletingId, setDeletingId] = useState(null);
+  const [togglingId, setTogglingId] = useState(null);
 
+  useEffect(() => {
+    fetchEquipmentTypes();
+  }, []);
+
+  // EDIT
   const handleEdit = (item) => {
     setSelectedItem(item);
     setEditModalOpen(true);
   };
-  
-  useEffect(() => {
-    fetchData(); 
-  }, []);
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      setError("");
-
-      const res = await getEquipmentTypes();
-      setData(res.data.data);
-    } catch (err) {
-      setError("Failed to load equipment types. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // TOGGLE
   const handleToggle = async (id) => {
     try {
       setTogglingId(id);
-
-      const res = await toggleEquipmentTypeStatus(id);
-
-      setData((prev) =>
-        prev.map((item) =>
-          item._id === id ? res.data.data : item
-        )
-      );
-    } catch (err) {
-      alert("Failed to update");
+      await toggleStatus(id);
     } finally {
       setTogglingId(null);
     }
   };
 
+  // DELETE
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete?")) return;
 
     try {
       setDeletingId(id);
-      await deleteEquipmentType(id);
-
-      setData((prev) => prev.filter((item) => item._id !== id));
-    } catch (err) {
-      alert("Delete failed. Try again.");
+      await removeEquipmentType(id);
     } finally {
       setDeletingId(null);
     }
@@ -83,49 +61,47 @@ const EquipmentTypeList = () => {
   return (
     <div className="space-y-4">
 
-      {/* Header */}
+      {/* HEADER */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">
           Equipment Types
         </h1>
 
         <button
-            onClick={() => setOpenModal(true)}
-            className="bg-blue-500 text-white px-4 py-2 rounded cursor-pointer hover:bg-blue-600 transition"
-          >
-            + Add Equipment Type
-          </button>
+          onClick={() => setOpenModal(true)}
+          className="bg-blue-500 text-white px-4 py-2 rounded cursor-pointer hover:bg-blue-600 transition"
+        >
+          + Add Equipment Type
+        </button>
       </div>
 
-      {/* Loading */}
-      {loading && (
-        <SkeletonLoader />
-      )}
+      {/* LOADING */}
+      {loading && <SkeletonLoader />}
 
-      {/* Error */}
+      {/* ERROR */}
       {error && (
         <div className="bg-red-100 text-red-600 p-4 rounded-lg">
           {error}
         </div>
       )}
 
-      {/* Empty State */}
-      {!loading && !error && data.length === 0 && (
+      {/* EMPTY */}
+      {!loading && !error && equipmentTypes.length === 0 && (
         <div className="bg-white p-6 rounded-xl shadow text-center">
           <p className="text-gray-500 mb-3">
             No equipment types found.
           </p>
           <button
             onClick={() => setOpenModal(true)}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
           >
             Create your first one →
           </button>
         </div>
       )}
 
-      {/* Table */}
-      {!loading && !error && data.length > 0 && (
+      {/* TABLE */}
+      {!loading && !error && equipmentTypes.length > 0 && (
         <div className="bg-white rounded-xl shadow overflow-hidden">
 
           <table className="w-full text-left">
@@ -138,17 +114,15 @@ const EquipmentTypeList = () => {
             </thead>
 
             <tbody>
-              {data.map((item) => (
-                <tr
-                  key={item._id}
-                  className="border-t hover:bg-gray-50 transition"
-                >
-                  {/* Name */}
+              {equipmentTypes.map((item) => (
+                <tr key={item._id} className="border-t hover:bg-gray-50">
+
+                  {/* NAME */}
                   <td className="p-4 font-medium text-gray-800">
                     {item.name}
                   </td>
 
-                  {/* Status */}
+                  {/* STATUS */}
                   <td className="p-4">
                     <div className="flex items-center gap-3">
 
@@ -160,7 +134,9 @@ const EquipmentTypeList = () => {
 
                       <span
                         className={`text-sm font-medium ${
-                          item.isActive ? "text-green-600" : "text-gray-400"
+                          item.isActive
+                            ? "text-green-600"
+                            : "text-gray-400"
                         }`}
                       >
                         {item.isActive ? "Active" : "Inactive"}
@@ -169,51 +145,46 @@ const EquipmentTypeList = () => {
                     </div>
                   </td>
 
-                  {/* Actions */}
+                  {/* ACTIONS */}
                   <td className="p-4 flex justify-center gap-4">
 
-                    {/* Edit */}
                     <Tooltip text="Edit">
                       <button
                         onClick={() => handleEdit(item)}
                         className="text-blue-500 cursor-pointer"
                       >
-                        <FaEdit size={18}/>
+                        <FaEdit size={18} />
                       </button>
                     </Tooltip>
 
-
-                    {/* Delete */}
                     <Tooltip text="Delete">
                       <button
                         onClick={() => handleDelete(item._id)}
                         disabled={deletingId === item._id}
-                        className="text-red-500 hover:text-red-700 transition cursor-pointer disabled:opacity-50"
+                        className="text-red-500 cursor-pointer disabled:opacity-50"
                       >
                         {deletingId === item._id ? "..." : <FaTrash size={18} />}
                       </button>
                     </Tooltip>
 
-
                   </td>
                 </tr>
               ))}
             </tbody>
-
           </table>
 
-           <EquipmentTypeModal
+          {/* MODALS */}
+          <EquipmentTypeModal
             isOpen={openModal}
             onClose={() => setOpenModal(false)}
-            onSuccess={fetchData}
           />
-          
+
           <EquipmentTypeEditModal
             isOpen={editModalOpen}
             onClose={() => setEditModalOpen(false)}
             selected={selectedItem}
-            onSuccess={fetchData}
           />
+
         </div>
       )}
     </div>
