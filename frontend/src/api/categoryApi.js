@@ -1,7 +1,10 @@
 import API from "./axios";
 
-// GET
+// GET ALL
 export const getCategories = () => API.get("/categories");
+
+// GET SINGLE
+export const getCategory = (slug) => API.get(`/categories/${slug}`);
 
 // CREATE
 export const createCategory = (data) =>
