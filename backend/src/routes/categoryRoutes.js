@@ -1,5 +1,5 @@
 import express from 'express'
-import { createCategory, deleteCategory, getCategories, getCategory, updateCategory } from '../controllers/categoryControllers.js'
+import { createCategory, deleteCategory, getCategories, getCategory, toggleCategoryActive, toggleCategoryFeatured, updateCategory } from '../controllers/categoryControllers.js'
 
 const router = express.Router()
 
@@ -8,5 +8,7 @@ router.get('/', getCategories);
 router.get('/:slug', getCategory);
 router.put("/:id", updateCategory);
 router.delete("/:id", deleteCategory);
+router.patch("/categories/:id/toggle-active", toggleCategoryActive);
+router.patch("/categories/:id/toggle-featured", toggleCategoryFeatured);
 
 export default router;
