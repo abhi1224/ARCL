@@ -43,7 +43,7 @@ export const createCategory = async (req, res) => {
 /* GET ALL */
 export const getCategories = async (req, res) => {
   try {
-    const categories = await Category.find({ isActive: true })
+    const categories = await Category.find()
       .populate("equipmentType", "name slug")
       .sort({ createdAt: -1 });
 
