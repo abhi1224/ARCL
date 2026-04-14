@@ -6,7 +6,7 @@ import {
   deleteCategory,
   toggleCategoryActive,
   toggleCategoryFeatured,
-} from "../api/categoryApi";
+} from "../api/categoryApi.js";
 
 export const categoryService = {
   
