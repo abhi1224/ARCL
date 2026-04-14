@@ -156,3 +156,21 @@ export const toggleCategoryActive = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const toggleCategoryFeatured = async (req, res) => {
+  try {
+    const category = await Category.findById(req.params.id);
+
+    if (!category) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+
+    category.isFeatured = !category.isFeatured;
+
+    const updated = await category.save();
+
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
