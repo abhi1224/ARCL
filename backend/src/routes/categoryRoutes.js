@@ -8,7 +8,7 @@ router.get('/', getCategories);
 router.get('/:slug', getCategory);
 router.put("/:id", updateCategory);
 router.delete("/:id", deleteCategory);
-router.patch("/categories/:id/toggle-active", toggleCategoryActive);
-router.patch("/categories/:id/toggle-featured", toggleCategoryFeatured);
+router.patch("/:id/toggle-active", toggleCategoryActive);
+router.patch("/:id/toggle-featured", toggleCategoryFeatured);
 
 export default router;

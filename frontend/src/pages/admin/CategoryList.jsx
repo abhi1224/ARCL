@@ -1,106 +1,105 @@
 import { useEffect, useState } from "react";
-import {
-  getCategories,
-  deleteCategory,
-} from "../../api/categoryApi.js";
+import { useCategoryStore } from "../../store/useCategoryStore.js";
+
 import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import Toggle from "../../components/admin/common/Toggle.jsx";
+import SkeletonLoader from "../../components/admin/common/SkeletonLoader.jsx";
+import Tooltip from "../../components/admin/common/Tooltip.jsx";
 
 const CategoryList = () => {
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const {
+    categories,
+    fetchCategories,
+    removeCategory,
+    toggleActive,
+    toggleFeatured,
+    loading,
+    error,
+  } = useCategoryStore();
+
   const [deletingId, setDeletingId] = useState(null);
+  const [togglingId, setTogglingId] = useState(null);
 
   useEffect(() => {
     fetchCategories();
   }, []);
 
-  const fetchCategories = async () => {
-    try {
-      setLoading(true);
-      setError("");
-
-      const res = await getCategories();
-      setCategories(res.data); 
-    } catch (err) {
-      setError("Failed to load categories. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // DELETE
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this category?")) return;
 
     try {
       setDeletingId(id);
-      await deleteCategory(id);
-
-      // Optimistic UI update
-      setCategories((prev) => prev.filter((item) => item._id !== id));
-    } catch (err) {
-      alert("Delete failed. Try again.");
+      await removeCategory(id);
+    } catch {
+      alert("Delete failed");
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  // TOGGLE ACTIVE
+  const handleToggleActive = async (id) => {
+    try {
+      setTogglingId(id);
+      await toggleActive(id);
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
+  // TOGGLE FEATURED
+  const handleToggleFeatured = async (id) => {
+    try {
+      setTogglingId(id);
+      await toggleFeatured(id);
+    } finally {
+      setTogglingId(null);
     }
   };
 
   return (
     <div className="space-y-5">
 
-      {/* Header */}
+      {/* HEADER */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">
           Categories
         </h1>
 
         <Link
-          to="/categories/create"
+          to="/admin/categories/create"
           className="flex items-center gap-2 bg-blue-500 text-white px-5 py-2 rounded-lg hover:bg-blue-600 transition"
         >
           <FaPlus /> Add Category
         </Link>
       </div>
 
-      {/* Loading */}
-      {loading && (
-        <div className="bg-white p-6 rounded-xl shadow text-center">
-          <p className="animate-pulse text-gray-500">
-            Loading categories...
-          </p>
-        </div>
-      )}
+      {/* LOADING */}
+      {loading && <SkeletonLoader />}
 
-      {/* Error */}
+      {/* ERROR */}
       {error && (
         <div className="bg-red-100 text-red-600 p-4 rounded-lg">
           {error}
         </div>
       )}
 
-      {/* Empty State */}
+      {/* EMPTY */}
       {!loading && !error && categories.length === 0 && (
         <div className="bg-white p-8 rounded-xl shadow text-center">
-          <p className="text-gray-500 mb-3">
-            No categories found.
-          </p>
-          <Link
-            to="/categories/create"
-            className="text-blue-500 hover:underline"
-          >
-            Create your first category →
-          </Link>
+          No categories found
         </div>
       )}
 
-      {/* Table */}
+      {/* TABLE */}
       {!loading && !error && categories.length > 0 && (
         <div className="bg-white rounded-xl shadow overflow-hidden">
 
           <table className="w-full text-left">
 
-            <thead className="bg-gray-100 text-gray-600 text-sm uppercase">
+            <thead className="bg-gray-100 text-sm uppercase">
               <tr>
                 <th className="p-4">Name</th>
                 <th className="p-4">Equipment Type</th>
@@ -113,73 +112,72 @@ const CategoryList = () => {
 
             <tbody>
               {categories.map((cat) => (
-                <tr
-                  key={cat._id}
-                  className="border-t hover:bg-gray-50 transition"
-                >
+                <tr key={cat._id} className="border-t hover:bg-gray-50">
 
-                  {/* Name */}
-                  <td className="p-4 font-medium text-gray-800">
-                    {cat.name}
-                  </td>
+                  {/* NAME */}
+                  <td className="p-4 font-medium">{cat.name}</td>
 
-                  {/* Equipment Type */}
-                  <td className="p-4 text-gray-600">
-                    {cat.equipmentType?.name || "—"}
-                  </td>
+                  {/* EQUIPMENT TYPE */}
+                  <td className="p-4">{cat.equipmentType?.name || "—"}</td>
 
-                  {/* Filters */}
+                  {/* FILTER COUNT */}
                   <td className="p-4">
                     <span className="bg-blue-100 text-blue-600 px-2 py-1 text-xs rounded-full">
                       {cat.filters?.length || 0} filters
                     </span>
                   </td>
 
-                  {/* Featured */}
+                  {/* FEATURED */}
                   <td className="p-4">
-                    <span
-                      className={`px-3 py-1 text-xs rounded-full ${
-                        cat.isFeatured
-                          ? "bg-yellow-100 text-yellow-600"
-                          : "bg-gray-100 text-gray-500"
-                      }`}
-                    >
-                      {cat.isFeatured ? "Yes" : "No"}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <Toggle
+                        checked={cat.isFeatured}
+                        onChange={() => handleToggleFeatured(cat._id)}
+                        disabled={togglingId === cat._id}
+                      />
+                      <span className="w-[80px] text-sm">
+                        {cat.isFeatured ? "Featured" : "Normal"}
+                      </span>
+                    </div>
                   </td>
 
-                  {/* Status */}
+                  {/* STATUS */}
                   <td className="p-4">
-                    <span
-                      className={`px-3 py-1 text-xs rounded-full ${
-                        cat.isActive
-                          ? "bg-green-100 text-green-600"
-                          : "bg-red-100 text-red-600"
-                      }`}
-                    >
-                      {cat.isActive ? "Active" : "Inactive"}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <Toggle
+                        checked={cat.isActive}
+                        onChange={() => handleToggleActive(cat._id)}
+                        disabled={togglingId === cat._id}
+                      />
+                      <span className="w-[80px] text-sm">
+                        {cat.isActive ? "Active" : "Inactive"}
+                      </span>
+                    </div>
                   </td>
 
-                  {/* Actions */}
+                  {/* ACTIONS */}
                   <td className="p-4 flex justify-center gap-4">
 
-                    {/* Edit */}
-                    <Link
-                      to={`/categories/edit/${cat._id}`}
-                      className="text-blue-500 hover:text-blue-700"
-                    >
-                      <FaEdit size={18} />
-                    </Link>
+                    <Tooltip text="Edit">
+                      <button
+                        onClick={() => handleEdit(item, setEditModalOpen)}
+                        className="text-blue-500 cursor-pointer"
+                      >
+                        <FaEdit size={18} />
+                      </button>
+                    </Tooltip>
 
-                    {/* Delete */}
-                    <button
-                      onClick={() => handleDelete(cat._id)}
-                      disabled={deletingId === cat._id}
-                      className="text-red-500 hover:text-red-700 disabled:opacity-50"
-                    >
-                      {deletingId === cat._id ? "..." : <FaTrash size={18} />}
-                    </button>
+
+                    <Tooltip text="Delete">
+                        <button
+                        onClick={() => handleDelete(cat._id)}
+                        disabled={deletingId === cat._id}
+                        className="text-red-500 hover:text-red-700 cursor-pointer"
+                      >
+                        {deletingId === cat._id ? "..." : <FaTrash />}
+                      </button>
+                    </Tooltip>
+                    
 
                   </td>
 
