@@ -139,38 +139,62 @@ export const deleteCategory = async (req, res) => {
   }
 };
 
+// Toggle active 
+
 export const toggleCategoryActive = async (req, res) => {
   try {
     const category = await Category.findById(req.params.id);
 
     if (!category) {
-      return res.status(404).json({ message: "Category not found" });
+      return res.status(404).json({
+        message: "Category not found",
+      });
     }
 
     category.isActive = !category.isActive;
 
-    const updated = await category.save();
+    await category.save();
 
-    res.json(updated);
+    // FETCH POPULATED CATEGORY
+    const updatedCategory = await Category.findById(category._id)
+      .populate("equipmentType", "name slug");
+
+    res.json(updatedCategory);
+
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };
+
+
+//  Toggle featured
 
 export const toggleCategoryFeatured = async (req, res) => {
   try {
     const category = await Category.findById(req.params.id);
 
     if (!category) {
-      return res.status(404).json({ message: "Category not found" });
+      return res.status(404).json({
+        message: "Category not found",
+      });
     }
 
     category.isFeatured = !category.isFeatured;
 
-    const updated = await category.save();
+    await category.save();
 
-    res.json(updated);
+    // FETCH POPULATED CATEGORY
+    const updatedCategory = await Category.findById(category._id)
+      .populate("equipmentType", "name slug");
+
+    res.json(updatedCategory);
+
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };
+
