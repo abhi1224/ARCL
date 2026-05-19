@@ -17,6 +17,7 @@ import EquipmentTypeList from './pages/admin/EquipmentTypeList.jsx'
 import CategoryList from './pages/admin/CategoryList.jsx'
 import ProductList from './pages/admin/ProductList.jsx'
 import ProductForm from './pages/admin/ProductForm.jsx'
+import CategoryForm from './components/admin/category/CategoryForm.jsx'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -33,6 +34,7 @@ const router = createBrowserRouter(
           <Route index element = {<Dashboard />}/>
           <Route path='equipment-types' element = {<EquipmentTypeList />}/>
           <Route path='categories' element = {<CategoryList />}/>
+          <Route path='categories/create' element = {<CategoryForm mode='create' />}/>
           <Route path='products' element = {<ProductList />}/>
           <Route path='products/create' element = {<ProductForm />}/>
         </Route>
