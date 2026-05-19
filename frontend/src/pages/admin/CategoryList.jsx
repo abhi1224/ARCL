@@ -159,12 +159,11 @@ const CategoryList = () => {
                   <td className="p-4 flex justify-center gap-4">
 
                     <Tooltip text="Edit">
-                      <button
-                        onClick={() => handleEdit(item, setEditModalOpen)}
+                      <Link
                         className="text-blue-500 cursor-pointer"
-                      >
+                       to={`/admin/categories/edit/${cat._id}`}>
                         <FaEdit size={18} />
-                      </button>
+                      </Link>
                     </Tooltip>
 
 

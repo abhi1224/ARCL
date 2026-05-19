@@ -35,6 +35,7 @@ const router = createBrowserRouter(
           <Route path='equipment-types' element = {<EquipmentTypeList />}/>
           <Route path='categories' element = {<CategoryList />}/>
           <Route path='categories/create' element = {<CategoryForm mode='create' />}/>
+          <Route path='categories/edit/:id' element = {<CategoryForm mode='edit' />}/>
           <Route path='products' element = {<ProductList />}/>
           <Route path='products/create' element = {<ProductForm />}/>
         </Route>
