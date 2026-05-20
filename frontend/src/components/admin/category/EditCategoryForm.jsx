@@ -1,77 +1,121 @@
-import { useEffect, useState } from "react";
-import { FaPlus, FaTrash, FaTimes } from "react-icons/fa";
 
-import { createCategory, updateCategory } from "../../../api/categoryApi.js";
+import { useEffect, useState } from "react";
+import { FaPlus, FaTrash } from "react-icons/fa";
+import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
+import {
+  getCategory,
+  updateCategory,
+} from "../../../api/categoryApi.js";
+
 import { getEquipmentTypes } from "../../../api/equipmentTypeApi.js";
 
-const CategoryForm = ({
-  mode = "create",
-  initialData = null,
-  categoryId = null,
-}) => {
-  const [equipmentTypes, setEquipmentTypes] = useState([]);
+const EditCategoryForm = () => {
+  const navigate = useNavigate();
+  const { slug } = useParams();
 
-  const defaultFilter = {
-    name: "",
-    values: "",
-  };
+  const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
+
+  const [equipmentTypes, setEquipmentTypes] = useState([]);
 
   const [form, setForm] = useState({
     name: "",
     description: "",
     equipmentType: "",
-    filters: [defaultFilter],
+    filters: [
+      {
+        name: "",
+        values: "",
+      },
+    ],
     isFeatured: false,
     isActive: true,
   });
 
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState("");
-  const [error, setError] = useState("");
+  // =========================
+  // FETCH DATA
+  // =========================
+
+  useEffect(() => {
+    if (slug) {
+      fetchCategory();
+    }
+
+    fetchEquipmentTypes();
+  }, [slug]);
 
   // =========================
   // FETCH EQUIPMENT TYPES
   // =========================
 
-  useEffect(() => {
-    fetchEquipmentTypes();
-  }, []);
-
   const fetchEquipmentTypes = async () => {
     try {
       const res = await getEquipmentTypes();
-      setEquipmentTypes(res.data.data || []);
+
+      setEquipmentTypes(res?.data?.data || []);
     } catch (err) {
       console.log(err);
+      toast.error("Failed to load equipment types");
     }
   };
 
   // =========================
-  // PREFILL EDIT DATA
+  // FETCH CATEGORY
   // =========================
 
-  useEffect(() => {
-    if (mode === "edit" && initialData) {
+  const fetchCategory = async () => {
+    try {
+      setPageLoading(true);
+
+      const res = await getCategory(slug);
+
+      // ✅ FIX:
+      // Your API response may contain data inside res.data
+      // so we safely extract it here.
+      const data = res?.data || res;
+
+      console.log("CATEGORY DATA =>", data);
+
       setForm({
-        name: initialData.name || "",
-        description: initialData.description || "",
+        name: data?.name || "",
+        description: data?.description || "",
+
         equipmentType:
-          initialData.equipmentType?._id || initialData.equipmentType || "",
+          data?.equipmentType?._id ||
+          data?.equipmentType ||
+          "",
+
         filters:
-          initialData.filters?.length > 0
-            ? initialData.filters.map((f) => ({
-                name: f.name || "",
-                values: Array.isArray(f.values) ? f.values.join(", ") : "",
+          data?.filters?.length > 0
+            ? data.filters.map((f) => ({
+                name: f?.name || "",
+                values: Array.isArray(f?.values)
+                  ? f.values.join(", ")
+                  : "",
               }))
-            : [{ name: "", values: "" }],
-        isFeatured: initialData.isFeatured || false,
+            : [
+                {
+                  name: "",
+                  values: "",
+                },
+              ],
+
+        isFeatured: data?.isFeatured || false,
+
         isActive:
-          typeof initialData.isActive === "boolean"
-            ? initialData.isActive
+          typeof data?.isActive === "boolean"
+            ? data.isActive
             : true,
       });
+
+    } catch (err) {
+      console.log(err);
+      toast.error("Failed to load category");
+    } finally {
+      setPageLoading(false);
     }
-  }, [initialData, mode]);
+  };
 
   // =========================
   // FILTERS
@@ -80,7 +124,13 @@ const CategoryForm = ({
   const addFilter = () => {
     setForm((prev) => ({
       ...prev,
-      filters: [...prev.filters, defaultFilter],
+      filters: [
+        ...prev.filters,
+        {
+          name: "",
+          values: "",
+        },
+      ],
     }));
   };
 
@@ -89,18 +139,24 @@ const CategoryForm = ({
 
     setForm((prev) => ({
       ...prev,
-      filters: prev.filters.filter((_, i) => i !== index),
+      filters: prev.filters.filter(
+        (_, i) => i !== index
+      ),
     }));
   };
 
-  const handleFilterChange = (index, field, value) => {
-    const updatedFilters = [...form.filters];
+  const handleFilterChange = (
+    index,
+    field,
+    value
+  ) => {
+    const updated = [...form.filters];
 
-    updatedFilters[index][field] = value;
+    updated[index][field] = value;
 
     setForm((prev) => ({
       ...prev,
-      filters: updatedFilters,
+      filters: updated,
     }));
   };
 
@@ -110,84 +166,91 @@ const CategoryForm = ({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
       setLoading(true);
-      setError("");
-      setSuccess("");
-      const formattedFilters = form.filters.map((f) => ({
-        name: f.name,
-        key: f.name.toLowerCase().trim().replace(/\s+/g, "_"),
-        values:
-          typeof f.values === "string"
-            ? f.values
-                .split(",")
-                .map((v) => v.trim())
-                .filter(Boolean)
-            : f.values,
-      }));
-      const payload = { ...form, filters: formattedFilters };
-      if (mode === "create") {
-        await createCategory(payload);
-        setSuccess("Category created successfully 🎉");
-        setForm({
-          name: "",
-          description: "",
-          equipmentType: "",
-          filters: [{ name: "", values: "" }],
-          isFeatured: false,
-          isActive: true,
-        });
-      } else {
-        await updateCategory(categoryId, payload);
-        setSuccess("Category updated successfully 🎉");
-      }
+
+      const formattedFilters = form.filters.map(
+        (f) => ({
+          name: f.name,
+
+          key: f.name
+            .toLowerCase()
+            .trim()
+            .replace(/\s+/g, "_"),
+
+          values: f.values
+            .split(",")
+            .map((v) => v.trim())
+            .filter(Boolean),
+        })
+      );
+
+      const payload = {
+        ...form,
+        filters: formattedFilters,
+      };
+
+      const categoryRes = await getCategory(slug);
+
+      const category =
+        categoryRes?.data || categoryRes;
+
+      await updateCategory(category._id, payload);
+
+      toast.success(
+        "Category updated successfully 🎉"
+      );
+
+      navigate("/admin/categories");
+
     } catch (err) {
-      setError(err.response?.data?.message || `Failed to ${mode} category`);
+      console.log(err);
+
+      toast.error(
+        err.response?.data?.message ||
+          "Failed to update category"
+      );
     } finally {
       setLoading(false);
     }
   };
 
+  // =========================
+  // PAGE LOADING
+  // =========================
+
+  if (pageLoading) {
+    return (
+      <div className="p-10 text-center text-gray-500">
+        Loading category...
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-5xl mx-auto p-6">
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-[0_10px_50px_rgba(0,0,0,0.08)] overflow-hidden">
+      <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+
         {/* HEADER */}
-        <div className="border-b px-8 py-6 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-8 py-6 border-b">
           <h2 className="text-3xl font-bold text-gray-800">
-            {mode === "create" ? "Create Category" : "Edit Category"}
+            Edit Category
           </h2>
 
           <p className="text-gray-500 mt-1">
-            Manage category details and filters
+            Update category details and filters
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-8 space-y-8">
-          {/* ALERTS */}
-          {error && (
-            <div className="flex justify-between items-center bg-red-100 text-red-600 px-4 py-3 rounded-xl">
-              <span>{error}</span>
-
-              <FaTimes
-                className="cursor-pointer"
-                onClick={() => setError("")}
-              />
-            </div>
-          )}
-
-          {success && (
-            <div className="flex justify-between items-center bg-green-100 text-green-600 px-4 py-3 rounded-xl">
-              <span>{success}</span>
-
-              <FaTimes
-                className="cursor-pointer"
-                onClick={() => setSuccess("")}
-              />
-            </div>
-          )}
+        <form
+          onSubmit={handleSubmit}
+          className="p-8 space-y-8"
+        >
 
           {/* BASIC INFO */}
           <div className="grid md:grid-cols-2 gap-6">
+
             {/* NAME */}
             <div>
               <label className="text-sm font-medium text-gray-700">
@@ -199,7 +262,7 @@ const CategoryForm = ({
                 required
                 value={form.name}
                 placeholder="Enter category name"
-                className="w-full border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none p-3 rounded-xl mt-2 transition"
+                className="w-full mt-2 border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition"
                 onChange={(e) =>
                   setForm({
                     ...form,
@@ -218,7 +281,7 @@ const CategoryForm = ({
               <select
                 required
                 value={form.equipmentType}
-                className="w-full border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none p-3 rounded-xl mt-2 cursor-pointer transition"
+                className="w-full mt-2 border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition"
                 onChange={(e) =>
                   setForm({
                     ...form,
@@ -226,10 +289,15 @@ const CategoryForm = ({
                   })
                 }
               >
-                <option value="">Select Equipment Type</option>
+                <option value="">
+                  Select Equipment Type
+                </option>
 
                 {equipmentTypes.map((item) => (
-                  <option key={item._id} value={item._id}>
+                  <option
+                    key={item._id}
+                    value={item._id}
+                  >
                     {item.name}
                   </option>
                 ))}
@@ -247,7 +315,7 @@ const CategoryForm = ({
               rows="4"
               value={form.description}
               placeholder="Write category description..."
-              className="w-full border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none p-3 rounded-xl mt-2 transition"
+              className="w-full mt-2 border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition"
               onChange={(e) =>
                 setForm({
                   ...form,
@@ -259,12 +327,15 @@ const CategoryForm = ({
 
           {/* FILTERS */}
           <div className="space-y-5">
+
             <div className="flex justify-between items-center">
               <div>
-                <h3 className="text-xl font-semibold text-gray-800">Filters</h3>
+                <h3 className="text-xl font-semibold">
+                  Filters
+                </h3>
 
                 <p className="text-sm text-gray-500">
-                  Add dynamic filters for this category
+                  Separate values using commas
                 </p>
               </div>
 
@@ -281,12 +352,14 @@ const CategoryForm = ({
             {form.filters.map((filter, index) => (
               <div
                 key={index}
-                className="border border-gray-200 rounded-2xl p-5 bg-gray-50 space-y-4"
+                className="bg-gray-50 hover:bg-white border border-gray-200 rounded-2xl p-5 space-y-4 hover:shadow-md transition-all"
               >
+
                 <div className="grid md:grid-cols-2 gap-4">
+
                   {/* FILTER NAME */}
                   <div>
-                    <label className="text-sm font-medium text-gray-700">
+                    <label className="text-sm font-medium">
                       Filter Name
                     </label>
 
@@ -294,16 +367,20 @@ const CategoryForm = ({
                       type="text"
                       value={filter.name}
                       placeholder="e.g Capacity"
-                      className="w-full border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none p-3 rounded-xl mt-2 transition"
+                      className="w-full mt-2 border border-gray-200 rounded-xl p-3"
                       onChange={(e) =>
-                        handleFilterChange(index, "name", e.target.value)
+                        handleFilterChange(
+                          index,
+                          "name",
+                          e.target.value
+                        )
                       }
                     />
                   </div>
 
                   {/* FILTER VALUES */}
                   <div>
-                    <label className="text-sm font-medium text-gray-700">
+                    <label className="text-sm font-medium">
                       Filter Values
                     </label>
 
@@ -311,9 +388,13 @@ const CategoryForm = ({
                       type="text"
                       value={filter.values}
                       placeholder="100L, 200L, 300L"
-                      className="w-full border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none p-3 rounded-xl mt-2 transition"
+                      className="w-full mt-2 border border-gray-200 rounded-xl p-3"
                       onChange={(e) =>
-                        handleFilterChange(index, "values", e.target.value)
+                        handleFilterChange(
+                          index,
+                          "values",
+                          e.target.value
+                        )
                       }
                     />
                   </div>
@@ -323,12 +404,16 @@ const CategoryForm = ({
                 <div className="flex justify-end">
                   <button
                     type="button"
-                    onClick={() => removeFilter(index)}
-                    disabled={form.filters.length === 1}
-                    className="flex items-center gap-2 text-red-500 hover:text-red-700 text-sm transition disabled:opacity-40"
+                    onClick={() =>
+                      removeFilter(index)
+                    }
+                    disabled={
+                      form.filters.length === 1
+                    }
+                    className="flex items-center gap-2 text-red-500 hover:text-red-700 disabled:opacity-40"
                   >
                     <FaTrash size={12} />
-                    Remove Filter
+                    Remove
                   </button>
                 </div>
               </div>
@@ -337,6 +422,7 @@ const CategoryForm = ({
 
           {/* TOGGLES */}
           <div className="grid md:grid-cols-2 gap-5">
+
             {/* FEATURED */}
             <label className="border rounded-2xl p-5 flex items-center gap-4 cursor-pointer hover:border-blue-400 transition">
               <input
@@ -345,7 +431,8 @@ const CategoryForm = ({
                 onChange={(e) =>
                   setForm({
                     ...form,
-                    isFeatured: e.target.checked,
+                    isFeatured:
+                      e.target.checked,
                   })
                 }
                 className="w-5 h-5"
@@ -370,14 +457,17 @@ const CategoryForm = ({
                 onChange={(e) =>
                   setForm({
                     ...form,
-                    isActive: e.target.checked,
+                    isActive:
+                      e.target.checked,
                   })
                 }
                 className="w-5 h-5"
               />
 
               <div>
-                <h3 className="font-semibold text-gray-800">Active Category</h3>
+                <h3 className="font-semibold text-gray-800">
+                  Active Category
+                </h3>
 
                 <p className="text-sm text-gray-500">
                   Enable category visibility
@@ -388,9 +478,13 @@ const CategoryForm = ({
 
           {/* ACTIONS */}
           <div className="flex justify-end gap-4 border-t pt-6">
+
             <button
               type="button"
-              className="px-6 py-3 rounded-xl border border-gray-300 hover:bg-gray-100 transition"
+              onClick={() =>
+                navigate("/admin/categories")
+              }
+              className="px-6 py-3 rounded-xl border hover:bg-gray-100 transition"
             >
               Cancel
             </button>
@@ -398,15 +492,11 @@ const CategoryForm = ({
             <button
               type="submit"
               disabled={loading}
-              className="min-w-[180px] bg-blue-500 hover:bg-blue-600 text-white font-medium px-8 py-3 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="min-w-[180px] bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-8 py-3 rounded-xl font-medium shadow-lg transition disabled:opacity-50"
             >
               {loading
-                ? mode === "create"
-                  ? "Creating..."
-                  : "Updating..."
-                : mode === "create"
-                  ? "Create Category"
-                  : "Update Category"}
+                ? "Updating..."
+                : "Update Category"}
             </button>
           </div>
         </form>
@@ -415,4 +505,5 @@ const CategoryForm = ({
   );
 };
 
-export default CategoryForm;
+export default EditCategoryForm;
+

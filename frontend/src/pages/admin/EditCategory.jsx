@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
-import CategoryForm from "../../components/admin/category/CategoryForm.jsx";
 import { useCategoryStore } from "../../store/useCategoryStore.js";
+import EditCategoryForm from "../../components/admin/category/EditCategoryForm.jsx";
 
 const EditCategory = () => {
   const { slug } = useParams();
@@ -70,10 +70,7 @@ const EditCategory = () => {
   // RENDER FORM
   // =========================
   return (
-    <CategoryForm
-      mode="edit"
-      initialData={data}
-    />
+    <EditCategoryForm />
   );
 };
 
