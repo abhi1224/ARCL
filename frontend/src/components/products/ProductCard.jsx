@@ -68,7 +68,7 @@ const ProductCard = ({ product }) => {
       className="
         text-lg
         md:text-xl
-        font-bold
+        font-semibold
         text-[#021C57]
         line-clamp-2
         hover:text-blue-600
@@ -96,12 +96,12 @@ const ProductCard = ({ product }) => {
         to={`/products/${product.slug}`}
         className="
           flex-1
-          bg-[#021C57]
-          hover:bg-blue-700
-          text-white
           py-3
           rounded-xl
           font-medium
+          border-gray-200
+          hover:border-[#021C57]
+          hover:text-blue-600
           flex
           items-center
           justify-center
@@ -127,7 +127,7 @@ const ProductCard = ({ product }) => {
           py-3
           border
           border-gray-200
-          hover:border-blue-500
+          hover:border-[#021C57]
           hover:text-blue-600
           rounded-xl
           flex
