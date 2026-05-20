@@ -16,6 +16,10 @@
   width: fit-content;
 }
 
+button{
+  cursor: pointer;
+}
+
 .border-style::after {
   content: "";
   width: 50%;

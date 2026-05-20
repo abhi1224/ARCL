@@ -1,10 +1,10 @@
 import React from 'react'
-import CategoryForm from '../../components/admin/category/CategoryForm'
+import CreateCategoryForm from '../../components/admin/category/CreateCategoryForm'
 
 const CreateCategory = () => {
   return (
     <>
-        <CategoryForm  mode='create' />
+      <CreateCategoryForm />
     </>
   )
 }
