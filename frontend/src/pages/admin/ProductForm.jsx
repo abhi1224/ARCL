@@ -3,9 +3,12 @@ import { getCategories } from "../../api/categoryApi.js";
 import { createProduct } from "../../api/productApi.js";
 import { FaTimes, FaUpload } from "react-icons/fa";
 import { MdClose } from "react-icons/md";
+import { useNavigate } from "react-router-dom";
 
 const ProductForm = () => {
   const fileInputRef = useRef();
+
+  const navigate = useNavigate();
 
   const [form, setForm] = useState({
     name: "",
@@ -122,7 +125,7 @@ const ProductForm = () => {
 
     if (selectedCategory) {
       const emptySpec = Object.values(form.specifications).some(
-        (v) => !v.trim()
+        (v) => !v.trim(),
       );
       if (emptySpec)
         newErrors.specifications = "All specifications must be selected";
@@ -153,6 +156,7 @@ const ProductForm = () => {
   };
 
   // SUBMIT
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -160,13 +164,15 @@ const ProductForm = () => {
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+
+      toast.error("Please fill all required fields");
+
       return;
     }
 
     try {
       setLoading(true);
-      setError("");
-      setSuccess("");
+
       setErrors({});
 
       const formData = new FormData();
@@ -179,17 +185,23 @@ const ProductForm = () => {
         }
       });
 
-      if (image) formData.append("image", image);
+      if (image) {
+        formData.append("image", image);
+      }
 
       await createProduct(formData);
 
-      setSuccess("Product created successfully 🎉");
+      toast.success("Product created successfully 🎉");
 
-      // RESET AFTER SUCCESS
       resetForm();
 
+      setTimeout(() => {
+        navigate("/admin/products");
+      }, 1200);
     } catch (err) {
-      setError("Failed to create product");
+      console.log(err);
+
+      toast.error("Failed to create product");
     } finally {
       setLoading(false);
     }
@@ -198,10 +210,7 @@ const ProductForm = () => {
   return (
     <div className="max-w-5xl mx-auto p-6">
       <div className="bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] p-8 space-y-6">
-
-        <h2 className="text-2xl font-bold text-gray-800">
-          Create New Product
-        </h2>
+        <h2 className="text-2xl font-bold text-gray-800">Create New Product</h2>
 
         {error && (
           <div className="flex justify-between items-center bg-red-100 text-red-600 px-4 py-3 rounded-lg">
@@ -213,12 +222,14 @@ const ProductForm = () => {
         {success && (
           <div className="flex justify-between items-center bg-green-100 text-green-600 px-4 py-3 rounded-lg">
             <span>{success}</span>
-            <FaTimes className="cursor-pointer" onClick={() => setSuccess("")} />
+            <FaTimes
+              className="cursor-pointer"
+              onClick={() => setSuccess("")}
+            />
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-
           <div className="grid md:grid-cols-2 gap-5">
             <div>
               <label className="text-sm font-medium">Product Name</label>
@@ -227,7 +238,9 @@ const ProductForm = () => {
                 className="w-full border p-3 rounded-lg mt-1 focus:ring-2 focus:ring-blue-400"
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
               />
-              {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+              {errors.name && (
+                <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+              )}
             </div>
 
             <div>
@@ -239,10 +252,14 @@ const ProductForm = () => {
               >
                 <option value="">Select category</option>
                 {categories.map((c) => (
-                  <option key={c._id} value={c._id}>{c.name}</option>
+                  <option key={c._id} value={c._id}>
+                    {c.name}
+                  </option>
                 ))}
               </select>
-              {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category}</p>}
+              {errors.category && (
+                <p className="text-red-500 text-sm mt-1">{errors.category}</p>
+              )}
             </div>
           </div>
 
@@ -252,9 +269,13 @@ const ProductForm = () => {
               value={form.description}
               rows="3"
               className="w-full border p-3 rounded-lg mt-1"
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, description: e.target.value })
+              }
             />
-            {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
+            {errors.description && (
+              <p className="text-red-500 text-sm mt-1">{errors.description}</p>
+            )}
           </div>
 
           {selectedCategory && (
@@ -271,13 +292,19 @@ const ProductForm = () => {
                     >
                       <option value="">Select {f.name}</option>
                       {f.values.map((v, i) => (
-                        <option key={i} value={v}>{v}</option>
+                        <option key={i} value={v}>
+                          {v}
+                        </option>
                       ))}
                     </select>
                   </div>
                 ))}
               </div>
-              {errors.specifications && <p className="text-red-500 text-sm mt-2">{errors.specifications}</p>}
+              {errors.specifications && (
+                <p className="text-red-500 text-sm mt-2">
+                  {errors.specifications}
+                </p>
+              )}
             </div>
           )}
 
@@ -291,11 +318,25 @@ const ProductForm = () => {
                   className="border p-2 w-full rounded"
                   onChange={(e) => handleFeatureChange(i, e.target.value)}
                 />
-                <button type="button" onClick={() => removeFeature(i)} className="text-red-500 cursor-pointer"><MdClose /></button>
+                <button
+                  type="button"
+                  onClick={() => removeFeature(i)}
+                  className="text-red-500 cursor-pointer"
+                >
+                  <MdClose />
+                </button>
               </div>
             ))}
-            {errors.features && <p className="text-red-500 text-sm mt-2">{errors.features}</p>}
-            <button type="button" onClick={addFeature} className="text-blue-500 text-sm cursor-pointer">+ Add Feature</button>
+            {errors.features && (
+              <p className="text-red-500 text-sm mt-2">{errors.features}</p>
+            )}
+            <button
+              type="button"
+              onClick={addFeature}
+              className="text-blue-500 text-sm cursor-pointer"
+            >
+              + Add Feature
+            </button>
           </div>
 
           {/* Applications */}
@@ -308,11 +349,25 @@ const ProductForm = () => {
                   className="border p-2 w-full rounded"
                   onChange={(e) => handleApplicationChange(i, e.target.value)}
                 />
-                <button type="button" onClick={() => removeApplication(i)} className="text-red-500 cursor-pointer"><MdClose /></button>
+                <button
+                  type="button"
+                  onClick={() => removeApplication(i)}
+                  className="text-red-500 cursor-pointer"
+                >
+                  <MdClose />
+                </button>
               </div>
             ))}
-            {errors.applications && <p className="text-red-500 text-sm mt-2">{errors.applications}</p>}
-            <button type="button" onClick={addApplication} className="text-blue-500 text-sm cursor-pointer">+ Add Application</button>
+            {errors.applications && (
+              <p className="text-red-500 text-sm mt-2">{errors.applications}</p>
+            )}
+            <button
+              type="button"
+              onClick={addApplication}
+              className="text-blue-500 text-sm cursor-pointer"
+            >
+              + Add Application
+            </button>
           </div>
 
           {/* Image */}
@@ -327,34 +382,104 @@ const ProductForm = () => {
               <p className="text-sm text-gray-500">Click to upload image</p>
             </div>
 
-            <input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" />
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageChange}
+              className="hidden"
+            />
 
             {preview && (
               <div className="relative mt-4 w-40">
-                <img src={preview} alt="preview" className="rounded-lg shadow-md" />
-                <button type="button" onClick={removeImage} className="absolute top-1 right-1 bg-black text-white p-1 rounded-full text-xs">✕</button>
+                <img
+                  src={preview}
+                  alt="preview"
+                  className="rounded-lg shadow-md"
+                />
+                <button
+                  type="button"
+                  onClick={removeImage}
+                  className="absolute top-1 right-1 bg-black text-white p-1 rounded-full text-xs"
+                >
+                  ✕
+                </button>
               </div>
             )}
 
-            {errors.image && <p className="text-red-500 text-sm mt-2">{errors.image}</p>}
+            {errors.image && (
+              <p className="text-red-500 text-sm mt-2">{errors.image}</p>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
               checked={form.isFeatured}
-              onChange={(e) => setForm({ ...form, isFeatured: e.target.checked })}
+              onChange={(e) =>
+                setForm({ ...form, isFeatured: e.target.checked })
+              }
             />
             <label>Mark as Featured</label>
           </div>
 
-          <button
-            disabled={loading}
-            className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition"
-          >
-            {loading ? "Creating..." : "Create Product"}
-          </button>
+          
+              {/* Actions  */}
+          <div className="flex justify-end gap-4 border-t pt-6">
+            {/* CANCEL */}
+            <button
+              type="button"
+              onClick={() =>
+                navigate("/admin/products")
+              }
+              className="
+                px-6
+                py-3
+                rounded-xl
+                border
+                border-gray-300
+                hover:bg-gray-100
+                transition
+                font-medium
+              "
+            >
+              Cancel
+            </button>
 
+            {/* SUBMIT */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="
+      min-w-[200px]
+      bg-gradient-to-r
+      from-blue-500
+      to-indigo-600
+      hover:from-blue-600
+      hover:to-indigo-700
+      text-white
+      px-8
+      py-3
+      rounded-xl
+      font-medium
+      shadow-lg
+      transition
+      disabled:opacity-50
+      flex
+      items-center
+      justify-center
+      gap-2
+    "
+            >
+              {loading ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                  Creating...
+                </>
+              ) : (
+                "Create Product"
+              )}
+            </button>
+          </div>
         </form>
       </div>
     </div>
