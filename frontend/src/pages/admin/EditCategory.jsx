@@ -1,12 +1,81 @@
-import React from 'react'
-import CategoryForm from '../../components/admin/category/CategoryForm'
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+
+import CategoryForm from "../../components/admin/category/CategoryForm.jsx";
+import { useCategoryStore } from "../../store/useCategoryStore.js";
 
 const EditCategory = () => {
-  return (
-    <>
-        <CategoryForm mode='edit' />
-    </>
-  )
-}
+  const { slug } = useParams();
 
-export default EditCategory
+  const {
+    getOneCategory,
+    loading,
+    error,
+  } = useCategoryStore();
+
+  const [data, setData] = useState(null);
+
+  // =========================
+  // FETCH CATEGORY
+  // =========================
+  useEffect(() => {
+    const fetchCategory = async () => {
+      try {
+        const category = await getOneCategory(slug);
+
+        setData(category);
+
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+    fetchCategory();
+  }, [slug]);
+
+  // =========================
+  // LOADING
+  // =========================
+  if (loading) {
+    return (
+      <div className="p-6 text-center text-gray-500">
+        Loading category...
+      </div>
+    );
+  }
+
+  // =========================
+  // ERROR
+  // =========================
+  if (error) {
+    return (
+      <div className="p-6 text-center text-red-500">
+        {error}
+      </div>
+    );
+  }
+
+  // =========================
+  // NOT FOUND
+  // =========================
+  if (!data) {
+    return (
+      <div className="p-6 text-center text-red-500">
+        Category not found
+      </div>
+    );
+  }
+
+  // =========================
+  // RENDER FORM
+  // =========================
+  return (
+    <CategoryForm
+      mode="edit"
+      initialData={data}
+    />
+  );
+};
+
+export default EditCategory;
+

@@ -161,7 +161,7 @@ const CategoryList = () => {
                     <Tooltip text="Edit">
                       <Link
                         className="text-blue-500 cursor-pointer"
-                       to={`/admin/categories/edit/${cat._id}`}>
+                        to={`/admin/categories/edit/${cat.slug}`}>
                         <FaEdit size={18} />
                       </Link>
                     </Tooltip>

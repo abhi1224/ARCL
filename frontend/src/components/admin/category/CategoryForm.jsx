@@ -56,18 +56,14 @@ const CategoryForm = ({
         name: initialData.name || "",
         description: initialData.description || "",
         equipmentType:
-          initialData.equipmentType?._id ||
-          initialData.equipmentType ||
-          "",
-
+          initialData.equipmentType?._id || initialData.equipmentType || "",
         filters:
           initialData.filters?.length > 0
             ? initialData.filters.map((f) => ({
-                name: f.name,
-                values: f.values.join(", "),
+                name: f.name || "",
+                values: Array.isArray(f.values) ? f.values.join(", ") : "",
               }))
-            : [defaultFilter],
-
+            : [{ name: "", values: "" }],
         isFeatured: initialData.isFeatured || false,
         isActive:
           typeof initialData.isActive === "boolean"
@@ -114,55 +110,39 @@ const CategoryForm = ({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
       setLoading(true);
       setError("");
       setSuccess("");
-
       const formattedFilters = form.filters.map((f) => ({
         name: f.name,
-        key: f.name
-          .toLowerCase()
-          .trim()
-          .replace(/\s+/g, "_"),
-
-        values: f.values
-          .split(",")
-          .map((v) => v.trim())
-          .filter(Boolean),
+        key: f.name.toLowerCase().trim().replace(/\s+/g, "_"),
+        values:
+          typeof f.values === "string"
+            ? f.values
+                .split(",")
+                .map((v) => v.trim())
+                .filter(Boolean)
+            : f.values,
       }));
-
-      const payload = {
-        ...form,
-        filters: formattedFilters,
-      };
-
+      const payload = { ...form, filters: formattedFilters };
       if (mode === "create") {
         await createCategory(payload);
-
         setSuccess("Category created successfully 🎉");
-
         setForm({
           name: "",
           description: "",
           equipmentType: "",
-          filters: [defaultFilter],
+          filters: [{ name: "", values: "" }],
           isFeatured: false,
           isActive: true,
         });
-
       } else {
         await updateCategory(categoryId, payload);
-
         setSuccess("Category updated successfully 🎉");
       }
-
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          `Failed to ${mode} category`
-      );
+      setError(err.response?.data?.message || `Failed to ${mode} category`);
     } finally {
       setLoading(false);
     }
@@ -171,13 +151,10 @@ const CategoryForm = ({
   return (
     <div className="max-w-5xl mx-auto p-6">
       <div className="bg-white rounded-3xl border border-gray-100 shadow-[0_10px_50px_rgba(0,0,0,0.08)] overflow-hidden">
-
         {/* HEADER */}
         <div className="border-b px-8 py-6 bg-gradient-to-r from-blue-50 to-indigo-50">
           <h2 className="text-3xl font-bold text-gray-800">
-            {mode === "create"
-              ? "Create Category"
-              : "Edit Category"}
+            {mode === "create" ? "Create Category" : "Edit Category"}
           </h2>
 
           <p className="text-gray-500 mt-1">
@@ -186,7 +163,6 @@ const CategoryForm = ({
         </div>
 
         <form onSubmit={handleSubmit} className="p-8 space-y-8">
-
           {/* ALERTS */}
           {error && (
             <div className="flex justify-between items-center bg-red-100 text-red-600 px-4 py-3 rounded-xl">
@@ -212,7 +188,6 @@ const CategoryForm = ({
 
           {/* BASIC INFO */}
           <div className="grid md:grid-cols-2 gap-6">
-
             {/* NAME */}
             <div>
               <label className="text-sm font-medium text-gray-700">
@@ -251,9 +226,7 @@ const CategoryForm = ({
                   })
                 }
               >
-                <option value="">
-                  Select Equipment Type
-                </option>
+                <option value="">Select Equipment Type</option>
 
                 {equipmentTypes.map((item) => (
                   <option key={item._id} value={item._id}>
@@ -286,12 +259,9 @@ const CategoryForm = ({
 
           {/* FILTERS */}
           <div className="space-y-5">
-
             <div className="flex justify-between items-center">
               <div>
-                <h3 className="text-xl font-semibold text-gray-800">
-                  Filters
-                </h3>
+                <h3 className="text-xl font-semibold text-gray-800">Filters</h3>
 
                 <p className="text-sm text-gray-500">
                   Add dynamic filters for this category
@@ -313,9 +283,7 @@ const CategoryForm = ({
                 key={index}
                 className="border border-gray-200 rounded-2xl p-5 bg-gray-50 space-y-4"
               >
-
                 <div className="grid md:grid-cols-2 gap-4">
-
                   {/* FILTER NAME */}
                   <div>
                     <label className="text-sm font-medium text-gray-700">
@@ -328,11 +296,7 @@ const CategoryForm = ({
                       placeholder="e.g Capacity"
                       className="w-full border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none p-3 rounded-xl mt-2 transition"
                       onChange={(e) =>
-                        handleFilterChange(
-                          index,
-                          "name",
-                          e.target.value
-                        )
+                        handleFilterChange(index, "name", e.target.value)
                       }
                     />
                   </div>
@@ -349,11 +313,7 @@ const CategoryForm = ({
                       placeholder="100L, 200L, 300L"
                       className="w-full border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none p-3 rounded-xl mt-2 transition"
                       onChange={(e) =>
-                        handleFilterChange(
-                          index,
-                          "values",
-                          e.target.value
-                        )
+                        handleFilterChange(index, "values", e.target.value)
                       }
                     />
                   </div>
@@ -377,7 +337,6 @@ const CategoryForm = ({
 
           {/* TOGGLES */}
           <div className="grid md:grid-cols-2 gap-5">
-
             {/* FEATURED */}
             <label className="border rounded-2xl p-5 flex items-center gap-4 cursor-pointer hover:border-blue-400 transition">
               <input
@@ -418,9 +377,7 @@ const CategoryForm = ({
               />
 
               <div>
-                <h3 className="font-semibold text-gray-800">
-                  Active Category
-                </h3>
+                <h3 className="font-semibold text-gray-800">Active Category</h3>
 
                 <p className="text-sm text-gray-500">
                   Enable category visibility
@@ -431,7 +388,6 @@ const CategoryForm = ({
 
           {/* ACTIONS */}
           <div className="flex justify-end gap-4 border-t pt-6">
-
             <button
               type="button"
               className="px-6 py-3 rounded-xl border border-gray-300 hover:bg-gray-100 transition"
@@ -449,8 +405,8 @@ const CategoryForm = ({
                   ? "Creating..."
                   : "Updating..."
                 : mode === "create"
-                ? "Create Category"
-                : "Update Category"}
+                  ? "Create Category"
+                  : "Update Category"}
             </button>
           </div>
         </form>
