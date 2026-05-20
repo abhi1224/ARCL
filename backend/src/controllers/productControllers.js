@@ -85,6 +85,98 @@ export const getProducts = async (req, res) => {
   }
 };
 
+
+// export const getProducts = async (req, res) => {
+//   try {
+
+//     // =========================
+//     // QUERY
+//     // =========================
+
+//     const query = {
+//       isActive: true,
+//     };
+
+//     // =========================
+//     // SEARCH
+//     // =========================
+
+//     if (req.query.search) {
+//       query.name = {
+//         $regex: req.query.search,
+//         $options: "i",
+//       };
+//     }
+
+//     // =========================
+//     // CATEGORY FILTER
+//     // =========================
+
+//     if (req.query.category) {
+//       const category = await Category.findOne({
+//         slug: req.query.category,
+//       });
+
+//       if (category) {
+//         query.category = category._id;
+//       }
+//     }
+
+//     // =========================
+//     // FETCH PRODUCTS
+//     // =========================
+
+//     let productsQuery = Product.find(query)
+//       .populate({
+//         path: "category",
+//         populate: {
+//           path: "equipmentType",
+//         },
+//       });
+
+//     // =========================
+//     // SORTING
+//     // =========================
+
+//     if (req.query.sort === "a-z") {
+//       productsQuery = productsQuery.sort({
+//         name: 1,
+//       });
+
+//     } else {
+//       productsQuery = productsQuery.sort({
+//         createdAt: -1,
+//       });
+//     }
+
+//     // =========================
+//     // EXECUTE
+//     // =========================
+
+//     const products = await productsQuery;
+
+//     // =========================
+//     // RESPONSE
+//     // =========================
+
+//     res.json({
+//       products,
+//       total: products.length,
+//       page: 1,
+//       pages: 1,
+//     });
+
+//   } catch (error) {
+//     console.log(error);
+
+//     res.status(500).json({
+//       message: error.message,
+//     });
+//   }
+// };
+
+
+
 export const getProduct = async (req, res) => {
   try {
     const product = await Product.findOne({

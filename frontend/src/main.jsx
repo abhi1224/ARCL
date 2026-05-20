@@ -19,6 +19,7 @@ import ProductList from './pages/admin/ProductList.jsx'
 import ProductForm from './pages/admin/ProductForm.jsx'
 import CreateCategoryForm from './components/admin/category/CreateCategoryForm.jsx'
 import EditCategoryForm from './components/admin/category/EditCategoryForm.jsx'
+import ProductListingPage from './pages/ProductListingPage.jsx'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -27,6 +28,7 @@ const router = createBrowserRouter(
       <Route path="/" element={<App />}>
         <Route index element={<Home />} />
         <Route path="about" element={<About />} />
+        <Route path="products" element={<ProductListingPage />} />
         <Route path="contact" element={<Contact />} />
       </Route>
 
