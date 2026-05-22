@@ -21,7 +21,7 @@ const ProductSidebar = ({
                         <span className="h-6 w-6 rounded-full bg-[#021C57] text-white flex justify-center items-center">{equipmentTypes.length} </span>
             </div>
           <div className="space-y-2">
-            <div className="overflow-y-auto max-h-52 my-5">
+            <div className="overflow-y-auto max-h-64 my-5">
                 {equipmentTypes.map((item) => (
               <button
                 key={item._id}
@@ -62,7 +62,7 @@ const ProductSidebar = ({
                         <span className="h-6 w-6 rounded-full bg-[#021C57] text-white flex justify-center items-center">{categories.length} </span>
                 </div>
 
-            <div className="space-y-2 overflow-y-auto max-h-72 my-5">
+            <div className="space-y-2 overflow-y-auto max-h-96 my-5">
                 {categories.map((item) => (
                 <button
                     key={item._id}
