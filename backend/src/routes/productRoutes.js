@@ -4,7 +4,8 @@ import {
   getProducts,
   getProduct,
   updateProduct,
-  deleteProduct
+  deleteProduct,
+  getProductsByCategory
 } from "../controllers/productControllers.js";
 import upload from "../middlewares/multer.js";
 
@@ -15,5 +16,6 @@ router.get("/", getProducts);
 router.get("/:slug", getProduct);
 router.put("/:id", updateProduct);
 router.delete("/:id", deleteProduct);
+router.get("/category/:slug", getProductsByCategory);
 
 export default router;

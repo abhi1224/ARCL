@@ -12,13 +12,13 @@ export const createProduct = async (req, res) => {
       applications,
       features,
       category,
-      isFeatured
+      isFeatured,
     } = req.body;
 
     // Validation
     if (!name || !category) {
       return res.status(400).json({
-        message: "Name and category are required"
+        message: "Name and category are required",
       });
     }
 
@@ -35,7 +35,7 @@ export const createProduct = async (req, res) => {
     const exists = await Product.findOne({ slug });
     if (exists) {
       return res.status(400).json({
-        message: "Product already exists"
+        message: "Product already exists",
       });
     }
 
@@ -44,7 +44,7 @@ export const createProduct = async (req, res) => {
     // Upload to Cloudinary
     if (req.file) {
       const result = await cloudinary.uploader.upload(req.file.path, {
-        folder: "products"
+        folder: "products",
       });
 
       imageUrl = result.secure_url;
@@ -62,11 +62,10 @@ export const createProduct = async (req, res) => {
       features,
       category,
       images: imageUrl ? [imageUrl] : [],
-      isFeatured
+      isFeatured,
     });
 
     res.status(201).json(product);
-
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: error.message });
@@ -84,7 +83,6 @@ export const getProducts = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 
 // export const getProducts = async (req, res) => {
 //   try {
@@ -175,13 +173,11 @@ export const getProducts = async (req, res) => {
 //   }
 // };
 
-
-
 export const getProduct = async (req, res) => {
   try {
     const product = await Product.findOne({
       slug: req.params.slug,
-      isActive: true
+      isActive: true,
     }).populate("category", "name slug");
 
     if (!product) {
@@ -194,7 +190,6 @@ export const getProduct = async (req, res) => {
   }
 };
 
-
 export const updateProduct = async (req, res) => {
   try {
     const {
@@ -206,7 +201,7 @@ export const updateProduct = async (req, res) => {
       category,
       images,
       isFeatured,
-      isActive
+      isActive,
     } = req.body;
 
     const product = await Product.findById(req.params.id);
@@ -257,5 +252,43 @@ export const deleteProduct = async (req, res) => {
     res.json({ message: "Product deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+export const getProductsByCategory = async (req, res) => {
+  try {
+    const category = await Category.findOne({
+      slug: req.params.slug,
+    });
+
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+
+        message: "Category not found",
+      });
+    }
+
+    const products = await Product.find({
+      category: category._id,
+    })
+
+      .populate("category")
+
+      .populate("equipmentType");
+
+    res.status(200).json({
+      success: true,
+
+      products,
+    });
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      success: false,
+
+      message: "Failed to fetch products",
+    });
   }
 };
