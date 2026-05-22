@@ -21,6 +21,7 @@ import CreateCategoryForm from './components/admin/category/CreateCategoryForm.j
 import EditCategoryForm from './components/admin/category/EditCategoryForm.jsx'
 import ProductListingPage from './pages/ProductListingPage.jsx'
 import ProductDetailsPage from './pages/ProductDetailsPage.jsx'
+import InquiryPage from './pages/admin/InquiryPage.jsx'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -43,6 +44,7 @@ const router = createBrowserRouter(
           <Route path='categories/edit/:slug' element = {<EditCategoryForm />}/>
           <Route path='products' element = {<ProductList />}/>
           <Route path='products/create' element = {<ProductForm />}/>
+          <Route path='inquiry' element = {<InquiryPage />}/>
         </Route>
     </>
   )

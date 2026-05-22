@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { FaHome, FaLayerGroup, FaThList, FaBox } from "react-icons/fa";
+import { FaHome, FaLayerGroup, FaThList, FaBox, FaEnvelope } from "react-icons/fa";
 import { RiAdminFill } from "react-icons/ri";
 
 const menuItems = [
@@ -7,6 +7,7 @@ const menuItems = [
   { name: "Equipment Types", path: "/admin/equipment-types", icon: <FaLayerGroup /> },
   { name: "Categories", path: "/admin/categories", icon: <FaThList /> },
   { name: "Products", path: "/admin/products", icon: <FaBox /> },
+  { name: "Inquiries", path: "/admin/inquiry", icon: <FaEnvelope /> },
 ];
 
 const Sidebar = () => {
