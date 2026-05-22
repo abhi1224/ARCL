@@ -1,167 +1,87 @@
 import { useEffect, useMemo, useState } from "react";
 
-import {
-Trash2,
-Eye,
-Search,
-} from "lucide-react";
+import { Trash2, Eye, Search } from "lucide-react";
 
-import { useInquiryStore }
-from "../../store/useInquiryStore.js";
+import { useInquiryStore } from "../../store/useInquiryStore.js";
+import InquiryDetailsModal from "../../components/admin/inquiry/InquiryDetailsModal.jsx";
 
 const InquiryPage = () => {
+  const {
+    inquiries = [],
 
-const {
+    loading,
 
-  
-inquiries = [],
+    error,
 
-loading,
+    fetchInquiries,
 
-error,
+    updateStatus,
 
-fetchInquiries,
+    deleteInquiry,
+  } = useInquiryStore();
 
-updateStatus,
+  // SEARCH + FILTER STATES
 
-deleteInquiry,
-  
+  const [search, setSearch] = useState("");
 
-} = useInquiryStore();
+  const [selectedInquiry, setSelectedInquiry] = useState(null);
 
-// SEARCH + FILTER STATES
+  const [statusFilter, setStatusFilter] = useState("all");
 
-const [search, setSearch] =
-useState("");
+  // FETCH DATA
 
-const [statusFilter,
-setStatusFilter] =
-useState("all");
+  useEffect(() => {
+    fetchInquiries();
+  }, []);
 
-// FETCH DATA
+  // FILTERED INQUIRIES
 
-useEffect(() => {
+  const filteredInquiries = useMemo(() => {
+    return inquiries.filter((item) => {
+      const matchesSearch =
+        item.customerName?.toLowerCase().includes(search.toLowerCase()) ||
+        item.productName?.toLowerCase().includes(search.toLowerCase()) ||
+        item.email?.toLowerCase().includes(search.toLowerCase());
 
-  
-fetchInquiries();
-  
+      const matchesStatus =
+        statusFilter === "all" || item.status === statusFilter;
 
-}, []);
+      return matchesSearch && matchesStatus;
+    });
+  }, [inquiries, search, statusFilter]);
 
-// FILTERED INQUIRIES
+  // STATUS UPDATE
 
-const filteredInquiries =
-useMemo(() => {
+  const handleStatusChange = async (id, status) => {
+    try {
+      await updateStatus(id, status);
 
-  
-return inquiries.filter((item) => {
+      fetchInquiries();
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
-  const matchesSearch =
+  // DELETE
 
-    item.customerName
-      ?.toLowerCase()
-      .includes(
-        search.toLowerCase()
-      )
+  const handleDelete = async (id) => {
+    const confirmDelete = window.confirm("Delete this inquiry?");
 
-    ||
+    if (!confirmDelete) return;
 
-    item.productName
-      ?.toLowerCase()
-      .includes(
-        search.toLowerCase()
-      )
+    try {
+      await deleteInquiry(id);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
-    ||
+  // LOADING
 
-    item.email
-      ?.toLowerCase()
-      .includes(
-        search.toLowerCase()
-      );
-
-  const matchesStatus =
-
-    statusFilter === "all"
-
-    ||
-
-    item.status ===
-    statusFilter;
-
-  return (
-    matchesSearch &&
-    matchesStatus
-  );
-
-});
-  
-
-}, [
-inquiries,
-search,
-statusFilter,
-]);
-
-// STATUS UPDATE
-
-const handleStatusChange =
-async (id, status) => {
-
-  
-try {
-
-  await updateStatus(
-    id,
-    status
-  );
-
-  fetchInquiries();
-
-} catch (error) {
-
-  console.log(error);
-
-}
-  
-
-};
-
-// DELETE
-
-const handleDelete =
-async (id) => {
-
-  
-const confirmDelete =
-  window.confirm(
-    "Delete this inquiry?"
-  );
-
-if (!confirmDelete) return;
-
-try {
-
-  await deleteInquiry(id);
-
-} catch (error) {
-
-  console.log(error);
-
-}
-  
-
-};
-
-// LOADING
-
-if (loading) {
-
-  
-return (
-
-  <div
-    className="
+  if (loading) {
+    return (
+      <div
+        className="
       min-h-screen
       flex
       items-center
@@ -169,24 +89,18 @@ return (
       text-xl
       font-semibold
     "
-  >
-    Loading inquiries...
-  </div>
+      >
+        Loading inquiries...
+      </div>
+    );
+  }
 
-);
-  
+  // ERROR
 
-}
-
-// ERROR
-
-if (error) {
-
-  
-return (
-
-  <div
-    className="
+  if (error) {
+    return (
+      <div
+        className="
       min-h-screen
       flex
       items-center
@@ -195,34 +109,29 @@ return (
       text-xl
       font-semibold
     "
-  >
-    {error}
-  </div>
+      >
+        {error}
+      </div>
+    );
+  }
 
-);
-  
+  return (
+    <>
 
-}
-
-return (
-
-  
-<div className="bg-gray-50 min-h-screen">
-
-  <div
-    className="
+    <div className="bg-gray-50 min-h-screen">
+      <div
+        className="
       max-w-[1600px]
       mx-auto
       px-4
       md:px-8
       py-10
     "
-  >
+      >
+        {/* HEADER */}
 
-    {/* HEADER */}
-
-    <div
-      className="
+        <div
+          className="
         flex
         flex-col
         lg:flex-row
@@ -231,49 +140,43 @@ return (
         gap-5
         mb-10
       "
-    >
-
-      <div>
-
-        <h1
-          className="
+        >
+          <div>
+            <h1
+              className="
             text-4xl
             font-bold
             text-[#021C57]
           "
-        >
-          Inquiry Management
-        </h1>
+            >
+              Inquiry Management
+            </h1>
 
-        <p
-          className="
+            <p
+              className="
             text-gray-500
             mt-2
           "
-        >
-          Manage all customer inquiries
-        </p>
+            >
+              Manage all customer inquiries
+            </p>
+          </div>
 
-      </div>
+          {/* SEARCH + FILTER */}
 
-
-      {/* SEARCH + FILTER */}
-
-      <div
-        className="
+          <div
+            className="
           flex
           flex-col
           sm:flex-row
           gap-4
         "
-      >
+          >
+            {/* SEARCH */}
 
-        {/* SEARCH */}
-
-        <div className="relative">
-
-          <Search
-            className="
+            <div className="relative">
+              <Search
+                className="
               absolute
               left-4
               top-1/2
@@ -282,20 +185,16 @@ return (
               h-5
               text-gray-400
             "
-          />
+              />
 
-          <input
-            type="text"
-            placeholder="
+              <input
+                type="text"
+                placeholder="
               Search inquiry...
             "
-            value={search}
-            onChange={(e) =>
-              setSearch(
-                e.target.value
-              )
-            }
-            className="
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="
               pl-12
               pr-4
               py-3
@@ -307,24 +206,15 @@ return (
               w-full
               sm:w-[300px]
             "
-          />
+              />
+            </div>
 
-        </div>
+            {/* STATUS FILTER */}
 
-
-        {/* STATUS FILTER */}
-
-        <select
-
-          value={statusFilter}
-
-          onChange={(e) =>
-            setStatusFilter(
-              e.target.value
-            )
-          }
-
-          className="
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="
             border
             border-gray-200
             rounded-2xl
@@ -333,35 +223,22 @@ return (
             outline-none
             bg-white
           "
-        >
+            >
+              <option value="all">All Status</option>
 
-          <option value="all">
-            All Status
-          </option>
+              <option value="pending">Pending</option>
 
-          <option value="pending">
-            Pending
-          </option>
+              <option value="contacted">Contacted</option>
 
-          <option value="contacted">
-            Contacted
-          </option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+        </div>
 
-          <option value="completed">
-            Completed
-          </option>
+        {/* STATS */}
 
-        </select>
-
-      </div>
-
-    </div>
-
-
-    {/* STATS */}
-
-    <div
-      className="
+        <div
+          className="
         grid
         grid-cols-1
         sm:grid-cols-2
@@ -369,147 +246,105 @@ return (
         gap-5
         mb-10
       "
-    >
-
-      <div
-        className="
+        >
+          <div
+            className="
           bg-white
           rounded-3xl
           p-6
           border
           border-gray-100
         "
-      >
+          >
+            <h2 className="text-gray-500">Total</h2>
 
-        <h2 className="text-gray-500">
-          Total
-        </h2>
-
-        <p
-          className="
+            <p
+              className="
             text-4xl
             font-bold
             text-[#021C57]
             mt-3
           "
-        >
-          {inquiries.length}
-        </p>
+            >
+              {inquiries.length}
+            </p>
+          </div>
 
-      </div>
-
-
-      <div
-        className="
+          <div
+            className="
           bg-white
           rounded-3xl
           p-6
           border
           border-gray-100
         "
-      >
+          >
+            <h2 className="text-gray-500">Pending</h2>
 
-        <h2 className="text-gray-500">
-          Pending
-        </h2>
-
-        <p
-          className="
+            <p
+              className="
             text-4xl
             font-bold
             text-yellow-500
             mt-3
           "
-        >
-          {
-            inquiries.filter(
-              (item) =>
-                item.status ===
-                "pending"
-            ).length
-          }
-        </p>
+            >
+              {inquiries.filter((item) => item.status === "pending").length}
+            </p>
+          </div>
 
-      </div>
-
-
-      <div
-        className="
+          <div
+            className="
           bg-white
           rounded-3xl
           p-6
           border
           border-gray-100
         "
-      >
+          >
+            <h2 className="text-gray-500">Contacted</h2>
 
-        <h2 className="text-gray-500">
-          Contacted
-        </h2>
-
-        <p
-          className="
+            <p
+              className="
             text-4xl
             font-bold
             text-blue-500
             mt-3
           "
-        >
-          {
-            inquiries.filter(
-              (item) =>
-                item.status ===
-                "contacted"
-            ).length
-          }
-        </p>
+            >
+              {inquiries.filter((item) => item.status === "contacted").length}
+            </p>
+          </div>
 
-      </div>
-
-
-      <div
-        className="
+          <div
+            className="
           bg-white
           rounded-3xl
           p-6
           border
           border-gray-100
         "
-      >
+          >
+            <h2 className="text-gray-500">Completed</h2>
 
-        <h2 className="text-gray-500">
-          Completed
-        </h2>
-
-        <p
-          className="
+            <p
+              className="
             text-4xl
             font-bold
             text-green-500
             mt-3
           "
-        >
-          {
-            inquiries.filter(
-              (item) =>
-                item.status ===
-                "completed"
-            ).length
-          }
-        </p>
+            >
+              {inquiries.filter((item) => item.status === "completed").length}
+            </p>
+          </div>
+        </div>
 
-      </div>
+        {/* EMPTY STATE */}
 
-    </div>
-
-
-    {/* EMPTY STATE */}
-
-    {
-      filteredInquiries.length === 0 && (
-
-        <div
-          className="
+        {filteredInquiries.length === 0 && (
+          <div
+            className="
             bg-white
             rounded-3xl
             border
@@ -517,95 +352,60 @@ return (
             py-20
             text-center
           "
-        >
-
-          <h2
-            className="
+          >
+            <h2
+              className="
               text-2xl
               font-bold
               text-[#021C57]
             "
-          >
-            No inquiries found
-          </h2>
+            >
+              No inquiries found
+            </h2>
 
-          <p className="text-gray-500 mt-3">
-            Try changing filters
-          </p>
+            <p className="text-gray-500 mt-3">Try changing filters</p>
+          </div>
+        )}
 
-        </div>
+        {/* TABLE */}
 
-      )
-    }
-
-
-    {/* TABLE */}
-
-    {
-      filteredInquiries.length > 0 && (
-
-        <div
-          className="
+        {filteredInquiries.length > 0 && (
+          <div
+            className="
             bg-white
             rounded-3xl
             border
             border-gray-100
             overflow-hidden
           "
-        >
-
-          <div className="overflow-x-auto">
-
-            <table className="w-full">
-
-              <thead
-                className="
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead
+                  className="
                   bg-[#021C57]
                   text-white
                 "
-              >
+                >
+                  <tr>
+                    <th className="px-6 py-5 text-left">Customer</th>
 
-                <tr>
+                    <th className="px-6 py-5 text-left">Product</th>
 
-                  <th className="px-6 py-5 text-left">
-                    Customer
-                  </th>
+                    <th className="px-6 py-5 text-left">Phone</th>
 
-                  <th className="px-6 py-5 text-left">
-                    Product
-                  </th>
+                    <th className="px-6 py-5 text-left">Quantity</th>
 
-                  <th className="px-6 py-5 text-left">
-                    Phone
-                  </th>
+                    <th className="px-6 py-5 text-left">Date</th>
 
-                  <th className="px-6 py-5 text-left">
-                    Quantity
-                  </th>
+                    <th className="px-6 py-5 text-left">Status</th>
 
-                  <th className="px-6 py-5 text-left">
-                    Date
-                  </th>
+                    <th className="px-6 py-5 text-left">Actions</th>
+                  </tr>
+                </thead>
 
-                  <th className="px-6 py-5 text-left">
-                    Status
-                  </th>
-
-                  <th className="px-6 py-5 text-left">
-                    Actions
-                  </th>
-
-                </tr>
-
-              </thead>
-
-
-              <tbody>
-
-                {
-                  filteredInquiries.map(
-                    (item) => (
-
+                <tbody>
+                  {filteredInquiries.map((item) => (
                     <tr
                       key={item._id}
                       className="
@@ -614,22 +414,17 @@ return (
                         hover:bg-gray-50
                       "
                     >
-
                       {/* CUSTOMER */}
 
                       <td className="px-6 py-5">
-
                         <div>
-
                           <h2
                             className="
                               font-semibold
                               text-[#021C57]
                             "
                           >
-                            {
-                              item.customerName
-                            }
+                            {item.customerName}
                           </h2>
 
                           <p
@@ -640,26 +435,19 @@ return (
                           >
                             {item.email}
                           </p>
-
                         </div>
-
                       </td>
-
 
                       {/* PRODUCT */}
 
                       <td className="px-6 py-5">
-
                         <div>
-
                           <h2
                             className="
                               font-medium
                             "
                           >
-                            {
-                              item.productName
-                            }
+                            {item.productName}
                           </h2>
 
                           <p
@@ -668,58 +456,33 @@ return (
                               text-gray-500
                             "
                           >
-                            {
-                              item.category
-                            }
+                            {item.category}
                           </p>
-
                         </div>
-
                       </td>
-
 
                       {/* PHONE */}
 
-                      <td className="px-6 py-5">
-                        {item.phone}
-                      </td>
-
+                      <td className="px-6 py-5">{item.phone}</td>
 
                       {/* QUANTITY */}
 
-                      <td className="px-6 py-5">
-                        {item.quantity}
-                      </td>
-
+                      <td className="px-6 py-5">{item.quantity}</td>
 
                       {/* DATE */}
 
                       <td className="px-6 py-5">
-
-                        {
-                          new Date(
-                            item.createdAt
-                          ).toLocaleDateString()
-                        }
-
+                        {new Date(item.createdAt).toLocaleDateString()}
                       </td>
-
 
                       {/* STATUS */}
 
                       <td className="px-6 py-5">
-
                         <select
-
                           value={item.status}
-
                           onChange={(e) =>
-                            handleStatusChange(
-                              item._id,
-                              e.target.value
-                            )
+                            handleStatusChange(item._id, e.target.value)
                           }
-
                           className="
                             border
                             border-gray-200
@@ -729,31 +492,20 @@ return (
                             outline-none
                           "
                         >
+                          <option value="pending">Pending</option>
 
-                          <option value="pending">
-                            Pending
-                          </option>
+                          <option value="contacted">Contacted</option>
 
-                          <option value="contacted">
-                            Contacted
-                          </option>
-
-                          <option value="completed">
-                            Completed
-                          </option>
-
+                          <option value="completed">Completed</option>
                         </select>
-
                       </td>
-
 
                       {/* ACTIONS */}
 
                       <td className="px-6 py-5">
-
                         <div className="flex gap-3">
-
                           <button
+                            onClick={() => setSelectedInquiry(item)}
                             className="
                               h-10
                               w-10
@@ -765,20 +517,11 @@ return (
                               justify-center
                             "
                           >
-
                             <Eye className="w-5 h-5" />
-
                           </button>
 
-
                           <button
-
-                            onClick={() =>
-                              handleDelete(
-                                item._id
-                              )
-                            }
-
+                            onClick={() => handleDelete(item._id)}
                             className="
                               h-10
                               w-10
@@ -790,37 +533,27 @@ return (
                               justify-center
                             "
                           >
-
                             <Trash2 className="w-5 h-5" />
-
                           </button>
-
                         </div>
-
                       </td>
-
                     </tr>
-
-                  ))
-                }
-
-              </tbody>
-
-            </table>
-
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
+        )}
+      </div>
+    </div>
+      <InquiryDetailsModal
+        inquiry={selectedInquiry}
+        onClose={() => setSelectedInquiry(null)}
+      />
+    </>
 
-        </div>
 
-      )
-    }
-
-  </div>
-
-</div>
-  
-
-);
+  );
 };
 
 export default InquiryPage;
