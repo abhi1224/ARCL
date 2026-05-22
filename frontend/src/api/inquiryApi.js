@@ -1,5 +1,5 @@
-import axiosInstance
-from "./axiosInstance.js";
+import API from "./axios";
+
 
 // CREATE INQUIRY
 
@@ -7,7 +7,7 @@ export const createInquiry =
 async (inquiryData) => {
 
 const response =
-await axiosInstance.post(
+await API.post(
 "/inquiries",
 inquiryData
 );
@@ -21,7 +21,7 @@ export const getAllInquiries =
 async () => {
 
 const response =
-await axiosInstance.get(
+await API.get(
 "/inquiries"
 );
 
@@ -34,7 +34,7 @@ export const getSingleInquiry =
 async (id) => {
 
 const response =
-await axiosInstance.get(
+await API.get(
 `/inquiries/${id}`
 );
 
@@ -47,15 +47,15 @@ export const updateInquiryStatus =
 async (id, status) => {
 
 const response =
-await axiosInstance.put(
+await API.put(
 
-```
+
   `/inquiries/${id}`,
 
   { status }
 
 );
-```
+
 
 return response.data;
 };
@@ -66,7 +66,7 @@ export const deleteInquiry =
 async (id) => {
 
 const response =
-await axiosInstance.delete(
+await API.delete(
 `/inquiries/${id}`
 );
 
