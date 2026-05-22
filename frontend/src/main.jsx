@@ -23,6 +23,7 @@ import ProductListingPage from './pages/ProductListingPage.jsx'
 import ProductDetailsPage from './pages/ProductDetailsPage.jsx'
 import InquiryPage from './pages/admin/InquiryPage.jsx'
 import ContactPage from './pages/admin/ContactPage.jsx'
+import CategoryProductsPage from './pages/CategoryProductPage.jsx'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -34,6 +35,7 @@ const router = createBrowserRouter(
         <Route path="products" element={<ProductListingPage />} />
         <Route path ='products/:slug' element = {<ProductDetailsPage />}/>
         <Route path="contact" element={<Contact />} />
+        <Route path="/categories/:slug" element={<CategoryProductsPage />} /> 
       </Route>
 
       {/* Admin Panel Layout */}

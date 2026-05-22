@@ -1,4 +1,3 @@
-
 import { create } from "zustand";
 
 import { productService } from "../services/productService.js";
@@ -18,6 +17,38 @@ export const useProductStore = create((set) => ({
 
   totalProducts: 0,
 
+  categoryProducts: [],
+
+  categoryData: null,
+
+  fetchProductsByCategory: async (slug) => {
+    try {
+      set({
+        loading: true,
+        error: null,
+      });
+
+      const data = await productService.getByCategory(slug);
+      
+      set({
+        categoryProducts: data.products || [],
+
+        categoryData: data.category || null,
+
+        loading: false,
+      });
+    } catch (err) {
+      console.log(err);
+
+      set({
+        error:
+          err.response?.data?.message || "Failed to fetch category products",
+
+        loading: false,
+      });
+    }
+  },
+
   // =========================
   // FETCH PRODUCTS
   // =========================
@@ -29,26 +60,21 @@ export const useProductStore = create((set) => ({
         error: null,
       });
 
-      const data =
-        await productService.getAll(params);
+      const data = await productService.getAll(params);
 
       set({
         // Backend returns direct array
         products: data || [],
 
-        totalProducts:
-          data?.length || 0,
+        totalProducts: data?.length || 0,
 
         loading: false,
       });
-
     } catch (err) {
       console.log(err);
 
       set({
-        error:
-          err.response?.data?.message ||
-          "Failed to fetch products",
+        error: err.response?.data?.message || "Failed to fetch products",
 
         loading: false,
       });
@@ -66,8 +92,7 @@ export const useProductStore = create((set) => ({
         error: null,
       });
 
-      const data =
-        await productService.getOne(slug);
+      const data = await productService.getOne(slug);
 
       set({
         product: data,
@@ -76,14 +101,11 @@ export const useProductStore = create((set) => ({
       });
 
       return data;
-
     } catch (err) {
       console.log(err);
 
       set({
-        error:
-          err.response?.data?.message ||
-          "Failed to fetch product",
+        error: err.response?.data?.message || "Failed to fetch product",
 
         loading: false,
       });
@@ -103,30 +125,22 @@ export const useProductStore = create((set) => ({
         error: null,
       });
 
-      const newProduct =
-        await productService.create(payload);
+      const newProduct = await productService.create(payload);
 
       set((state) => ({
-        products: [
-          newProduct,
-          ...state.products,
-        ],
+        products: [newProduct, ...state.products],
 
-        totalProducts:
-          state.totalProducts + 1,
+        totalProducts: state.totalProducts + 1,
 
         loading: false,
       }));
 
       return newProduct;
-
     } catch (err) {
       console.log(err);
 
       set({
-        error:
-          err.response?.data?.message ||
-          "Failed to create product",
+        error: err.response?.data?.message || "Failed to create product",
 
         loading: false,
       });
@@ -139,28 +153,18 @@ export const useProductStore = create((set) => ({
   // UPDATE PRODUCT
   // =========================
 
-  editProduct: async (
-    id,
-    payload
-  ) => {
+  editProduct: async (id, payload) => {
     try {
       set({
         loading: true,
         error: null,
       });
 
-      const updatedProduct =
-        await productService.update(
-          id,
-          payload
-        );
+      const updatedProduct = await productService.update(id, payload);
 
       set((state) => ({
-        products: state.products.map(
-          (item) =>
-            item._id === id
-              ? updatedProduct
-              : item
+        products: state.products.map((item) =>
+          item._id === id ? updatedProduct : item,
         ),
 
         product: updatedProduct,
@@ -169,14 +173,11 @@ export const useProductStore = create((set) => ({
       }));
 
       return updatedProduct;
-
     } catch (err) {
       console.log(err);
 
       set({
-        error:
-          err.response?.data?.message ||
-          "Failed to update product",
+        error: err.response?.data?.message || "Failed to update product",
 
         loading: false,
       });
@@ -199,23 +200,17 @@ export const useProductStore = create((set) => ({
       await productService.remove(id);
 
       set((state) => ({
-        products: state.products.filter(
-          (item) => item._id !== id
-        ),
+        products: state.products.filter((item) => item._id !== id),
 
-        totalProducts:
-          state.totalProducts - 1,
+        totalProducts: state.totalProducts - 1,
 
         loading: false,
       }));
-
     } catch (err) {
       console.log(err);
 
       set({
-        error:
-          err.response?.data?.message ||
-          "Failed to delete product",
+        error: err.response?.data?.message || "Failed to delete product",
 
         loading: false,
       });

@@ -1,12 +1,10 @@
-
 import API from "./axios";
 
 // =========================
 // CREATE PRODUCT
 // =========================
 
-export const createProduct = (data) =>
-  API.post("/products", data);
+export const createProduct = (data) => API.post("/products", data);
 
 // =========================
 // GET ALL PRODUCTS
@@ -21,22 +19,28 @@ export const getProducts = (params = {}) =>
 // GET SINGLE PRODUCT
 // =========================
 
-export const getProduct = (slug) =>
-  API.get(`/products/${slug}`);
+export const getProduct = (slug) => API.get(`/products/${slug}`);
+
+// =========================
+// GET PRODUCTS BY CATEGORY
+// =========================
+
+export const getProductsByCategory = (slug, params = {}) =>
+  API.get(
+    `/products/category/${slug}`,
+    {
+      params,
+    },
+  );
 
 // =========================
 // UPDATE PRODUCT
 // =========================
 
-export const updateProduct = (
-  id,
-  data
-) =>
-  API.put(`/products/${id}`, data);
+export const updateProduct = (id, data) => API.put(`/products/${id}`, data);
 
 // =========================
 // DELETE PRODUCT
 // =========================
 
-export const deleteProduct = (id) =>
-  API.delete(`/products/${id}`);
+export const deleteProduct = (id) => API.delete(`/products/${id}`);

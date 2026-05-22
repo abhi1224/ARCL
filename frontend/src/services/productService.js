@@ -1,10 +1,10 @@
-
 import {
   getProducts,
   getProduct,
   createProduct,
   updateProduct,
   deleteProduct,
+  getProductsByCategory,
 } from "../api/productApi.js";
 
 export const productService = {
@@ -13,16 +13,9 @@ export const productService = {
   // =========================
 
   getAll: async (params = {}) => {
-    try {
-      const res = await getProducts(params);
+    const res = await getProducts(params);
 
-      return res.data;
-
-    } catch (err) {
-      console.log(err);
-
-      throw err;
-    }
+    return res.data;
   },
 
   // =========================
@@ -30,16 +23,23 @@ export const productService = {
   // =========================
 
   getOne: async (slug) => {
-    try {
-      const res = await getProduct(slug);
+    const res = await getProduct(slug);
 
-      return res.data;
+    return res.data;
+  },
 
-    } catch (err) {
-      console.log(err);
+  // =========================
+  // GET PRODUCTS BY CATEGORY
+  // =========================
 
-      throw err;
-    }
+  getByCategory: async (slug, params = {}) => {
+    const res = await getProductsByCategory(
+      slug,
+
+      params,
+    );
+
+    return res.data;
   },
 
   // =========================
@@ -47,16 +47,9 @@ export const productService = {
   // =========================
 
   create: async (payload) => {
-    try {
-      const res = await createProduct(payload);
+    const res = await createProduct(payload);
 
-      return res.data;
-
-    } catch (err) {
-      console.log(err);
-
-      throw err;
-    }
+    return res.data;
   },
 
   // =========================
@@ -64,19 +57,13 @@ export const productService = {
   // =========================
 
   update: async (id, payload) => {
-    try {
-      const res = await updateProduct(
-        id,
-        payload
-      );
+    const res = await updateProduct(
+      id,
 
-      return res.data;
+      payload,
+    );
 
-    } catch (err) {
-      console.log(err);
-
-      throw err;
-    }
+    return res.data;
   },
 
   // =========================
@@ -84,16 +71,8 @@ export const productService = {
   // =========================
 
   remove: async (id) => {
-    try {
-      const res = await deleteProduct(id);
+    const res = await deleteProduct(id);
 
-      return res.data;
-
-    } catch (err) {
-      console.log(err);
-
-      throw err;
-    }
+    return res.data;
   },
 };
-

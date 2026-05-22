@@ -1,4 +1,5 @@
 import Product from "../models/product.js";
+import Category from "../models/category.js";
 import slugify from "slugify";
 import cloudinary from "../config/cloudinary.js";
 import fs from "fs";
@@ -84,95 +85,6 @@ export const getProducts = async (req, res) => {
   }
 };
 
-// export const getProducts = async (req, res) => {
-//   try {
-
-//     // =========================
-//     // QUERY
-//     // =========================
-
-//     const query = {
-//       isActive: true,
-//     };
-
-//     // =========================
-//     // SEARCH
-//     // =========================
-
-//     if (req.query.search) {
-//       query.name = {
-//         $regex: req.query.search,
-//         $options: "i",
-//       };
-//     }
-
-//     // =========================
-//     // CATEGORY FILTER
-//     // =========================
-
-//     if (req.query.category) {
-//       const category = await Category.findOne({
-//         slug: req.query.category,
-//       });
-
-//       if (category) {
-//         query.category = category._id;
-//       }
-//     }
-
-//     // =========================
-//     // FETCH PRODUCTS
-//     // =========================
-
-//     let productsQuery = Product.find(query)
-//       .populate({
-//         path: "category",
-//         populate: {
-//           path: "equipmentType",
-//         },
-//       });
-
-//     // =========================
-//     // SORTING
-//     // =========================
-
-//     if (req.query.sort === "a-z") {
-//       productsQuery = productsQuery.sort({
-//         name: 1,
-//       });
-
-//     } else {
-//       productsQuery = productsQuery.sort({
-//         createdAt: -1,
-//       });
-//     }
-
-//     // =========================
-//     // EXECUTE
-//     // =========================
-
-//     const products = await productsQuery;
-
-//     // =========================
-//     // RESPONSE
-//     // =========================
-
-//     res.json({
-//       products,
-//       total: products.length,
-//       page: 1,
-//       pages: 1,
-//     });
-
-//   } catch (error) {
-//     console.log(error);
-
-//     res.status(500).json({
-//       message: error.message,
-//     });
-//   }
-// };
-
 export const getProduct = async (req, res) => {
   try {
     const product = await Product.findOne({
@@ -257,9 +169,13 @@ export const deleteProduct = async (req, res) => {
 
 export const getProductsByCategory = async (req, res) => {
   try {
+    // FIND CATEGORY
+
     const category = await Category.findOne({
       slug: req.params.slug,
     });
+
+    // CATEGORY NOT FOUND
 
     if (!category) {
       return res.status(404).json({
@@ -269,16 +185,30 @@ export const getProductsByCategory = async (req, res) => {
       });
     }
 
+    // FIND PRODUCTS
+
     const products = await Product.find({
       category: category._id,
     })
 
-      .populate("category")
+      .populate("category", "name slug")
 
-      .populate("equipmentType");
+      .sort({
+        createdAt: -1,
+      });
+
+    // RESPONSE
 
     res.status(200).json({
       success: true,
+
+      category: {
+        name: category.name,
+
+        slug: category.slug,
+
+        filters: category.filters,
+      },
 
       products,
     });
@@ -288,7 +218,7 @@ export const getProductsByCategory = async (req, res) => {
     res.status(500).json({
       success: false,
 
-      message: "Failed to fetch products",
+      message: "Failed to fetch category products",
     });
   }
 };
