@@ -8,6 +8,7 @@ const menuItems = [
   { name: "Categories", path: "/admin/categories", icon: <FaThList /> },
   { name: "Products", path: "/admin/products", icon: <FaBox /> },
   { name: "Inquiries", path: "/admin/inquiry", icon: <FaEnvelope /> },
+  { name: "Contact Messages", path: "/admin/contact-messages", icon: <FaEnvelope /> },
 ];
 
 const Sidebar = () => {
