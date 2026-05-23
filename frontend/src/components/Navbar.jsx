@@ -13,7 +13,6 @@ const Navbar = () => {
     { name: "Home", to: "/" },
     { name: "About", to: "/about" },
     { name: "Laboratry Equipments", to: "/products" },
-    { name: "Scientific Equipments", to: "/scientific-equipment" },
     { name: "Contact", to: "/contact" },
   ];
 
@@ -55,12 +54,12 @@ const Navbar = () => {
                 <span className="hidden md:block"> Call +91 8169695728 </span>
                 <FaPhoneAlt className="md:hidden w-10 h-10 rounded-full hover:bg-[#021C57] transition border-2 p-1.5" />
               </a>
-
+{/* 
               <button 
                 onClick={() => setQuoteForm(true)}
                 className="button-style hidden rounded-md font-semibold px-4 py-2 md:flex items-center gap-2 transition">
                 Request Quote <ArrowRight className="w-5 h-5" />
-              </button>
+              </button> */}
             </div>
           </div>
 
@@ -137,11 +136,11 @@ const Navbar = () => {
                   </Link>
                 ))}
 
-                <button 
+                {/* <button 
                 onClick={() => console.log('Clicked')}
                 className="button-style font-semibold px-4 py-2 flex items-center gap-2 transition rounded-md">
                   Request Quote <ArrowRight className="w-5 h-5" />
-                </button>
+                </button> */}
               </div>
             )}
           </nav>
