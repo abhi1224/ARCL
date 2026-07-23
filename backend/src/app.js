@@ -1,6 +1,8 @@
 import dotenv from 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
+import dns from "node:dns/promises";
+dns.setServers(["1.1.1.1"]);
 
 const app = express();
 

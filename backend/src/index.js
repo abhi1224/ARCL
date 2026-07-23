@@ -21,6 +21,8 @@ connectDB()
   })
   .catch((error) => {
     console.log(`Database connection failed !`);
+    console.log(error);
+    
   });
 
 app.get("/", (req, res) => {
