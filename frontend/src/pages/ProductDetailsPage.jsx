@@ -238,7 +238,7 @@ const ProductDetailsPage = () => {
         <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           
           {/* ================= LEFT: IMAGE GALLERY ================= */}
-          <div className="lg:col-span-6 space-y-4 sticky top-20">
+          <div className="lg:col-span-6 space-y-4">
             
             {/* MAIN IMAGE CONTAINER */}
             <div className="relative bg-white rounded-3xl border border-gray-200/80 p-6 sm:p-8 shadow-sm group overflow-hidden flex items-center justify-center min-h-[380px] sm:min-h-[460px]">
@@ -262,10 +262,7 @@ const ProductDetailsPage = () => {
                 className="max-h-[360px] sm:max-h-[420px] w-auto object-contain transition duration-500 group-hover:scale-105"
               />
 
-              {/* NABL BADGE */}
-              {/* <div className="absolute bottom-4 right-4 bg-blue-50/90 border border-blue-200/80 text-[#021C57] px-3 py-1 rounded-xl text-[10px] font-bold backdrop-blur-xs flex items-center gap-1">
-                <ShieldCheck size={13} className="text-blue-600" /> Traceable Calibration
-              </div> */}
+
             </div>
 
             {/* THUMBNAIL SELECTOR (IF MULTIPLE) */}
