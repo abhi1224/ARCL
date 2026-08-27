@@ -1,0 +1,203 @@
+import Product from "../../models/product.js";
+import Category from "../../models/category.js";
+import EquipmentType from "../../models/equipmentType.js";
+
+/**
+ * @desc    Get All Active Products (Client)
+ * @route   GET /api/v1/client/products
+ * @access  Public
+ */
+export const getProducts = async (req, res) => {
+  try {
+    const {
+      search,
+      category,
+      equipmentType,
+      featured,
+      sort = "latest",
+      page,
+      limit,
+    } = req.query;
+
+    const filter = { isActive: true };
+
+    // Search by product name
+    if (search && search.trim()) {
+      filter.name = { $regex: search.trim(), $options: "i" };
+    }
+
+    // Filter by Featured
+    if (typeof featured !== "undefined" && featured !== "") {
+      filter.isFeatured = featured === "true" || featured === true;
+    }
+
+    // Filter by Category (slug or ObjectId)
+    if (category && category.trim()) {
+      let catId = category;
+      if (!category.match(/^[0-9a-fA-F]{24}$/)) {
+        const cat = await Category.findOne({ slug: category });
+        if (cat) {
+          catId = cat._id;
+        } else {
+          return res.status(200).json({ success: true, count: 0, data: [] });
+        }
+      }
+      filter.category = catId;
+    }
+
+    // Filter by Equipment Type (slug or ObjectId)
+    if (equipmentType && equipmentType.trim()) {
+      let eqId = equipmentType;
+      if (!equipmentType.match(/^[0-9a-fA-F]{24}$/)) {
+        const eq = await EquipmentType.findOne({ slug: equipmentType });
+        if (eq) {
+          eqId = eq._id;
+        }
+      }
+
+      if (eqId) {
+        const categoriesInType = await Category.find({
+          equipmentType: eqId,
+          isActive: true,
+        }).select("_id");
+
+        const catIds = categoriesInType.map((c) => c._id);
+
+        if (filter.category) {
+          // If both category and equipmentType are filtered, ensure category is in equipmentType
+          if (!catIds.some((id) => id.toString() === filter.category.toString())) {
+            return res.status(200).json({ success: true, count: 0, data: [] });
+          }
+        } else {
+          filter.category = { $in: catIds };
+        }
+      }
+    }
+
+    // Sort mappings
+    let sortOption = { createdAt: -1 };
+    if (sort === "a-z" || sort === "name-asc") {
+      sortOption = { name: 1 };
+    } else if (sort === "z-a" || sort === "name-desc") {
+      sortOption = { name: -1 };
+    } else if (sort === "popular" || sort === "featured") {
+      sortOption = { isFeatured: -1, createdAt: -1 };
+    } else if (sort === "oldest") {
+      sortOption = { createdAt: 1 };
+    }
+
+    if (page && limit) {
+      const pageNum = parseInt(page);
+      const limitNum = parseInt(limit);
+      const total = await Product.countDocuments(filter);
+      const products = await Product.find(filter)
+        .populate("category", "name slug")
+        .sort(sortOption)
+        .skip((pageNum - 1) * limitNum)
+        .limit(limitNum);
+
+      return res.status(200).json({
+        success: true,
+        total,
+        currentPage: pageNum,
+        totalPages: Math.ceil(total / limitNum),
+        data: products,
+      });
+    }
+
+    const products = await Product.find(filter)
+      .populate("category", "name slug")
+      .sort(sortOption);
+
+    return res.status(200).json({
+      success: true,
+      count: products.length,
+      data: products,
+    });
+  } catch (error) {
+    console.error("Client Get Products Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to fetch products",
+    });
+  }
+};
+
+/**
+ * @desc    Get Single Active Product by Slug (Client)
+ * @route   GET /api/v1/client/products/:slug
+ * @access  Public
+ */
+export const getProduct = async (req, res) => {
+  try {
+    const product = await Product.findOne({
+      slug: req.params.slug,
+      isActive: true,
+    }).populate("category", "name slug filters");
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: product,
+    });
+  } catch (error) {
+    console.error("Client Get Product Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to fetch product",
+    });
+  }
+};
+
+/**
+ * @desc    Get Products by Category Slug (Client)
+ * @route   GET /api/v1/client/products/category/:slug
+ * @access  Public
+ */
+export const getProductsByCategory = async (req, res) => {
+  try {
+    const category = await Category.findOne({
+      slug: req.params.slug,
+      isActive: true,
+    }).populate("equipmentType", "name slug");
+
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: "Category not found",
+      });
+    }
+
+    const products = await Product.find({
+      category: category._id,
+      isActive: true,
+    })
+      .populate("category", "name slug")
+      .sort({ isFeatured: -1, createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      category: {
+        _id: category._id,
+        name: category.name,
+        slug: category.slug,
+        description: category.description,
+        equipmentType: category.equipmentType,
+        filters: category.filters,
+      },
+      products,
+    });
+  } catch (error) {
+    console.error("Client Get Products By Category Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to fetch category products",
+    });
+  }
+};

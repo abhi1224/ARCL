@@ -11,9 +11,9 @@ import { FaSquareXTwitter, FaXTwitter } from "react-icons/fa6";
 const Footer = () => {
   const navLinks = [
     { name: "Home", to: "/" },
-    { name: "About", to: "/about" },
     { name: "Laboratry Equipments", to: "/products" },
-    { name: "Scientfic Equipments", to: "/scientific-equipment" },
+    { name: "Catalog", to: "/catalog" },
+    { name: "About", to: "/about" },
     { name: "Contact", to: "/contact" },
   ];
   return (
@@ -29,7 +29,7 @@ const Footer = () => {
                     <p className=" font-semibold font-saira">
                      ARCL INSTRUMENTS PVT. LTD
                     </p>
-                    <p className="text-[8px] md:text-[10px] text-center">( An ISO 9001:2025 Certified Company )</p>
+                    <p className="text-[8px] md:text-[10px] text-center">( An ISO 9001:2015 Certified Company )</p>
                   </div>
                 </Link>
               </div>   

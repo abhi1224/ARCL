@@ -1,4 +1,4 @@
-import Inquiry from "../models/inquiryModel.js";
+import Inquiry from "../../models/inquiryModel.js";
 
 // CREATE INQUIRY
 

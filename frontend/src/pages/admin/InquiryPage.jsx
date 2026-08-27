@@ -4,6 +4,7 @@ import { Trash2, Eye, Search } from "lucide-react";
 
 import { useInquiryStore } from "../../store/useInquiryStore.js";
 import InquiryDetailsModal from "../../components/admin/inquiry/InquiryDetailsModal.jsx";
+import Tooltip from "../../components/admin/common/Tooltip.jsx";
 
 const InquiryPage = () => {
   const {
@@ -504,37 +505,42 @@ const InquiryPage = () => {
 
                       <td className="px-6 py-5">
                         <div className="flex gap-3">
-                          <button
-                            onClick={() => setSelectedInquiry(item)}
-                            className="
-                              h-10
-                              w-10
-                              rounded-xl
-                              bg-blue-50
-                              text-blue-600
-                              flex
-                              items-center
-                              justify-center
-                            "
-                          >
-                            <Eye className="w-5 h-5" />
-                          </button>
+                          <Tooltip text="View Full Details">
+                            <button
+                              onClick={() => setSelectedInquiry(item)}
+                              className="
+                                h-10
+                                w-10
+                                rounded-xl
+                                bg-blue-50
+                                text-blue-600
+                                flex
+                                items-center
+                                justify-center
+                              "
+                            >
+                              <Eye className="w-5 h-5" />
+                            </button>
+                          </Tooltip>
+                          
 
-                          <button
-                            onClick={() => handleDelete(item._id)}
-                            className="
-                              h-10
-                              w-10
-                              rounded-xl
-                              bg-red-50
-                              text-red-600
-                              flex
-                              items-center
-                              justify-center
-                            "
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </button>
+                          <Tooltip text="Delete Inquiry">
+                            <button
+                              onClick={() => handleDelete(item._id)}
+                              className="
+                                h-10
+                                w-10
+                                rounded-xl
+                                bg-red-50
+                                text-red-600
+                                flex
+                                items-center
+                                justify-center
+                              "
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          </Tooltip>
                         </div>
                       </td>
                     </tr>

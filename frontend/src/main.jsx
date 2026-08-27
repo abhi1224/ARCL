@@ -11,7 +11,10 @@ import App from './App.jsx'
 import Home from './pages/Home.jsx'
 import About from './pages/About.jsx'
 import Contact from './pages/Contact.jsx'
+import CatalogPage from './pages/CatalogPage.jsx'
 import Layout from './components/admin/layout/Layout.jsx'
+import ProtectedRoute from './components/admin/ProtectedRoute.jsx'
+import AdminLogin from './pages/admin/AdminLogin.jsx'
 import Dashboard from './pages/admin/Dashboard.jsx'
 import EquipmentTypeList from './pages/admin/EquipmentTypeList.jsx'
 import CategoryList from './pages/admin/CategoryList.jsx'
@@ -21,9 +24,11 @@ import CreateCategoryForm from './components/admin/category/CreateCategoryForm.j
 import EditCategoryForm from './components/admin/category/EditCategoryForm.jsx'
 import ProductListingPage from './pages/ProductListingPage.jsx'
 import ProductDetailsPage from './pages/ProductDetailsPage.jsx'
+import ProductCatalogPdfPage from './pages/ProductCatalogPdfPage.jsx'
 import InquiryPage from './pages/admin/InquiryPage.jsx'
 import ContactPage from './pages/admin/ContactPage.jsx'
 import CategoryProductsPage from './pages/CategoryProductPage.jsx'
+import UserManagementPage from './pages/admin/UserManagementPage.jsx'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -32,24 +37,35 @@ const router = createBrowserRouter(
       <Route path="/" element={<App />}>
         <Route index element={<Home />} />
         <Route path="about" element={<About />} />
+        <Route path="catalog" element={<CatalogPage />} />
         <Route path="products" element={<ProductListingPage />} />
-        <Route path ='products/:slug' element = {<ProductDetailsPage />}/>
+        <Route path="products/:slug" element={<ProductDetailsPage />} />
         <Route path="contact" element={<Contact />} />
-        <Route path="/categories/:slug" element={<CategoryProductsPage />} /> 
+        <Route path="categories/:slug" element={<CategoryProductsPage />} />
       </Route>
 
-      {/* Admin Panel Layout */}
-        <Route path='/admin' element={true ? <Layout /> : <h1>Login</h1>}>
-          <Route index element = {<Dashboard />}/>
-          <Route path='equipment-types' element = {<EquipmentTypeList />}/>
-          <Route path='categories' element = {<CategoryList />}/>
-          <Route path='categories/create' element = {<CreateCategoryForm />}/>
-          <Route path='categories/edit/:slug' element = {<EditCategoryForm />}/>
-          <Route path='products' element = {<ProductList />}/>
-          <Route path='products/create' element = {<ProductForm />}/>
-          <Route path='inquiry' element = {<InquiryPage />}/>
-          <Route path='contact-messages' element = {<ContactPage />}/>
+      {/* PDF Catalog Full View & Download (Standalone Page) */}
+      <Route path="/products/:slug/catalog" element={<ProductCatalogPdfPage />} />
+
+      {/* Admin Login Route (Public) */}
+      <Route path="/admin/login" element={<AdminLogin />} />
+
+      {/* Admin Panel (Protected by Role-Based Auth) */}
+      <Route path="/admin" element={<ProtectedRoute />}>
+        <Route element={<Layout />}>
+          <Route index element={<Dashboard />} />
+          <Route path="equipment-types" element={<EquipmentTypeList />} />
+          <Route path="categories" element={<CategoryList />} />
+          <Route path="categories/create" element={<CreateCategoryForm />} />
+          <Route path="categories/edit/:slug" element={<EditCategoryForm />} />
+          <Route path="products" element={<ProductList />} />
+          <Route path="products/create" element={<ProductForm />} />
+          <Route path="products/edit/:id" element={<ProductForm />} />
+          <Route path="users" element={<UserManagementPage />} />
+          <Route path="inquiry" element={<InquiryPage />} />
+          <Route path="contact-messages" element={<ContactPage />} />
         </Route>
+      </Route>
     </>
   )
 )

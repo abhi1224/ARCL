@@ -1,78 +1,81 @@
 import {
   getProducts,
   getProduct,
+  getAdminProducts,
+  getProductById,
   createProduct,
   updateProduct,
   deleteProduct,
+  toggleProductActive,
+  toggleProductFeatured,
   getProductsByCategory,
+  getFeaturedShowcase,
 } from "../api/productApi.js";
 
 export const productService = {
-  // =========================
-  // GET ALL PRODUCTS
-  // =========================
-
+  // CLIENT GET ALL
   getAll: async (params = {}) => {
     const res = await getProducts(params);
-
-    return res.data;
+    return res.data?.data || res.data;
   },
 
-  // =========================
-  // GET SINGLE PRODUCT
-  // =========================
+  // ADMIN GET ALL (Active + Inactive)
+  getAdminAll: async (params = {}) => {
+    const res = await getAdminProducts(params);
+    return res.data?.data || res.data;
+  },
 
+  // CLIENT GET SINGLE BY SLUG
   getOne: async (slug) => {
     const res = await getProduct(slug);
-
-    return res.data;
+    return res.data?.data || res.data;
   },
 
-  // =========================
-  // GET PRODUCTS BY CATEGORY
-  // =========================
+  // ADMIN GET SINGLE BY ID
+  getById: async (id) => {
+    const res = await getProductById(id);
+    return res.data?.data || res.data;
+  },
 
+  // CLIENT GET BY CATEGORY
   getByCategory: async (slug, params = {}) => {
-    const res = await getProductsByCategory(
-      slug,
-
-      params,
-    );
-
+    const res = await getProductsByCategory(slug, params);
     return res.data;
   },
 
-  // =========================
-  // CREATE PRODUCT
-  // =========================
+  // CLIENT GET FEATURED SHOWCASE
+  getFeaturedShowcase: async () => {
+    const res = await getFeaturedShowcase();
+    return res.data?.data || res.data;
+  },
 
+  // CREATE PRODUCT
   create: async (payload) => {
     const res = await createProduct(payload);
-
-    return res.data;
+    return res.data?.data || res.data;
   },
 
-  // =========================
   // UPDATE PRODUCT
-  // =========================
-
   update: async (id, payload) => {
-    const res = await updateProduct(
-      id,
-
-      payload,
-    );
-
-    return res.data;
+    const res = await updateProduct(id, payload);
+    return res.data?.data || res.data;
   },
 
-  // =========================
   // DELETE PRODUCT
-  // =========================
-
   remove: async (id) => {
     const res = await deleteProduct(id);
-
     return res.data;
+  },
+
+  // TOGGLE ACTIVE STATUS
+  toggleActive: async (id) => {
+    const res = await toggleProductActive(id);
+    return res.data?.data || res.data;
+  },
+
+  // TOGGLE FEATURED STATUS
+  toggleFeatured: async (id) => {
+    const res = await toggleProductFeatured(id);
+    return res.data?.data || res.data;
   },
 };

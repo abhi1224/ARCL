@@ -1,16 +1,13 @@
 import { useEffect, useState } from "react";
-import { FaEdit, FaTrash } from "react-icons/fa";
-
-
+import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
 import EquipmentTypeModal from "../../components/admin/equipmentType/EquipmentTypeModal.jsx";
 import EquipmentTypeEditModal from "../../components/admin/equipmentType/EquipmentTypeEditModal.jsx";
-import Toggle from "../../components/admin/common/Toggle.jsx";
 import Tooltip from "../../components/admin/common/Tooltip.jsx";
 import SkeletonLoader from "../../components/admin/common/SkeletonLoader.jsx";
 import useEquipmentType from "../../hooks/useEquipmentType.js";
+import { toast } from "react-toastify";
 
 const EquipmentTypeList = () => {
-
   const {
     equipmentTypes,
     fetchEquipmentTypes,
@@ -18,9 +15,7 @@ const EquipmentTypeList = () => {
     error,
     selectedItem,
     deletingId,
-    togglingId,
     handleEdit,
-    handleToggle,
     handleDelete,
   } = useEquipmentType();
 
@@ -31,20 +26,31 @@ const EquipmentTypeList = () => {
     fetchEquipmentTypes();
   }, []);
 
-  return (
-    <div className="space-y-4">
+  const onDeleteConfirm = async (id) => {
+    try {
+      await handleDelete(id);
+      toast.success("Equipment type deleted successfully");
+    } catch (err) {
+      toast.error(err.message || "Failed to delete equipment type");
+    }
+  };
 
+  return (
+    <div className="space-y-6">
       {/* HEADER */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-800">
-          Equipment Types
-        </h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Equipment Types</h1>
+          <p className="text-gray-500 text-sm mt-0.5">
+            Top-level industry equipment classifications ({equipmentTypes.length} total)
+          </p>
+        </div>
 
         <button
           onClick={() => setOpenModal(true)}
-          className="bg-blue-500 text-white px-4 py-2 rounded cursor-pointer hover:bg-blue-600 transition"
+          className="inline-flex items-center justify-center gap-2 bg-[#021C57] hover:bg-[#03308f] text-white font-medium px-5 py-2.5 rounded-xl shadow-sm transition cursor-pointer"
         >
-          + Add Equipment Type
+          <FaPlus size={14} /> Add Equipment Type
         </button>
       </div>
 
@@ -53,93 +59,75 @@ const EquipmentTypeList = () => {
 
       {/* ERROR */}
       {error && (
-        <div className="bg-red-100 text-red-600 p-4 rounded-lg">
+        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-2xl">
           {error}
         </div>
       )}
 
       {/* EMPTY */}
       {!loading && !error && equipmentTypes.length === 0 && (
-        <div className="bg-white p-6 rounded-xl shadow text-center">
-          <p className="text-gray-500 mb-3">
-            No equipment types found.
-          </p>
+        <div className="bg-white p-12 rounded-3xl shadow-xs border border-gray-100 text-center">
+          <p className="text-gray-500 mb-4">No equipment types found.</p>
           <button
             onClick={() => setOpenModal(true)}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl font-medium hover:bg-blue-700 transition cursor-pointer"
           >
-            Create your first one →
+            <FaPlus /> Create First Equipment Type
           </button>
         </div>
       )}
 
       {/* TABLE */}
       {!loading && !error && equipmentTypes.length > 0 && (
-        <div className="bg-white rounded-xl shadow overflow-hidden">
-
+        <div className="bg-white rounded-2xl shadow-xs border border-gray-100 overflow-hidden">
           <table className="w-full text-left">
-            <thead className="bg-gray-100 text-gray-600 text-sm uppercase">
+            <thead className="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100">
               <tr>
                 <th className="p-4">Name</th>
-                <th className="p-4">Status</th>
+                <th className="p-4">Slug</th>
                 <th className="p-4 text-center">Actions</th>
               </tr>
             </thead>
 
-            <tbody>
+            <tbody className="divide-y divide-gray-100 text-sm">
               {equipmentTypes.map((item) => (
-                <tr key={item._id} className="border-t hover:bg-gray-50">
-
+                <tr key={item._id} className="hover:bg-gray-50/80 transition">
                   {/* NAME */}
-                  <td className="p-4 font-medium text-gray-800">
+                  <td className="p-4 font-semibold text-gray-800">
                     {item.name}
                   </td>
 
-                  {/* STATUS */}
-                  <td className="p-4">
-                    <div className="flex items-center gap-3">
-
-                      <Toggle
-                        checked={item.isActive}
-                        onChange={() => handleToggle(item._id)}
-                        disabled={togglingId === item._id}
-                      />
-
-                      <span
-                        className={`text-sm font-medium w-[70px] ${
-                          item.isActive
-                            ? "text-green-600"
-                            : "text-gray-400"
-                        }`}
-                      >
-                        {item.isActive ? "Active" : "Inactive"}
-                      </span>
-
-                    </div>
+                  {/* SLUG */}
+                  <td className="p-4 text-gray-500 font-mono text-xs">
+                    /{item.slug}
                   </td>
 
                   {/* ACTIONS */}
-                  <td className="p-4 flex justify-center gap-4">
+                  <td className="p-4">
+                    <div className="flex justify-center items-center gap-3">
+                      <Tooltip text="Edit">
+                        <button
+                          onClick={() => handleEdit(item, setEditModalOpen)}
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer"
+                        >
+                          <FaEdit size={16} />
+                        </button>
+                      </Tooltip>
 
-                    <Tooltip text="Edit">
-                      <button
-                        onClick={() => handleEdit(item, setEditModalOpen)}
-                        className="text-blue-500 cursor-pointer"
-                      >
-                        <FaEdit size={18} />
-                      </button>
-                    </Tooltip>
-
-                    <Tooltip text="Delete">
-                      <button
-                        onClick={() => handleDelete(item._id)}
-                        disabled={deletingId === item._id}
-                        className="text-red-500 cursor-pointer disabled:opacity-50"
-                      >
-                        {deletingId === item._id ? "..." : <FaTrash size={18} />}
-                      </button>
-                    </Tooltip>
-
+                      <Tooltip text="Delete">
+                        <button
+                          onClick={() => onDeleteConfirm(item._id)}
+                          disabled={deletingId === item._id}
+                          className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition disabled:opacity-50 cursor-pointer"
+                        >
+                          {deletingId === item._id ? (
+                            <span className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin inline-block"></span>
+                          ) : (
+                            <FaTrash size={16} />
+                          )}
+                        </button>
+                      </Tooltip>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -157,7 +145,6 @@ const EquipmentTypeList = () => {
             onClose={() => setEditModalOpen(false)}
             selected={selectedItem}
           />
-
         </div>
       )}
     </div>

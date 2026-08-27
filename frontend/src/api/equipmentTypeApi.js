@@ -1,11 +1,31 @@
 import API from "./axios";
 
-export const getEquipmentTypes = () => API.get("/equipment-types");
-export const createEquipmentType = (data) => API.post("/equipment-types", data);
+// =========================
+// ADMIN EQUIPMENT TYPE APIS
+// =========================
+
+export const getAdminEquipmentTypes = () => API.get("/admin/equipment-types");
+
+export const getSingleEquipmentType = (id) =>
+  API.get(`/admin/equipment-types/${id}`);
+
+export const createEquipmentType = (data) =>
+  API.post("/admin/equipment-types", data);
+
 export const updateEquipmentType = (id, data) =>
-  API.put(`/equipment-types/${id}`, data);
+  API.put(`/admin/equipment-types/${id}`, data);
+
 export const deleteEquipmentType = (id) =>
-  API.delete(`/equipment-types/${id}`);
+  API.delete(`/admin/equipment-types/${id}`);
 
 export const toggleEquipmentTypeStatus = (id) =>
-  API.patch(`/equipment-types/${id}/toggle`);
+  API.patch(`/admin/equipment-types/${id}/toggle`);
+
+// =========================
+// CLIENT EQUIPMENT TYPE APIS
+// =========================
+
+export const getEquipmentTypes = () => API.get("/client/equipment-types");
+
+export const getEquipmentType = (slug) =>
+  API.get(`/client/equipment-types/${slug}`);

@@ -16,6 +16,7 @@ from "../../store/useContactStore.js";
 
 import ContactDetailsModal
 from "../../components/admin/contact/ContactDetailsModal.jsx";
+import Tooltip from "../../components/admin/common/Tooltip.jsx";
 
 const ContactPage = () => {
 
@@ -700,41 +701,42 @@ return (
 
                       {/* VIEW */}
 
-                      <button
+                      <Tooltip text="View Details">
+                        <button
+                          onClick={() =>
+                            setSelectedContact(
+                              item
+                            )
+                          }
 
-                        onClick={() =>
-                          setSelectedContact(
-                            item
-                          )
-                        }
+                          className="
+                            h-10
+                            w-10
+                            rounded-xl
+                            bg-blue-50
+                            hover:bg-blue-100
+                            text-blue-600
+                            flex
+                            items-center
+                            justify-center
+                          "
+                        >
 
-                        className="
-                          h-10
-                          w-10
-                          rounded-xl
-                          bg-blue-50
-                          hover:bg-blue-100
-                          text-blue-600
-                          flex
-                          items-center
-                          justify-center
-                        "
-                      >
+                          <Eye className="w-5 h-5" />
 
-                        <Eye className="w-5 h-5" />
-
-                      </button>
+                        </button> 
+                      </Tooltip>
 
 
                       {/* DELETE */}
 
-                      <button
-
-                        onClick={() =>
-                          handleDelete(
-                            item._id
-                          )
-                        }
+                      <Tooltip text="Delete Contact">
+                        <button
+                          onClick={() =>
+                            handleDelete(
+                              item._id
+                            )
+                            }
 
                         className="
                           h-10
@@ -752,6 +754,7 @@ return (
                         <Trash2 className="w-5 h-5" />
 
                       </button>
+                    </Tooltip>
 
                     </div>
 

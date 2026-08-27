@@ -1,6 +1,8 @@
 import {
   getCategories,
   getCategory,
+  getAdminCategories,
+  getCategoryById,
   createCategory,
   updateCategory,
   deleteCategory,
@@ -9,46 +11,57 @@ import {
 } from "../api/categoryApi.js";
 
 export const categoryService = {
-  
-  // GET ALL
-  getAll: async () => {
-    const res = await getCategories();
-    return res.data; // normalize
+  // CLIENT GET ALL (100% PUBLIC - No Auth Required)
+  getAll: async (params = {}) => {
+    const res = await getCategories(params);
+    return res.data?.data || res.data;
   },
 
-  // GET SINGLE
+  // ADMIN GET ALL (Protected)
+  getAdminAll: async (params = {}) => {
+    const res = await getAdminCategories(params);
+    return res.data?.data || res.data;
+  },
+
+  // GET SINGLE BY SLUG (Public)
   getOne: async (slug) => {
     const res = await getCategory(slug);
-    return res.data;
+    return res.data?.data || res.data;
   },
 
-  // CREATE
+  // GET SINGLE BY ID (Admin)
+  getById: async (id) => {
+    const res = await getCategoryById(id);
+    return res.data?.data || res.data;
+  },
+
+  // CREATE (Admin)
   create: async (data) => {
     const res = await createCategory(data);
-    return res.data;
+    return res.data?.data || res.data;
   },
 
-  // UPDATE
+  // UPDATE (Admin)
   update: async (id, data) => {
     const res = await updateCategory(id, data);
-    return res.data;
+    return res.data?.data || res.data;
   },
 
-  // DELETE
+  // DELETE (Admin)
   remove: async (id) => {
     await deleteCategory(id);
     return id;
   },
 
-  // TOGGLE ACTIVE
+  // TOGGLE ACTIVE (Admin)
   toggleActive: async (id) => {
     const res = await toggleCategoryActive(id);
-    return res.data;
+    return res.data?.data || res.data;
   },
 
-  // TOGGLE FEATURED
+  // TOGGLE FEATURED (Admin)
   toggleFeatured: async (id) => {
     const res = await toggleCategoryFeatured(id);
-    return res.data;
+    return res.data?.data || res.data;
   },
 };

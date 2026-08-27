@@ -1,27 +1,35 @@
 import API from "./axios";
 
-// GET ALL
-export const getCategories = () => API.get("/categories");
+// =========================
+// ADMIN CATEGORY APIS
+// =========================
 
-// GET SINGLE
-export const getCategory = (slug) => API.get(`/categories/${slug}`);
+export const createCategory = (data) => API.post("/admin/categories", data);
 
-// CREATE
-export const createCategory = (data) =>
-  API.post("/categories", data);
+export const getAdminCategories = (params = {}) =>
+  API.get("/admin/categories", { params });
 
-// UPDATE
+export const getCategoryById = (id) => API.get(`/admin/categories/id/${id}`);
+
 export const updateCategory = (id, data) =>
-  API.put(`/categories/${id}`, data);
+  API.put(`/admin/categories/${id}`, data);
 
-// DELETE (soft)
-export const deleteCategory = (id) =>
-  API.delete(`/categories/${id}`);
+export const deleteCategory = (id) => API.delete(`/admin/categories/${id}`);
 
-// TOGGLE ACTIVE
 export const toggleCategoryActive = (id) =>
-  API.patch(`/categories/${id}/toggle-active`);
+  API.patch(`/admin/categories/${id}/toggle`);
 
-// TOGGLE FEATURED
 export const toggleCategoryFeatured = (id) =>
-  API.patch(`/categories/${id}/toggle-featured`);
+  API.patch(`/admin/categories/${id}/toggle-featured`);
+
+// =========================
+// CLIENT CATEGORY APIS
+// =========================
+
+export const getCategories = (params = {}) =>
+  API.get("/client/categories", { params });
+
+export const getCategory = (slug) => API.get(`/client/categories/${slug}`);
+
+export const getCategoriesByEquipmentType = (slug) =>
+  API.get(`/client/categories/equipment/${slug}`);

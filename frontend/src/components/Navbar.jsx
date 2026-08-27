@@ -26,18 +26,19 @@ const Navbar = () => {
       name: "Home",
       to: "/",
     },
-
+    {
+      name: "Laboratry Equipments",
+      to: "/products",
+    },
+    {
+      name: "Catalog",
+      to: "/catalog",
+    },
     {
       name: "About",
       to: "/about",
-    },
-
-    {
-      name: "Laboratry Equipments",
-
-      to: "/products",
-    },
-
+    },   
+    
     {
       name: "Contact",
       to: "/contact",
@@ -347,7 +348,7 @@ const Navbar = () => {
                     text-center
                   "
                     >
-                      ( An ISO 9001:2025 Certified Company )
+                      ( An ISO 9001:2015 Certified Company )
                     </p>
                   </div>
                 </Link>

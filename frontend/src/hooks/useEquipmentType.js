@@ -32,7 +32,17 @@ const useEquipmentType = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete?")) return;
+    if (
+      !confirm(
+        "⚠️ Warning: Deletion May Affect Related Data\n\n" +
+        "This record is linked to one or more products or dependent records. " +
+        "Deleting it may impact associated data and system relationships.\n\n" +
+        "Please verify all related products and dependencies before confirming this action. " +
+        "This operation may not be reversible.\n\n" +
+        "Do you want to proceed with deletion?"
+      )
+    ) return;
+
 
     try {
       setDeletingId(id);

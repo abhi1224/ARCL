@@ -1,16 +1,26 @@
 import mongoose from "mongoose";
 import { DB_NAME } from "../constants.js";
 
-export const connectDB = async() => {
-    try{
-        const connectionInstance = await mongoose.connect(`${process.env.MONGO_URI}/${DB_NAME}`)
-        console.log('MongoDB Connected Successfully !'); 
-        // console.log(`${process.env.MONGO_URI}/${DB_NAME}`);
-               
-    }
-    catch(error){
-        console.log(`Error: ${error.message}`)      
-        throw error
+export const connectDB = async () => {
+  try {
+    const mongoUri = process.env.MONGO_URI;
+
+    if (!mongoUri) {
+      throw new Error(
+        "MONGO_URI is missing in backend/.env file. Please add your connection string."
+      );
     }
 
-}
+    const connectionInstance = await mongoose.connect(mongoUri, {
+      dbName: DB_NAME,
+      serverSelectionTimeoutMS: 15000,
+    });
+
+    console.log(
+      `MongoDB Connected Successfully! Host: ${connectionInstance.connection.host}, DB: ${connectionInstance.connection.name}`
+    );
+  } catch (error) {
+    console.error(`MongoDB Connection Error: ${error.message}`);
+    throw error;
+  }
+};
