@@ -31,6 +31,42 @@ const uploadBufferToCloudinary = async (fileBuffer, mimetype) => {
 };
 
 /**
+ * Helper: Fallback to Category description, features, applications if product's own are empty
+ * and ensure specifications is a clean plain JavaScript Object.
+ */
+const resolveProductInheritance = (prodDoc) => {
+  if (!prodDoc) return null;
+  const prod = prodDoc.toObject ? prodDoc.toObject({ flattenMaps: true }) : { ...prodDoc };
+
+  // Convert ES6 Map -> Plain Object if needed
+  if (prod.specifications instanceof Map) {
+    prod.specifications = Object.fromEntries(prod.specifications);
+  } else if (!prod.specifications || typeof prod.specifications !== "object") {
+    prod.specifications = {};
+  }
+
+  if ((!prod.description || !prod.description.trim()) && prod.category?.description) {
+    prod.description = prod.category.description;
+  }
+
+  if (
+    (!prod.features || !Array.isArray(prod.features) || prod.features.length === 0) &&
+    prod.category?.features?.length > 0
+  ) {
+    prod.features = prod.category.features;
+  }
+
+  if (
+    (!prod.applications || !Array.isArray(prod.applications) || prod.applications.length === 0) &&
+    prod.category?.applications?.length > 0
+  ) {
+    prod.applications = prod.category.applications;
+  }
+
+  return prod;
+};
+
+/**
  * @desc    Create Product (Admin)
  * @route   POST /api/v1/admin/products
  * @access  Admin
@@ -63,10 +99,12 @@ export const createProduct = async (req, res) => {
       });
     }
 
-    if (!description || !description.trim()) {
-      return res.status(400).json({
+    // Ensure category exists
+    const categoryDoc = await Category.findById(category);
+    if (!categoryDoc) {
+      return res.status(404).json({
         success: false,
-        message: "Product description is required.",
+        message: "Selected category not found in database.",
       });
     }
 
@@ -95,27 +133,26 @@ export const createProduct = async (req, res) => {
       }
     }
 
-    const cleanFeatures = Array.isArray(features)
+    let cleanFeatures = Array.isArray(features)
       ? features.filter((f) => f && String(f).trim().length > 0)
       : [];
 
-    const cleanApplications = Array.isArray(applications)
+    let cleanApplications = Array.isArray(applications)
       ? applications.filter((a) => a && String(a).trim().length > 0)
       : [];
 
-    if (cleanFeatures.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "At least one key feature is required.",
-      });
+    // AUTO-INHERIT from Category if not provided for this specific product
+    if (cleanFeatures.length === 0 && categoryDoc.features?.length > 0) {
+      cleanFeatures = categoryDoc.features;
     }
 
-    if (cleanApplications.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "At least one application scope is required.",
-      });
+    if (cleanApplications.length === 0 && categoryDoc.applications?.length > 0) {
+      cleanApplications = categoryDoc.applications;
     }
+
+    let finalDescription = description && description.trim()
+      ? description.trim()
+      : categoryDoc.description || "";
 
     // Convert strings → boolean
     isFeatured = isFeatured === true || isFeatured === "true";
@@ -123,15 +160,6 @@ export const createProduct = async (req, res) => {
       typeof isActive !== "undefined"
         ? isActive === true || isActive === "true"
         : true;
-
-    // Ensure category exists
-    const categoryDoc = await Category.findById(category);
-    if (!categoryDoc) {
-      return res.status(404).json({
-        success: false,
-        message: "Selected category not found in database.",
-      });
-    }
 
     // Slug generation
     let baseSlug =
@@ -160,7 +188,7 @@ export const createProduct = async (req, res) => {
     const product = await Product.create({
       name: name.trim(),
       slug,
-      description: description.trim(),
+      description: finalDescription,
       specifications: specifications || {},
       applications: cleanApplications,
       features: cleanFeatures,
@@ -170,12 +198,12 @@ export const createProduct = async (req, res) => {
       isActive,
     });
 
-    await product.populate("category", "name slug");
+    await product.populate("category", "name slug description features applications filters");
 
     return res.status(201).json({
       success: true,
       message: "Product created successfully! 🎉",
-      data: product,
+      data: resolveProductInheritance(product),
     });
   } catch (error) {
     console.error("Create Product Error:", error);
@@ -228,13 +256,15 @@ export const getProducts = async (req, res) => {
     sortOptions[sort] = order === "asc" ? 1 : -1;
 
     const products = await Product.find(filter)
-      .populate("category", "name slug")
+      .populate("category", "name slug description features applications filters")
       .sort(sortOptions);
+
+    const resolvedProducts = products.map(resolveProductInheritance);
 
     return res.status(200).json({
       success: true,
-      count: products.length,
-      data: products,
+      count: resolvedProducts.length,
+      data: resolvedProducts,
     });
   } catch (error) {
     console.error("Get Admin Products Error:", error);
@@ -254,7 +284,7 @@ export const getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id).populate(
       "category",
-      "name slug filters"
+      "name slug description features applications filters"
     );
 
     if (!product) {
@@ -266,7 +296,7 @@ export const getProductById = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      data: product,
+      data: resolveProductInheritance(product),
     });
   } catch (error) {
     console.error("Get Product By ID Error:", error);
@@ -286,7 +316,7 @@ export const getProduct = async (req, res) => {
   try {
     const product = await Product.findOne({
       slug: req.params.slug,
-    }).populate("category", "name slug");
+    }).populate("category", "name slug description features applications filters");
 
     if (!product) {
       return res.status(404).json({
@@ -297,7 +327,7 @@ export const getProduct = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      data: product,
+      data: resolveProductInheritance(product),
     });
   } catch (error) {
     return res.status(500).json({
@@ -397,12 +427,12 @@ export const updateProduct = async (req, res) => {
     if (typeof isActive !== "undefined") product.isActive = isActive;
 
     await product.save();
-    await product.populate("category", "name slug");
+    await product.populate("category", "name slug description features applications filters");
 
     return res.status(200).json({
       success: true,
       message: "Product updated successfully! 🎉",
-      data: product,
+      data: resolveProductInheritance(product),
     });
   } catch (error) {
     console.error("Update Product Error:", error);
@@ -529,12 +559,14 @@ export const getProductsByCategory = async (req, res) => {
 
     const products = await Product.find({
       category: category._id,
-    }).populate("category", "name slug");
+    }).populate("category", "name slug description features applications filters");
+
+    const resolvedProducts = products.map(resolveProductInheritance);
 
     return res.status(200).json({
       success: true,
-      count: products.length,
-      data: products,
+      count: resolvedProducts.length,
+      data: resolvedProducts,
     });
   } catch (error) {
     return res.status(500).json({

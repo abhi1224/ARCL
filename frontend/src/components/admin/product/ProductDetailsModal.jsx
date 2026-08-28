@@ -8,7 +8,7 @@ import {
   FaCalendarAlt,
   FaTag,
 } from "react-icons/fa";
-import { X, CheckCircle2, ShieldCheck, FileText } from "lucide-react";
+import { X, CheckCircle2, ShieldCheck, FileText, Sparkles } from "lucide-react";
 
 const ProductDetailsModal = ({ isOpen, onClose, product }) => {
   if (!isOpen || !product) return null;
@@ -19,6 +19,23 @@ const ProductDetailsModal = ({ isOpen, onClose, product }) => {
       : typeof product.images === "string"
       ? product.images
       : "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&q=80&w=600";
+
+  const description =
+    product.description || product.category?.description || "No description provided.";
+
+  const features =
+    Array.isArray(product.features) && product.features.length > 0
+      ? product.features
+      : product.category?.features?.length > 0
+      ? product.category.features
+      : [];
+
+  const applications =
+    Array.isArray(product.applications) && product.applications.length > 0
+      ? product.applications
+      : product.category?.applications?.length > 0
+      ? product.category.applications
+      : [];
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
@@ -32,7 +49,7 @@ const ProductDetailsModal = ({ isOpen, onClose, product }) => {
             </span>
             <div>
               <h2 className="text-lg font-bold text-gray-800 line-clamp-1">
-                Product Details
+                Product Specifications & Details
               </h2>
               <p className="text-xs text-gray-400 font-mono">
                 ID: {product._id}
@@ -102,7 +119,7 @@ const ProductDetailsModal = ({ isOpen, onClose, product }) => {
 
               {/* Description */}
               <p className="text-sm text-gray-600 leading-relaxed pt-1">
-                {product.description || "No description provided."}
+                {description}
               </p>
 
               {/* Timestamps */}
@@ -119,20 +136,20 @@ const ProductDetailsModal = ({ isOpen, onClose, product }) => {
 
           </div>
 
-          {/* TECHNICAL SPECIFICATIONS */}
+          {/* DYNAMIC SPECIFICATIONS / FILTERS */}
           {product.specifications &&
             Object.keys(product.specifications).length > 0 && (
               <div className="space-y-3">
                 <h4 className="text-sm font-bold text-[#021C57] flex items-center gap-2 border-b border-gray-100 pb-2">
-                  <ShieldCheck size={16} className="text-blue-600" /> Technical Specifications
+                  <ShieldCheck size={16} className="text-blue-600" /> Dynamic Technical Specifications (Filter Values)
                 </h4>
 
-                <div className="border border-gray-200 rounded-2xl overflow-hidden text-xs sm:text-sm">
+                <div className="border border-gray-200 rounded-2xl overflow-hidden text-xs sm:text-sm shadow-2xs">
                   <table className="w-full text-left">
                     <thead className="bg-gray-50 text-gray-600 text-xs uppercase font-semibold">
                       <tr>
-                        <th className="p-3 border-b border-gray-200 w-1/2">Attribute</th>
-                        <th className="p-3 border-b border-gray-200 w-1/2">Value</th>
+                        <th className="p-3.5 border-b border-gray-200 w-1/2">Specification Parameter</th>
+                        <th className="p-3.5 border-b border-gray-200 w-1/2">Value</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -142,10 +159,10 @@ const ProductDetailsModal = ({ isOpen, onClose, product }) => {
                             key={key}
                             className={idx % 2 === 0 ? "bg-white" : "bg-gray-50/50"}
                           >
-                            <td className="p-3 font-semibold text-gray-700">
+                            <td className="p-3.5 font-semibold text-gray-700">
                               {key}
                             </td>
-                            <td className="p-3 text-gray-900">{String(val)}</td>
+                            <td className="p-3.5 text-gray-900 font-bold">{String(val)}</td>
                           </tr>
                         )
                       )}
@@ -159,13 +176,14 @@ const ProductDetailsModal = ({ isOpen, onClose, product }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             
             {/* Features */}
-            {product.features && product.features.length > 0 && (
-              <div className="bg-blue-50/60 p-4 rounded-2xl border border-blue-100 space-y-2">
-                <h4 className="text-xs font-bold text-[#021C57] uppercase tracking-wider">
-                  Key Features ({product.features.length})
+            {features.length > 0 && (
+              <div className="bg-blue-50/60 p-4.5 rounded-2xl border border-blue-100 space-y-2">
+                <h4 className="text-xs font-bold text-[#021C57] uppercase tracking-wider flex items-center justify-between">
+                  <span>Key Features ({features.length})</span>
+                  <span className="text-[10px] text-blue-600 font-normal">Category Master</span>
                 </h4>
                 <ul className="space-y-1.5 text-xs text-gray-700">
-                  {product.features.map((f, i) => (
+                  {features.map((f, i) => (
                     <li key={i} className="flex items-start gap-2">
                       <CheckCircle2 size={13} className="text-blue-600 shrink-0 mt-0.5" />
                       <span>{f}</span>
@@ -176,13 +194,14 @@ const ProductDetailsModal = ({ isOpen, onClose, product }) => {
             )}
 
             {/* Applications */}
-            {product.applications && product.applications.length > 0 && (
-              <div className="bg-emerald-50/60 p-4 rounded-2xl border border-emerald-100 space-y-2">
-                <h4 className="text-xs font-bold text-emerald-900 uppercase tracking-wider">
-                  Applications ({product.applications.length})
+            {applications.length > 0 && (
+              <div className="bg-emerald-50/60 p-4.5 rounded-2xl border border-emerald-100 space-y-2">
+                <h4 className="text-xs font-bold text-emerald-900 uppercase tracking-wider flex items-center justify-between">
+                  <span>Applications ({applications.length})</span>
+                  <span className="text-[10px] text-emerald-700 font-normal">Category Master</span>
                 </h4>
                 <ul className="space-y-1.5 text-xs text-gray-700">
-                  {product.applications.map((a, i) => (
+                  {applications.map((a, i) => (
                     <li key={i} className="flex items-start gap-2">
                       <CheckCircle2 size={13} className="text-emerald-600 shrink-0 mt-0.5" />
                       <span>{a}</span>

@@ -5,56 +5,61 @@ const productSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
     },
 
     slug: {
       type: String,
       required: true,
       lowercase: true,
-      unique: true
+      unique: true,
+      trim: true,
     },
 
     description: {
-      type: String
+      type: String,
+      default: "",
     },
 
+    // Specifications stored as Mixed Object for reliable JSON serialization
     specifications: {
-      type: Map,
-      of: String
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
     },
 
     applications: [
       {
-        type: String
-      }
+        type: String,
+        trim: true,
+      },
     ],
-    
+
     features: [
       {
-        type: String
-      }
+        type: String,
+        trim: true,
+      },
     ],
 
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
-      required: true
+      required: true,
     },
 
     images: [String],
 
     isFeatured: {
       type: Boolean,
-      default: false
+      default: false,
     },
 
     isActive: {
       type: Boolean,
-      default: true
-    }
+      default: true,
+    },
   },
-  { timestamps: true }
+  { timestamps: true, minimize: false }
 );
 
 export default mongoose.model("Product", productSchema);

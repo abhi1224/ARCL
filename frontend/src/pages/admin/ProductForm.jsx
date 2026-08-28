@@ -6,8 +6,9 @@ import {
   updateProduct,
 } from "../../api/productApi.js";
 import { useProductStore } from "../../store/useProductStore.js";
-import { FaUpload, FaCheckCircle } from "react-icons/fa";
+import { FaUpload, FaSlidersH, FaLayerGroup } from "react-icons/fa";
 import { MdClose } from "react-icons/md";
+import { CheckCircle2, ChevronDown, Sparkles } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 
@@ -35,6 +36,7 @@ const ProductForm = () => {
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
 
+  const [showAdvancedOverrides, setShowAdvancedOverrides] = useState(false);
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(isEditMode);
   const [errors, setErrors] = useState({});
@@ -65,16 +67,21 @@ const ProductForm = () => {
 
           setForm({
             name: prod.name || "",
-            description: prod.description || "",
+            description:
+              prod.description || matchedCategory?.description || "",
             category: prod.category?._id || prod.category || "",
             specifications: prod.specifications || {},
             features:
               Array.isArray(prod.features) && prod.features.length > 0
                 ? prod.features
+                : matchedCategory?.features?.length > 0
+                ? matchedCategory.features
                 : [""],
             applications:
               Array.isArray(prod.applications) && prod.applications.length > 0
                 ? prod.applications
+                : matchedCategory?.applications?.length > 0
+                ? matchedCategory.applications
                 : [""],
             isFeatured: prod.isFeatured || false,
             isActive: typeof prod.isActive === "boolean" ? prod.isActive : true,
@@ -100,11 +107,34 @@ const ProductForm = () => {
     const specs = {};
     if (category?.filters) {
       category.filters.forEach((f) => {
-        specs[f.key] = form.specifications[f.key] || "";
+        specs[f.key] = form.specifications[f.key] || (f.values?.length ? f.values[0] : "");
       });
     }
 
-    setForm({ ...form, category: catId, specifications: specs });
+    // Auto-inherit description, features, applications from the selected category!
+    const inheritedDesc = category?.description || form.description || "";
+    const inheritedFeatures =
+      category?.features && category.features.length > 0
+        ? category.features
+        : form.features.length > 0 && form.features[0]
+        ? form.features
+        : [""];
+    const inheritedApps =
+      category?.applications && category.applications.length > 0
+        ? category.applications
+        : form.applications.length > 0 && form.applications[0]
+        ? form.applications
+        : [""];
+
+    setForm({
+      ...form,
+      category: catId,
+      specifications: specs,
+      description: inheritedDesc,
+      features: inheritedFeatures,
+      applications: inheritedApps,
+    });
+
     if (errors.category) {
       setErrors((prev) => ({ ...prev, category: null }));
     }
@@ -142,9 +172,6 @@ const ProductForm = () => {
     const updated = [...form.features];
     updated[i] = value;
     setForm({ ...form, features: updated });
-    if (errors.features) {
-      setErrors((prev) => ({ ...prev, features: null }));
-    }
   };
 
   // APPLICATIONS
@@ -166,9 +193,6 @@ const ProductForm = () => {
     const updated = [...form.applications];
     updated[i] = value;
     setForm({ ...form, applications: updated });
-    if (errors.applications) {
-      setErrors((prev) => ({ ...prev, applications: null }));
-    }
   };
 
   // IMAGE
@@ -195,8 +219,6 @@ const ProductForm = () => {
 
     if (!form.name.trim()) newErrors.name = "Product name is required.";
     if (!form.category) newErrors.category = "Please select a category.";
-    if (!form.description.trim())
-      newErrors.description = "Product description is required.";
 
     // Image required on create mode
     if (!isEditMode && !image && !preview) {
@@ -213,18 +235,6 @@ const ProductForm = () => {
       });
     }
 
-    // Features validation (at least 1 non-empty)
-    const validFeatures = form.features.filter((f) => f && f.trim());
-    if (validFeatures.length === 0) {
-      newErrors.features = "Please add at least one key feature point.";
-    }
-
-    // Applications validation (at least 1 non-empty)
-    const validApplications = form.applications.filter((a) => a && a.trim());
-    if (validApplications.length === 0) {
-      newErrors.applications = "Please add at least one application scope.";
-    }
-
     return newErrors;
   };
 
@@ -236,7 +246,7 @@ const ProductForm = () => {
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-      toast.error("Please fill in all required fields marked with *");
+      toast.error("Please fill in the required fields marked with *");
       return;
     }
 
@@ -246,7 +256,10 @@ const ProductForm = () => {
 
       const formData = new FormData();
       formData.append("name", form.name.trim());
-      formData.append("description", form.description.trim());
+      formData.append(
+        "description",
+        form.description.trim() || selectedCategory?.description || ""
+      );
       formData.append("category", form.category);
       formData.append("isFeatured", String(form.isFeatured));
       formData.append("isActive", String(form.isActive));
@@ -256,14 +269,24 @@ const ProductForm = () => {
         JSON.stringify(form.specifications || {})
       );
 
+      const cleanFeatures = form.features.filter((f) => f && f.trim());
       formData.append(
         "features",
-        JSON.stringify(form.features.filter((f) => f && f.trim()))
+        JSON.stringify(
+          cleanFeatures.length > 0
+            ? cleanFeatures
+            : selectedCategory?.features || []
+        )
       );
 
+      const cleanApplications = form.applications.filter((a) => a && a.trim());
       formData.append(
         "applications",
-        JSON.stringify(form.applications.filter((a) => a && a.trim()))
+        JSON.stringify(
+          cleanApplications.length > 0
+            ? cleanApplications
+            : selectedCategory?.applications || []
+        )
       );
 
       if (image) {
@@ -308,23 +331,66 @@ const ProductForm = () => {
       <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 md:p-10 space-y-8">
         
         {/* FORM TITLE */}
-        <div className="border-b border-gray-100 pb-5 flex justify-between items-center">
-          <div>
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-800">
-              {isEditMode ? "Edit Product" : "Create New Product"}
-            </h2>
-            <p className="text-gray-500 text-sm mt-1">
-              {isEditMode
-                ? "Update product specifications, images, and content."
-                : "Add new laboratory equipment to the product catalogue. All fields with * are required."}
-            </p>
+        <div className="border-b border-gray-100 pb-5">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-800">
+                {isEditMode ? "Edit Product" : "Create New Product"}
+              </h2>
+              <p className="text-gray-500 text-xs sm:text-sm mt-1">
+                Select a category to auto-inherit its description, features, and applications. Just enter product name, image, and dynamic filter values!
+              </p>
+            </div>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-7">
           
-          {/* BASIC DETAILS */}
+          {/* STEP 1: CATEGORY SELECTION */}
+          <div className="bg-blue-50/40 p-5 rounded-2xl border border-blue-100 space-y-3">
+            <label className="text-sm font-bold text-gray-800 flex items-center gap-2">
+              <FaLayerGroup className="text-[#021C57]" /> Select Equipment Category <span className="text-red-500">*</span>
+            </label>
+            
+            <select
+              value={form.category}
+              className={`w-full border p-3.5 rounded-xl focus:ring-2 focus:ring-blue-100 outline-none transition bg-white cursor-pointer ${
+                errors.category
+                  ? "border-red-400 bg-red-50/20 focus:border-red-500"
+                  : "border-gray-200 focus:border-blue-500"
+              }`}
+              onChange={(e) => handleCategoryChange(e.target.value)}
+            >
+              <option value="">-- Choose Category --</option>
+              {categories.map((c) => (
+                <option key={c._id} value={c._id}>
+                  {c.name} {c.equipmentType?.name ? `(${c.equipmentType.name})` : ""}
+                </option>
+              ))}
+            </select>
+
+            {errors.category && (
+              <p className="text-red-500 text-xs font-semibold mt-1">
+                {errors.category}
+              </p>
+            )}
+
+            {selectedCategory && (
+              <div className="text-xs text-blue-900 bg-white/80 p-3 rounded-xl border border-blue-200/80 flex items-center justify-between flex-wrap gap-2">
+                <span>
+                  ✓ Auto-inheriting default description, features, & applications from <strong>{selectedCategory.name}</strong>.
+                </span>
+                <span className="font-semibold text-blue-700">
+                  {selectedCategory.filters?.length || 0} Dynamic Filters Defined
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* STEP 2: PRODUCT NAME & DYNAMIC SPECIFICATION FILTERS */}
           <div className="grid md:grid-cols-2 gap-6">
+            
+            {/* PRODUCT NAME */}
             <div>
               <label className="text-sm font-bold text-gray-700">
                 Product Name <span className="text-red-500">*</span>
@@ -332,7 +398,7 @@ const ProductForm = () => {
               <input
                 type="text"
                 value={form.name}
-                placeholder="e.g. Digital Automatic Polarimeter"
+                placeholder="Enter product name "
                 className={`w-full border p-3.5 rounded-xl mt-1.5 focus:ring-2 focus:ring-blue-100 outline-none transition ${
                   errors.name
                     ? "border-red-400 bg-red-50/20 focus:border-red-500"
@@ -350,92 +416,26 @@ const ProductForm = () => {
               )}
             </div>
 
-            <div>
-              <label className="text-sm font-bold text-gray-700">
-                Category <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={form.category}
-                className={`w-full border p-3.5 rounded-xl mt-1.5 focus:ring-2 focus:ring-blue-100 outline-none transition bg-white cursor-pointer ${
-                  errors.category
-                    ? "border-red-400 bg-red-50/20 focus:border-red-500"
-                    : "border-gray-200 focus:border-blue-500"
-                }`}
-                onChange={(e) => handleCategoryChange(e.target.value)}
-              >
-                <option value="">Select a category</option>
-                {categories.map((c) => (
-                  <option key={c._id} value={c._id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-              {errors.category && (
-                <p className="text-red-500 text-xs font-semibold mt-1">
-                  {errors.category}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* DESCRIPTION */}
-          <div>
-            <label className="text-sm font-bold text-gray-700">
-              Product Description <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              value={form.description}
-              rows="4"
-              placeholder="Detailed description of features, compliance standards, and operating principles..."
-              className={`w-full border p-3.5 rounded-xl mt-1.5 focus:ring-2 focus:ring-blue-100 outline-none transition ${
-                errors.description
-                  ? "border-red-400 bg-red-50/20 focus:border-red-500"
-                  : "border-gray-200 focus:border-blue-500"
-              }`}
-              onChange={(e) => {
-                setForm({ ...form, description: e.target.value });
-                if (errors.description)
-                  setErrors({ ...errors, description: null });
-              }}
-            />
-            {errors.description && (
-              <p className="text-red-500 text-xs font-semibold mt-1">
-                {errors.description}
-              </p>
-            )}
-          </div>
-
-          {/* DYNAMIC CATEGORY SPECIFICATIONS */}
-          {selectedCategory && selectedCategory.filters?.length > 0 && (
-            <div className="bg-blue-50/50 p-6 rounded-2xl border border-blue-100 space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="font-bold text-gray-800 text-base">
-                  Technical Specifications ({selectedCategory.name}) <span className="text-red-500">*</span>
-                </h3>
-                <span className="text-xs text-blue-600 bg-white px-3 py-1 rounded-full border border-blue-200 font-medium">
-                  Dynamic Filters
-                </span>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
+            {/* DYNAMIC SPECIFICATION FILTERS (e.g. Size / Capacity) */}
+            {selectedCategory && selectedCategory.filters?.length > 0 ? (
+              <div className="space-y-3">
                 {selectedCategory.filters.map((f) => {
                   const specError = errors[`spec_${f.key}`];
                   return (
-                    <div
-                      key={f.key}
-                      className={`bg-white p-4 rounded-xl border ${
-                        specError ? "border-red-300 bg-red-50/10" : "border-gray-200/70"
-                      }`}
-                    >
-                      <label className="text-xs font-bold text-gray-700 uppercase tracking-wide flex items-center justify-between">
-                        <span>{f.name} <span className="text-red-500">*</span></span>
-                        <span className="text-[10px] text-gray-400 font-mono">({f.key})</span>
+                    <div key={f.key}>
+                      <label className="text-sm font-bold text-gray-700 flex items-center justify-between">
+                        <span>
+                          {f.name} (Filter) <span className="text-red-500">*</span>
+                        </span>
+                        <span className="text-[11px] text-gray-400 font-mono">
+                          {f.key}
+                        </span>
                       </label>
 
                       {f.values?.length > 0 ? (
                         <select
                           value={form.specifications[f.key] || ""}
-                          className={`w-full border p-2.5 rounded-lg mt-1.5 text-sm bg-white cursor-pointer outline-none ${
+                          className={`w-full border p-3.5 rounded-xl mt-1.5 text-sm bg-white cursor-pointer outline-none ${
                             specError
                               ? "border-red-400 focus:border-red-500"
                               : "border-gray-200 focus:border-blue-500"
@@ -444,7 +444,7 @@ const ProductForm = () => {
                             handleSpecChange(f.key, e.target.value)
                           }
                         >
-                          <option value="">Select {f.name}</option>
+                          <option value="">Select {f.name} value</option>
                           {f.values.map((v, i) => (
                             <option key={i} value={v}>
                               {v}
@@ -455,8 +455,8 @@ const ProductForm = () => {
                         <input
                           type="text"
                           value={form.specifications[f.key] || ""}
-                          placeholder={`Enter ${f.name} (e.g. 500 RPM, 100L)`}
-                          className={`w-full border p-2.5 rounded-lg mt-1.5 text-sm outline-none ${
+                          placeholder="Enter value for this specification"
+                          className={`w-full border p-3.5 rounded-xl mt-1.5 text-sm outline-none ${
                             specError
                               ? "border-red-400 focus:border-red-500"
                               : "border-gray-200 focus:border-blue-500"
@@ -468,7 +468,7 @@ const ProductForm = () => {
                       )}
 
                       {specError && (
-                        <p className="text-red-500 text-[11px] font-semibold mt-1">
+                        <p className="text-red-500 text-xs font-semibold mt-1">
                           {specError}
                         </p>
                       )}
@@ -476,92 +476,17 @@ const ProductForm = () => {
                   );
                 })}
               </div>
-            </div>
-          )}
-
-          {/* KEY FEATURES */}
-          <div>
-            <div className="flex justify-between items-center mb-2">
-              <label className="text-sm font-bold text-gray-700">
-                Key Features <span className="text-red-500">*</span>
-              </label>
-              <button
-                type="button"
-                onClick={addFeature}
-                className="text-blue-600 hover:text-blue-800 text-xs font-bold cursor-pointer"
-              >
-                + Add Feature Point
-              </button>
-            </div>
-            
-            <div className="space-y-2.5">
-              {form.features.map((f, i) => (
-                <div key={i} className="flex gap-2">
-                  <input
-                    value={f}
-                    placeholder={`Feature point #${i + 1} (e.g. High-accuracy digital LCD display)`}
-                    className="border border-gray-200 p-3 w-full rounded-xl text-sm outline-none focus:border-blue-500"
-                    onChange={(e) => handleFeatureChange(i, e.target.value)}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeFeature(i)}
-                    className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition cursor-pointer"
-                  >
-                    <MdClose size={18} />
-                  </button>
-                </div>
-              ))}
-            </div>
-            {errors.features && (
-              <p className="text-red-500 text-xs font-semibold mt-1">
-                {errors.features}
-              </p>
+            ) : (
+              <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 flex items-center text-xs text-gray-500">
+                {selectedCategory
+                  ? "This category has no variable dynamic filters configured."
+                  : "Select a category to load its dynamic specification filters."}
+              </div>
             )}
+
           </div>
 
-          {/* APPLICATIONS */}
-          <div>
-            <div className="flex justify-between items-center mb-2">
-              <label className="text-sm font-bold text-gray-700">
-                Industrial & Lab Applications <span className="text-red-500">*</span>
-              </label>
-              <button
-                type="button"
-                onClick={addApplication}
-                className="text-blue-600 hover:text-blue-800 text-xs font-bold cursor-pointer"
-              >
-                + Add Application Scope
-              </button>
-            </div>
-
-            <div className="space-y-2.5">
-              {form.applications.map((a, i) => (
-                <div key={i} className="flex gap-2">
-                  <input
-                    value={a}
-                    placeholder={`Application #${i + 1} (e.g. Soil & Concrete Quality Testing Labs)`}
-                    className="border border-gray-200 p-3 w-full rounded-xl text-sm outline-none focus:border-blue-500"
-                    onChange={(e) => handleApplicationChange(i, e.target.value)}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeApplication(i)}
-                    className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition cursor-pointer"
-                  >
-                    <MdClose size={18} />
-                  </button>
-                </div>
-              ))}
-            </div>
-            {errors.applications && (
-              <p className="text-red-500 text-xs font-semibold mt-1">
-                {errors.applications}
-              </p>
-            )}
-          </div>
-
-          {/* IMAGE UPLOAD */}
+          {/* STEP 3: IMAGE UPLOAD */}
           <div>
             <label className="text-sm font-bold text-gray-700">
               Product Image {!isEditMode && <span className="text-red-500">*</span>}
@@ -615,6 +540,121 @@ const ProductForm = () => {
               <p className="text-red-500 text-xs font-semibold mt-1.5">
                 {errors.image}
               </p>
+            )}
+          </div>
+
+          {/* STEP 4: OPTIONAL ADVANCED OVERRIDES ACCORDION */}
+          <div className="border border-gray-200 rounded-2xl overflow-hidden bg-gray-50/40">
+            <button
+              type="button"
+              onClick={() => setShowAdvancedOverrides(!showAdvancedOverrides)}
+              className="w-full p-4 flex items-center justify-between font-bold text-xs sm:text-sm text-gray-700 hover:bg-gray-100/70 transition cursor-pointer"
+            >
+              <span className="flex items-center gap-2">
+                <Sparkles size={14} className="text-blue-600" />
+                Customize Description, Features & Applications (Optional Overrides)
+              </span>
+              <span className="text-xs text-blue-600 font-semibold flex items-center gap-1">
+                {showAdvancedOverrides ? "Hide Details" : "Show Details"}
+                <ChevronDown
+                  size={14}
+                  className={`transition-transform duration-200 ${
+                    showAdvancedOverrides ? "rotate-180" : ""
+                  }`}
+                />
+              </span>
+            </button>
+
+            {showAdvancedOverrides && (
+              <div className="p-5 border-t border-gray-200 bg-white space-y-6 animate-fade-in">
+                
+                {/* DESCRIPTION */}
+                <div>
+                  <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">
+                    Product Description (Auto-Inherited from Category)
+                  </label>
+                  <textarea
+                    value={form.description}
+                    rows="3"
+                    placeholder="Auto-inherited from category..."
+                    className="w-full border border-gray-200 p-3 rounded-xl mt-1.5 text-sm outline-none focus:border-blue-500"
+                    onChange={(e) =>
+                      setForm({ ...form, description: e.target.value })
+                    }
+                  />
+                </div>
+
+                {/* FEATURES */}
+                <div>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">
+                      Key Features
+                    </label>
+                    <button
+                      type="button"
+                      onClick={addFeature}
+                      className="text-blue-600 hover:text-blue-800 text-xs font-bold cursor-pointer"
+                    >
+                      + Add Feature Point
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {form.features.map((f, i) => (
+                      <div key={i} className="flex gap-2">
+                        <input
+                          value={f}
+                          placeholder={`Feature #${i + 1}`}
+                          className="border border-gray-200 p-2.5 w-full rounded-xl text-xs outline-none focus:border-blue-500"
+                          onChange={(e) => handleFeatureChange(i, e.target.value)}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeFeature(i)}
+                          className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                        >
+                          <MdClose size={15} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* APPLICATIONS */}
+                <div>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">
+                      Applications
+                    </label>
+                    <button
+                      type="button"
+                      onClick={addApplication}
+                      className="text-blue-600 hover:text-blue-800 text-xs font-bold cursor-pointer"
+                    >
+                      + Add Application Scope
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {form.applications.map((a, i) => (
+                      <div key={i} className="flex gap-2">
+                        <input
+                          value={a}
+                          placeholder={`Application #${i + 1}`}
+                          className="border border-gray-200 p-2.5 w-full rounded-xl text-xs outline-none focus:border-blue-500"
+                          onChange={(e) => handleApplicationChange(i, e.target.value)}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeApplication(i)}
+                          className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                        >
+                          <MdClose size={15} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
             )}
           </div>
 

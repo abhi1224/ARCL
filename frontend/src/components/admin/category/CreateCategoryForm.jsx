@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { FaPlus, FaTrash } from "react-icons/fa";
+import { MdClose } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { createCategory } from "../../../api/categoryApi.js";
@@ -14,6 +15,8 @@ const CreateCategoryForm = () => {
   const [form, setForm] = useState({
     name: "",
     description: "",
+    features: [""],
+    applications: [""],
     equipmentType: "",
     filters: [
       {
@@ -21,7 +24,7 @@ const CreateCategoryForm = () => {
         values: "",
       },
     ],
-    isFeatured: false,
+    isFeatured: true,
     isActive: true,
   });
 
@@ -38,7 +41,49 @@ const CreateCategoryForm = () => {
     }
   };
 
-  // FILTERS
+  // FEATURES
+  const addFeature = () =>
+    setForm((prev) => ({ ...prev, features: [...prev.features, ""] }));
+
+  const removeFeature = (i) => {
+    if (form.features.length === 1) {
+      setForm((prev) => ({ ...prev, features: [""] }));
+      return;
+    }
+    setForm((prev) => ({
+      ...prev,
+      features: prev.features.filter((_, idx) => idx !== i),
+    }));
+  };
+
+  const handleFeatureChange = (i, value) => {
+    const updated = [...form.features];
+    updated[i] = value;
+    setForm((prev) => ({ ...prev, features: updated }));
+  };
+
+  // APPLICATIONS
+  const addApplication = () =>
+    setForm((prev) => ({ ...prev, applications: [...prev.applications, ""] }));
+
+  const removeApplication = (i) => {
+    if (form.applications.length === 1) {
+      setForm((prev) => ({ ...prev, applications: [""] }));
+      return;
+    }
+    setForm((prev) => ({
+      ...prev,
+      applications: prev.applications.filter((_, idx) => idx !== i),
+    }));
+  };
+
+  const handleApplicationChange = (i, value) => {
+    const updated = [...form.applications];
+    updated[i] = value;
+    setForm((prev) => ({ ...prev, applications: updated }));
+  };
+
+  // DYNAMIC SPECIFICATION FILTERS
   const addFilter = () => {
     setForm((prev) => ({
       ...prev,
@@ -102,9 +147,14 @@ const CreateCategoryForm = () => {
             .filter(Boolean),
         }));
 
+      const cleanFeatures = form.features.filter((f) => f && f.trim());
+      const cleanApplications = form.applications.filter((a) => a && a.trim());
+
       const payload = {
         name: form.name.trim(),
         description: form.description.trim(),
+        features: cleanFeatures,
+        applications: cleanApplications,
         equipmentType: form.equipmentType,
         isFeatured: form.isFeatured,
         isActive: true,
@@ -112,7 +162,7 @@ const CreateCategoryForm = () => {
       };
 
       await createCategory(payload);
-      toast.success("Category created successfully!");
+      toast.success("Category created successfully with master specifications! 🎉");
       navigate("/admin/categories");
     } catch (err) {
       toast.error(
@@ -130,10 +180,10 @@ const CreateCategoryForm = () => {
         {/* HEADER */}
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-8 py-6 border-b border-gray-100">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-800">
-            Create Category
+            Create Category & Master Specifications
           </h2>
           <p className="text-gray-500 text-sm mt-1">
-            Define a new equipment category and its dynamic filter attributes
+            Define default description, features, applications, and dynamic filters (e.g. Size, Capacity) that will automatically apply to all products created under this category.
           </p>
         </div>
 
@@ -149,7 +199,7 @@ const CreateCategoryForm = () => {
                 type="text"
                 required
                 value={form.name}
-                placeholder="e.g. Polarimeters & Refractometers"
+                placeholder="Category Name "
                 className="w-full mt-2 border border-gray-200 rounded-xl p-3.5 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition"
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
               />
@@ -177,15 +227,15 @@ const CreateCategoryForm = () => {
             </div>
           </div>
 
-          {/* DESCRIPTION */}
+          {/* MASTER CATEGORY DESCRIPTION */}
           <div>
             <label className="text-sm font-semibold text-gray-700">
-              Description
+              Master Category Description (Applies to all products in this category)
             </label>
             <textarea
               rows="4"
               value={form.description}
-              placeholder="Detailed description of instruments in this category..."
+              placeholder="Enter description for the category..."
               className="w-full mt-2 border border-gray-200 rounded-xl p-3.5 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition"
               onChange={(e) =>
                 setForm({ ...form, description: e.target.value })
@@ -193,7 +243,91 @@ const CreateCategoryForm = () => {
             />
           </div>
 
-          {/* DYNAMIC FILTERS */}
+          {/* MASTER KEY FEATURES */}
+          <div className="bg-blue-50/40 p-6 rounded-2xl border border-blue-100 space-y-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-base font-bold text-gray-800">
+                  Master Key Features
+                </h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  These key features will automatically apply to all products under this category.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={addFeature}
+                className="text-xs font-bold text-blue-600 hover:text-blue-800 cursor-pointer bg-white px-3 py-1.5 rounded-xl border border-blue-200 shadow-2xs"
+              >
+                + Add Feature Point
+              </button>
+            </div>
+
+            <div className="space-y-2.5">
+              {form.features.map((f, i) => (
+                <div key={i} className="flex gap-2">
+                  <input
+                    value={f}
+                    placeholder="Enter a key feature point..."
+                    className="border border-gray-200 p-3 w-full rounded-xl text-sm bg-white outline-none focus:border-blue-500"
+                    onChange={(e) => handleFeatureChange(i, e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeFeature(i)}
+                    className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition cursor-pointer"
+                  >
+                    <MdClose size={18} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* MASTER APPLICATIONS */}
+          <div className="bg-emerald-50/40 p-6 rounded-2xl border border-emerald-100 space-y-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-base font-bold text-gray-800">
+                  Master Industrial & Lab Applications
+                </h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Application scopes inherited by all products in this category.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={addApplication}
+                className="text-xs font-bold text-emerald-700 hover:text-emerald-900 cursor-pointer bg-white px-3 py-1.5 rounded-xl border border-emerald-200 shadow-2xs"
+              >
+                + Add Application Scope
+              </button>
+            </div>
+
+            <div className="space-y-2.5">
+              {form.applications.map((a, i) => (
+                <div key={i} className="flex gap-2">
+                  <input
+                    value={a}
+                    placeholder="Enter an application scope..."
+                    className="border border-gray-200 p-3 w-full rounded-xl text-sm bg-white outline-none focus:border-blue-500"
+                    onChange={(e) => handleApplicationChange(i, e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeApplication(i)}
+                    className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition cursor-pointer"
+                  >
+                    <MdClose size={18} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* DYNAMIC FILTERS (e.g. Size: 60, 70, 80, 90, 100) */}
           <div className="space-y-5">
             <div className="flex justify-between items-center">
               <div>
@@ -201,7 +335,7 @@ const CreateCategoryForm = () => {
                   Dynamic Specification Filters
                 </h3>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  Add custom attributes for products in this category (e.g. Capacity, Accuracy, Material). Comma-separate allowable values.
+                  Add the variable attributes that distinguish individual products (e.g. Size: 60, 70, 80, 90, 100 or Capacity: 100L, 200L).
                 </p>
               </div>
 
@@ -223,12 +357,12 @@ const CreateCategoryForm = () => {
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
                       <label className="text-xs font-semibold text-gray-600 uppercase">
-                        Filter Name
+                        Filter Name 
                       </label>
                       <input
                         type="text"
                         value={filter.name}
-                        placeholder="e.g. Measuring Range"
+                        placeholder="Enter filter name(e.g. Size, Capacity)"
                         className="w-full mt-1.5 border border-gray-200 rounded-xl p-3 text-sm bg-white outline-none focus:border-blue-500"
                         onChange={(e) =>
                           handleFilterChange(index, "name", e.target.value)
@@ -243,7 +377,7 @@ const CreateCategoryForm = () => {
                       <input
                         type="text"
                         value={filter.values}
-                        placeholder="e.g. ±45°, ±90°, 0-100%"
+                        placeholder="Enter allowed values (e.g. 30mm, 40mm, 50mm)"
                         className="w-full mt-1.5 border border-gray-200 rounded-xl p-3 text-sm bg-white outline-none focus:border-blue-500"
                         onChange={(e) =>
                           handleFilterChange(index, "values", e.target.value)

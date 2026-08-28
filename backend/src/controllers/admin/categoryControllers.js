@@ -11,7 +11,16 @@ import mongoose from "mongoose";
  */
 export const createCategory = async (req, res) => {
   try {
-    const { name, description, equipmentType, filters, isFeatured, isActive } = req.body;
+    let {
+      name,
+      description,
+      features,
+      applications,
+      equipmentType,
+      filters,
+      isFeatured,
+      isActive,
+    } = req.body;
 
     if (!name || !equipmentType) {
       return res.status(400).json({
@@ -41,34 +50,71 @@ export const createCategory = async (req, res) => {
     if (existingCategory) {
       return res.status(409).json({
         success: false,
-        message: "Category already exists.",
+        message: "Category with this name already exists.",
       });
     }
+
+    // Format features & applications
+    if (typeof features === "string") {
+      try {
+        features = JSON.parse(features);
+      } catch (e) {
+        features = features.split("\n").map((f) => f.trim()).filter(Boolean);
+      }
+    }
+    const cleanFeatures = Array.isArray(features)
+      ? features.filter((f) => f && String(f).trim().length > 0)
+      : [];
+
+    if (typeof applications === "string") {
+      try {
+        applications = JSON.parse(applications);
+      } catch (e) {
+        applications = applications.split("\n").map((a) => a.trim()).filter(Boolean);
+      }
+    }
+    const cleanApplications = Array.isArray(applications)
+      ? applications.filter((a) => a && String(a).trim().length > 0)
+      : [];
 
     // Format filters
     const formattedFilters = Array.isArray(filters)
       ? filters.map((f) => ({
-          name: f.name || "",
-          key: f.key || slugify(f.name || "", { lower: true, replacement: "_" }),
-          values: Array.isArray(f.values) ? f.values : typeof f.values === "string" ? f.values.split(",").map((v) => v.trim()).filter(Boolean) : [],
+          name: f.name ? f.name.trim() : "",
+          key:
+            f.key ||
+            slugify(f.name || "", { lower: true, replacement: "_" }),
+          values: Array.isArray(f.values)
+            ? f.values
+            : typeof f.values === "string"
+            ? f.values
+                .split(",")
+                .map((v) => v.trim())
+                .filter(Boolean)
+            : [],
         }))
       : [];
 
     const category = await Category.create({
       name: name.trim(),
       slug,
-      description: description || "",
+      description: description ? description.trim() : "",
+      features: cleanFeatures,
+      applications: cleanApplications,
       equipmentType,
       filters: formattedFilters,
       isFeatured: isFeatured === true || isFeatured === "true",
-      isActive: typeof isActive !== "undefined" ? isActive === true || isActive === "true" : true,
+      isActive:
+        typeof isActive !== "undefined"
+          ? isActive === true || isActive === "true"
+          : true,
     });
 
     await category.populate("equipmentType", "name slug");
 
     return res.status(201).json({
       success: true,
-      message: "Category created successfully.",
+      message: "Category created successfully! 🎉",
       data: category,
     });
   } catch (error) {
@@ -236,7 +282,16 @@ export const getCategory = async (req, res) => {
 export const updateCategory = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, equipmentType, filters, isFeatured, isActive } = req.body;
+    let {
+      name,
+      description,
+      features,
+      applications,
+      equipmentType,
+      filters,
+      isFeatured,
+      isActive,
+    } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
@@ -264,7 +319,7 @@ export const updateCategory = async (req, res) => {
       category.equipmentType = equipmentType;
     }
 
-    if (name) {
+    if (name && name.trim()) {
       const slug = slugify(name, {
         lower: true,
         strict: true,
@@ -287,15 +342,50 @@ export const updateCategory = async (req, res) => {
       category.slug = slug;
     }
 
-    if (description !== undefined) {
+    if (typeof description !== "undefined") {
       category.description = description;
+    }
+
+    if (typeof features !== "undefined") {
+      if (typeof features === "string") {
+        try {
+          features = JSON.parse(features);
+        } catch (e) {
+          features = features.split("\n").map((f) => f.trim()).filter(Boolean);
+        }
+      }
+      category.features = Array.isArray(features)
+        ? features.filter((f) => f && String(f).trim().length > 0)
+        : [];
+    }
+
+    if (typeof applications !== "undefined") {
+      if (typeof applications === "string") {
+        try {
+          applications = JSON.parse(applications);
+        } catch (e) {
+          applications = applications.split("\n").map((a) => a.trim()).filter(Boolean);
+        }
+      }
+      category.applications = Array.isArray(applications)
+        ? applications.filter((a) => a && String(a).trim().length > 0)
+        : [];
     }
 
     if (filters) {
       category.filters = filters.map((f) => ({
-        name: f.name || "",
-        key: f.key || slugify(f.name || "", { lower: true, replacement: "_" }),
-        values: Array.isArray(f.values) ? f.values : typeof f.values === "string" ? f.values.split(",").map((v) => v.trim()).filter(Boolean) : [],
+        name: f.name ? f.name.trim() : "",
+        key:
+          f.key ||
+          slugify(f.name || "", { lower: true, replacement: "_" }),
+        values: Array.isArray(f.values)
+          ? f.values
+          : typeof f.values === "string"
+          ? f.values
+              .split(",")
+              .map((v) => v.trim())
+              .filter(Boolean)
+          : [],
       }));
     }
 
@@ -316,7 +406,7 @@ export const updateCategory = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "Category updated successfully.",
+      message: "Category updated successfully! 🎉",
       data: updatedCategory,
     });
   } catch (error) {
@@ -351,7 +441,9 @@ export const toggleCategoryStatus = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: `Category ${category.isActive ? "activated" : "deactivated"} successfully.`,
+      message: `Category ${
+        category.isActive ? "activated" : "deactivated"
+      } successfully.`,
       data: category,
     });
   } catch (error) {
@@ -373,7 +465,10 @@ export const toggleCategoryFeatured = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const category = await Category.findById(id).populate("equipmentType", "name slug");
+    const category = await Category.findById(id).populate(
+      "equipmentType",
+      "name slug"
+    );
     if (!category) {
       return res.status(404).json({
         success: false,
@@ -386,7 +481,9 @@ export const toggleCategoryFeatured = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: `Category ${category.isFeatured ? "marked as featured" : "removed from featured"} successfully.`,
+      message: `Category ${
+        category.isFeatured ? "marked as featured" : "removed from featured"
+      } successfully.`,
       data: category,
     });
   } catch (error) {

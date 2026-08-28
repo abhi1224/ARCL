@@ -6,14 +6,14 @@ import {
   FaCalendarAlt,
   FaSlidersH,
 } from "react-icons/fa";
-import { X } from "lucide-react";
+import { X, CheckCircle2, ShieldCheck, FileText } from "lucide-react";
 
 const CategoryDetailsModal = ({ isOpen, onClose, category }) => {
   if (!isOpen || !category) return null;
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-100 relative animate-scale-up">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-gray-100 relative animate-scale-up">
         
         {/* MODAL HEADER */}
         <div className="sticky top-0 bg-white/95 backdrop-blur-md px-6 py-4 border-b border-gray-100 flex items-center justify-between z-10">
@@ -23,7 +23,7 @@ const CategoryDetailsModal = ({ isOpen, onClose, category }) => {
             </span>
             <div>
               <h2 className="text-lg font-bold text-gray-800 line-clamp-1">
-                Category Details
+                Category & Master Specifications
               </h2>
               <p className="text-xs text-gray-400 font-mono">
                 ID: {category._id}
@@ -64,11 +64,16 @@ const CategoryDetailsModal = ({ isOpen, onClose, category }) => {
               Slug: <span className="text-blue-600">/categories/{category.slug}</span>
             </p>
 
-            <p className="text-sm text-gray-600 leading-relaxed pt-1">
-              {category.description || "No category description provided."}
-            </p>
+            <div className="bg-gray-50 border border-gray-200/80 p-4 rounded-2xl">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
+                Master Category Description
+              </h4>
+              <p className="text-sm text-gray-700 leading-relaxed">
+                {category.description || "No category description provided."}
+              </p>
+            </div>
 
-            <div className="pt-2 flex items-center gap-4 text-xs text-gray-400">
+            <div className="pt-1 flex items-center gap-4 text-xs text-gray-400">
               <span className="flex items-center gap-1">
                 <FaCalendarAlt size={11} /> Created:{" "}
                 {new Date(category.createdAt).toLocaleDateString()}
@@ -80,11 +85,11 @@ const CategoryDetailsModal = ({ isOpen, onClose, category }) => {
           <div className="space-y-3 pt-2">
             <h4 className="text-sm font-bold text-[#021C57] flex items-center gap-2 border-b border-gray-100 pb-2">
               <FaSlidersH size={14} className="text-blue-600" />
-              Dynamic Specifications Filters ({category.filters?.length || 0})
+              Dynamic Product Filters ({category.filters?.length || 0})
             </h4>
 
             {category.filters && category.filters.length > 0 ? (
-              <div className="space-y-3">
+              <div className="grid sm:grid-cols-2 gap-3">
                 {category.filters.map((filter, index) => (
                   <div
                     key={index}
@@ -95,7 +100,7 @@ const CategoryDetailsModal = ({ isOpen, onClose, category }) => {
                         {filter.name}
                       </span>
                       <span className="text-[10px] text-gray-400 font-mono">
-                        Key: {filter.key}
+                        ({filter.key})
                       </span>
                     </div>
 
@@ -104,14 +109,14 @@ const CategoryDetailsModal = ({ isOpen, onClose, category }) => {
                         filter.values.map((val, idx) => (
                           <span
                             key={idx}
-                            className="bg-white border border-gray-200 text-gray-700 text-xs px-2.5 py-1 rounded-lg shadow-2xs font-medium"
+                            className="bg-white border border-gray-200 text-gray-700 text-xs px-2.5 py-1 rounded-lg shadow-2xs font-bold"
                           >
                             {val}
                           </span>
                         ))
                       ) : (
                         <span className="text-xs text-gray-400 italic">
-                          Custom free-text input allowed
+                          Custom value input allowed
                         </span>
                       )}
                     </div>
@@ -123,6 +128,45 @@ const CategoryDetailsModal = ({ isOpen, onClose, category }) => {
                 No dynamic specification filters defined for this category.
               </p>
             )}
+          </div>
+
+          {/* MASTER FEATURES & APPLICATIONS */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+            
+            {/* Features */}
+            {category.features && category.features.length > 0 && (
+              <div className="bg-blue-50/60 p-4 rounded-2xl border border-blue-100 space-y-2">
+                <h4 className="text-xs font-bold text-[#021C57] uppercase tracking-wider">
+                  Master Key Features ({category.features.length})
+                </h4>
+                <ul className="space-y-1.5 text-xs text-gray-700">
+                  {category.features.map((f, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <CheckCircle2 size={13} className="text-blue-600 shrink-0 mt-0.5" />
+                      <span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Applications */}
+            {category.applications && category.applications.length > 0 && (
+              <div className="bg-emerald-50/60 p-4 rounded-2xl border border-emerald-100 space-y-2">
+                <h4 className="text-xs font-bold text-emerald-900 uppercase tracking-wider">
+                  Master Applications ({category.applications.length})
+                </h4>
+                <ul className="space-y-1.5 text-xs text-gray-700">
+                  {category.applications.map((a, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <CheckCircle2 size={13} className="text-emerald-600 shrink-0 mt-0.5" />
+                      <span>{a}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
           </div>
 
         </div>

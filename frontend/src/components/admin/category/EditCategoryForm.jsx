@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { FaPlus, FaTrash } from "react-icons/fa";
+import { MdClose } from "react-icons/md";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
@@ -20,6 +21,8 @@ const EditCategoryForm = () => {
   const [form, setForm] = useState({
     name: "",
     description: "",
+    features: [""],
+    applications: [""],
     equipmentType: "",
     filters: [
       {
@@ -55,6 +58,14 @@ const EditCategoryForm = () => {
         setForm({
           name: data.name || "",
           description: data.description || "",
+          features:
+            Array.isArray(data.features) && data.features.length > 0
+              ? data.features
+              : [""],
+          applications:
+            Array.isArray(data.applications) && data.applications.length > 0
+              ? data.applications
+              : [""],
           equipmentType: data.equipmentType?._id || data.equipmentType || "",
           filters:
             data.filters?.length > 0
@@ -77,7 +88,49 @@ const EditCategoryForm = () => {
     }
   };
 
-  // FILTERS
+  // FEATURES
+  const addFeature = () =>
+    setForm((prev) => ({ ...prev, features: [...prev.features, ""] }));
+
+  const removeFeature = (i) => {
+    if (form.features.length === 1) {
+      setForm((prev) => ({ ...prev, features: [""] }));
+      return;
+    }
+    setForm((prev) => ({
+      ...prev,
+      features: prev.features.filter((_, idx) => idx !== i),
+    }));
+  };
+
+  const handleFeatureChange = (i, value) => {
+    const updated = [...form.features];
+    updated[i] = value;
+    setForm((prev) => ({ ...prev, features: updated }));
+  };
+
+  // APPLICATIONS
+  const addApplication = () =>
+    setForm((prev) => ({ ...prev, applications: [...prev.applications, ""] }));
+
+  const removeApplication = (i) => {
+    if (form.applications.length === 1) {
+      setForm((prev) => ({ ...prev, applications: [""] }));
+      return;
+    }
+    setForm((prev) => ({
+      ...prev,
+      applications: prev.applications.filter((_, idx) => idx !== i),
+    }));
+  };
+
+  const handleApplicationChange = (i, value) => {
+    const updated = [...form.applications];
+    updated[i] = value;
+    setForm((prev) => ({ ...prev, applications: updated }));
+  };
+
+  // DYNAMIC FILTERS
   const addFilter = () => {
     setForm((prev) => ({
       ...prev,
@@ -141,9 +194,14 @@ const EditCategoryForm = () => {
             .filter(Boolean),
         }));
 
+      const cleanFeatures = form.features.filter((f) => f && f.trim());
+      const cleanApplications = form.applications.filter((a) => a && a.trim());
+
       const payload = {
         name: form.name.trim(),
         description: form.description.trim(),
+        features: cleanFeatures,
+        applications: cleanApplications,
         equipmentType: form.equipmentType,
         isFeatured: form.isFeatured,
         isActive: form.isActive,
@@ -151,7 +209,7 @@ const EditCategoryForm = () => {
       };
 
       await updateCategory(categoryId, payload);
-      toast.success("Category updated successfully! 🎉");
+      toast.success("Category & Master Specifications updated successfully! 🎉");
       navigate("/admin/categories");
     } catch (err) {
       console.error("Update category error:", err);
@@ -179,10 +237,10 @@ const EditCategoryForm = () => {
         {/* HEADER */}
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-8 py-6 border-b border-gray-100">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-800">
-            Edit Category
+            Edit Category & Master Specifications
           </h2>
           <p className="text-gray-500 text-sm mt-1">
-            Update category properties and dynamic filter specifications
+            Update category master description, features, applications, and dynamic filters.
           </p>
         </div>
 
@@ -225,10 +283,10 @@ const EditCategoryForm = () => {
             </div>
           </div>
 
-          {/* DESCRIPTION */}
+          {/* MASTER DESCRIPTION */}
           <div>
             <label className="text-sm font-semibold text-gray-700">
-              Description
+              Master Category Description (Applies to all products under this category)
             </label>
             <textarea
               rows="4"
@@ -240,6 +298,90 @@ const EditCategoryForm = () => {
             />
           </div>
 
+          {/* MASTER KEY FEATURES */}
+          <div className="bg-blue-50/40 p-6 rounded-2xl border border-blue-100 space-y-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-base font-bold text-gray-800">
+                  Master Key Features
+                </h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Applies to all products created under this category.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={addFeature}
+                className="text-xs font-bold text-blue-600 hover:text-blue-800 cursor-pointer bg-white px-3 py-1.5 rounded-xl border border-blue-200 shadow-2xs"
+              >
+                + Add Feature Point
+              </button>
+            </div>
+
+            <div className="space-y-2.5">
+              {form.features.map((f, i) => (
+                <div key={i} className="flex gap-2">
+                  <input
+                    value={f}
+                    placeholder={`e.g. Heavy-duty mixing blades with planetary action for uniform dispersion`}
+                    className="border border-gray-200 p-3 w-full rounded-xl text-sm bg-white outline-none focus:border-blue-500"
+                    onChange={(e) => handleFeatureChange(i, e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeFeature(i)}
+                    className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition cursor-pointer"
+                  >
+                    <MdClose size={18} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* MASTER APPLICATIONS */}
+          <div className="bg-emerald-50/40 p-6 rounded-2xl border border-emerald-100 space-y-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-base font-bold text-gray-800">
+                  Master Industrial & Lab Applications
+                </h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Application scopes inherited by all products under this category.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={addApplication}
+                className="text-xs font-bold text-emerald-700 hover:text-emerald-900 cursor-pointer bg-white px-3 py-1.5 rounded-xl border border-emerald-200 shadow-2xs"
+              >
+                + Add Application Scope
+              </button>
+            </div>
+
+            <div className="space-y-2.5">
+              {form.applications.map((a, i) => (
+                <div key={i} className="flex gap-2">
+                  <input
+                    value={a}
+                    placeholder={`e.g. Concrete mix design testing, Ready-Mix Concrete batching QA`}
+                    className="border border-gray-200 p-3 w-full rounded-xl text-sm bg-white outline-none focus:border-blue-500"
+                    onChange={(e) => handleApplicationChange(i, e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeApplication(i)}
+                    className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition cursor-pointer"
+                  >
+                    <MdClose size={18} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* DYNAMIC FILTERS */}
           <div className="space-y-5">
             <div className="flex justify-between items-center">
@@ -248,7 +390,7 @@ const EditCategoryForm = () => {
                   Dynamic Specification Filters
                 </h3>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  Attributes used by products belonging to this category.
+                  Attributes used by products belonging to this category (e.g. Size: 60, 70, 80, 90, 100).
                 </p>
               </div>
 

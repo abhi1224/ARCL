@@ -3,7 +3,12 @@ import { useParams, Link } from "react-router-dom";
 import { useProductStore } from "../store/useProductStore.js";
 import ProductCard from "../components/products/ProductCard.jsx";
 import ProductToolbar from "../components/products/ProductToolbar.jsx";
-import { Filter, X, RotateCcw, ChevronRight, Layers } from "lucide-react";
+import { Filter, X, RotateCcw, ChevronRight, Layers, SlidersHorizontal, Check } from "lucide-react";
+
+/**
+ * Helper to normalize key strings for robust matching
+ */
+const normalizeKey = (k) => String(k || "").toLowerCase().replace(/[\s_-]+/g, "").trim();
 
 const CategoryProductPage = () => {
   const { slug } = useParams();
@@ -52,7 +57,7 @@ const CategoryProductPage = () => {
   };
 
   const activeFilterCount = Object.values(selectedFilters).reduce(
-    (acc, arr) => acc + arr.length,
+    (acc, arr) => acc + (Array.isArray(arr) ? arr.length : 0),
     0
   );
 
@@ -65,8 +70,9 @@ const CategoryProductPage = () => {
       const q = search.toLowerCase().trim();
       result = result.filter(
         (p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.description?.toLowerCase().includes(q)
+          p.name?.toLowerCase().includes(q) ||
+          p.description?.toLowerCase().includes(q) ||
+          p.slug?.toLowerCase().includes(q)
       );
     }
 
@@ -74,28 +80,42 @@ const CategoryProductPage = () => {
     const filterKeys = Object.keys(selectedFilters);
     if (filterKeys.length > 0) {
       result = result.filter((product) => {
-        const specs = product.specifications || {};
+        const rawSpecs = product.specifications;
+        
+        // Convert specs to a normalized key-value object
+        let specsObj = {};
+        if (rawSpecs instanceof Map) {
+          specsObj = Object.fromEntries(rawSpecs);
+        } else if (rawSpecs && typeof rawSpecs === "object") {
+          specsObj = rawSpecs;
+        }
 
-        return filterKeys.every((key) => {
-          const selectedValues = selectedFilters[key];
+        // Each filter category must match
+        return filterKeys.every((filterKey) => {
+          const selectedValues = selectedFilters[filterKey];
           if (!selectedValues || selectedValues.length === 0) return true;
 
-          // Look up product specification value for this key
-          // (check exact key, lowercase key, underscore/hyphen variants)
-          const productVal =
-            specs[key] ||
-            specs[key.toLowerCase()] ||
-            specs[key.replace(/_/g, " ")] ||
-            specs[key.replace(/\s+/g, "_")] ||
-            "";
+          const targetNormalizedKey = normalizeKey(filterKey);
 
-          const productValStr = String(productVal).toLowerCase().trim();
+          // Find matching key in product specifications
+          const foundKey = Object.keys(specsObj).find(
+            (k) =>
+              normalizeKey(k) === targetNormalizedKey ||
+              k.toLowerCase().trim() === filterKey.toLowerCase().trim()
+          );
 
-          // Matches if product spec value matches any of the checked values in this group
+          const productVal = foundKey ? specsObj[foundKey] : "";
+          const productValStr = String(productVal || "").toLowerCase().trim();
+
+          // Check if ANY selected value matches the product's spec
           return selectedValues.some((val) => {
             const valLower = String(val).toLowerCase().trim();
+            if (!valLower) return true;
+
+            // Direct match, contains match, or word-boundary match
             return (
               productValStr === valLower ||
+              productValStr.split(/[\s,/-]+/).includes(valLower) ||
               productValStr.includes(valLower) ||
               valLower.includes(productValStr)
             );
@@ -106,9 +126,9 @@ const CategoryProductPage = () => {
 
     // 3. Sorting
     if (sort === "a-z") {
-      result.sort((a, b) => a.name.localeCompare(b.name));
+      result.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
     } else if (sort === "z-a") {
-      result.sort((a, b) => b.name.localeCompare(a.name));
+      result.sort((a, b) => (b.name || "").localeCompare(a.name || ""));
     } else if (sort === "popular") {
       result.sort((a, b) => (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0));
     } else {
@@ -192,7 +212,7 @@ const CategoryProductPage = () => {
             >
               <div className="flex items-center justify-between pb-3 border-b border-gray-100">
                 <h3 className="font-bold text-[#021C57] text-sm flex items-center gap-2">
-                  <Filter className="w-4 h-4" /> Technical Filters
+                  <SlidersHorizontal className="w-4 h-4 text-blue-600" /> Technical Filters
                 </h3>
 
                 {activeFilterCount > 0 && (
@@ -206,10 +226,17 @@ const CategoryProductPage = () => {
               </div>
 
               {categoryData.filters.map((filter) => (
-                <div key={filter.key} className="space-y-3">
-                  <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-                    {filter.name}
-                  </h4>
+                <div key={filter.key || filter.name} className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      {filter.name}
+                    </h4>
+                    {selectedFilters[filter.key]?.length > 0 && (
+                      <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                        {selectedFilters[filter.key].length} selected
+                      </span>
+                    )}
+                  </div>
 
                   <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
                     {filter.values?.map((val, idx) => {
@@ -219,7 +246,11 @@ const CategoryProductPage = () => {
                       return (
                         <label
                           key={idx}
-                          className="flex items-center gap-2.5 text-xs text-gray-600 hover:text-gray-900 cursor-pointer select-none"
+                          className={`flex items-center gap-2.5 text-xs px-2.5 py-1.5 rounded-xl cursor-pointer select-none transition ${
+                            isChecked
+                              ? "bg-blue-50/80 text-[#021C57] font-bold"
+                              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                          }`}
                         >
                           <input
                             type="checkbox"
@@ -229,9 +260,7 @@ const CategoryProductPage = () => {
                             }
                             className="w-4 h-4 rounded-md accent-[#021C57] cursor-pointer"
                           />
-                          <span className={isChecked ? "font-bold text-[#021C57]" : ""}>
-                            {val}
-                          </span>
+                          <span className="truncate">{val}</span>
                         </label>
                       );
                     })}
@@ -254,6 +283,38 @@ const CategoryProductPage = () => {
               onReset={handleResetFilters}
               hasActiveFilters={Boolean(search || activeFilterCount > 0 || sort !== "latest")}
             />
+
+            {/* APPLIED FILTERS PILLS */}
+            {activeFilterCount > 0 && (
+              <div className="flex items-center gap-2 flex-wrap bg-white p-3.5 rounded-2xl border border-gray-100 shadow-2xs">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wide">
+                  Active Filters:
+                </span>
+                {Object.entries(selectedFilters).map(([k, vals]) =>
+                  vals.map((v) => (
+                    <span
+                      key={`${k}-${v}`}
+                      className="inline-flex items-center gap-1.5 bg-blue-50 text-[#021C57] border border-blue-200 px-3 py-1 rounded-xl text-xs font-bold shadow-2xs"
+                    >
+                      <span>{v}</span>
+                      <button
+                        onClick={() => handleFilterToggle(k, v)}
+                        className="hover:text-red-500 cursor-pointer"
+                        title="Remove filter"
+                      >
+                        <X size={12} />
+                      </button>
+                    </span>
+                  ))
+                )}
+                <button
+                  onClick={handleResetFilters}
+                  className="text-xs text-red-500 hover:underline font-semibold ml-auto cursor-pointer"
+                >
+                  Clear all
+                </button>
+              </div>
+            )}
 
             {/* LOADING */}
             {loading && (

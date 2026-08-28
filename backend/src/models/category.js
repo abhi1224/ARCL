@@ -5,11 +5,13 @@ const filterSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
+      trim: true,
     },
 
     key: {
       type: String,
-      required: true
+      required: true,
+      trim: true,
     },
 
     values: [String],
@@ -30,14 +32,34 @@ const categorySchema = new mongoose.Schema(
       required: true,
       unique: true,
       lowercase: true,
+      trim: true,
     },
 
-    description: String,
+    description: {
+      type: String,
+      default: "",
+    },
+
+    // Master Key Features for all products in this category
+    features: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+
+    // Master Applications for all products in this category
+    applications: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
 
     equipmentType: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "EquipmentType",
-      required: true
+      required: true,
     },
 
     isActive: {
@@ -47,7 +69,7 @@ const categorySchema = new mongoose.Schema(
 
     isFeatured: {
       type: Boolean,
-      default: false
+      default: false,
     },
 
     filters: [filterSchema],

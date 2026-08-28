@@ -3,6 +3,34 @@ import Category from "../../models/category.js";
 import EquipmentType from "../../models/equipmentType.js";
 
 /**
+ * Helper: Fallback to Category description, features, applications if product's own are empty
+ */
+const resolveProductInheritance = (prodDoc) => {
+  if (!prodDoc) return null;
+  const prod = prodDoc.toObject ? prodDoc.toObject() : { ...prodDoc };
+
+  if ((!prod.description || !prod.description.trim()) && prod.category?.description) {
+    prod.description = prod.category.description;
+  }
+
+  if (
+    (!prod.features || !Array.isArray(prod.features) || prod.features.length === 0) &&
+    prod.category?.features?.length > 0
+  ) {
+    prod.features = prod.category.features;
+  }
+
+  if (
+    (!prod.applications || !Array.isArray(prod.applications) || prod.applications.length === 0) &&
+    prod.category?.applications?.length > 0
+  ) {
+    prod.applications = prod.category.applications;
+  }
+
+  return prod;
+};
+
+/**
  * @desc    Get All Active Products (Client)
  * @route   GET /api/v1/client/products
  * @access  Public
@@ -91,28 +119,32 @@ export const getProducts = async (req, res) => {
       const limitNum = parseInt(limit);
       const total = await Product.countDocuments(filter);
       const products = await Product.find(filter)
-        .populate("category", "name slug")
+        .populate("category", "name slug description features applications")
         .sort(sortOption)
         .skip((pageNum - 1) * limitNum)
         .limit(limitNum);
+
+      const resolvedProducts = products.map(resolveProductInheritance);
 
       return res.status(200).json({
         success: true,
         total,
         currentPage: pageNum,
         totalPages: Math.ceil(total / limitNum),
-        data: products,
+        data: resolvedProducts,
       });
     }
 
     const products = await Product.find(filter)
-      .populate("category", "name slug")
+      .populate("category", "name slug description features applications")
       .sort(sortOption);
+
+    const resolvedProducts = products.map(resolveProductInheritance);
 
     return res.status(200).json({
       success: true,
-      count: products.length,
-      data: products,
+      count: resolvedProducts.length,
+      data: resolvedProducts,
     });
   } catch (error) {
     console.error("Client Get Products Error:", error);
@@ -133,7 +165,7 @@ export const getProduct = async (req, res) => {
     const product = await Product.findOne({
       slug: req.params.slug,
       isActive: true,
-    }).populate("category", "name slug filters");
+    }).populate("category", "name slug description features applications filters");
 
     if (!product) {
       return res.status(404).json({
@@ -144,7 +176,7 @@ export const getProduct = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      data: product,
+      data: resolveProductInheritance(product),
     });
   } catch (error) {
     console.error("Client Get Product Error:", error);
@@ -178,8 +210,10 @@ export const getProductsByCategory = async (req, res) => {
       category: category._id,
       isActive: true,
     })
-      .populate("category", "name slug")
+      .populate("category", "name slug description features applications")
       .sort({ isFeatured: -1, createdAt: -1 });
+
+    const resolvedProducts = products.map(resolveProductInheritance);
 
     return res.status(200).json({
       success: true,
@@ -188,10 +222,12 @@ export const getProductsByCategory = async (req, res) => {
         name: category.name,
         slug: category.slug,
         description: category.description,
+        features: category.features,
+        applications: category.applications,
         equipmentType: category.equipmentType,
         filters: category.filters,
       },
-      products,
+      products: resolvedProducts,
     });
   } catch (error) {
     console.error("Client Get Products By Category Error:", error);
