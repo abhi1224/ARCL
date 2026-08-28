@@ -70,7 +70,7 @@ const EquipmentTypeList = () => {
           <p className="text-gray-500 mb-4">No equipment types found.</p>
           <button
             onClick={() => setOpenModal(true)}
-            className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl font-medium hover:bg-blue-700 transition cursor-pointer"
+            className="inline-flex items-center gap-2 bg-[#021C57] hover:bg-[#03308f] text-white px-5 py-2.5 rounded-xl font-medium transition cursor-pointer"
           >
             <FaPlus /> Create First Equipment Type
           </button>
@@ -94,7 +94,7 @@ const EquipmentTypeList = () => {
                 <tr key={item._id} className="hover:bg-gray-50/80 transition">
                   {/* NAME */}
                   <td className="p-4 font-semibold text-gray-800">
-                    {item.name}
+                    {item.name.toUpperCase()}
                   </td>
 
                   {/* SLUG */}
@@ -133,8 +133,10 @@ const EquipmentTypeList = () => {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
 
-          {/* MODALS */}
+       {/* MODALS */}
           <EquipmentTypeModal
             isOpen={openModal}
             onClose={() => setOpenModal(false)}
@@ -145,8 +147,6 @@ const EquipmentTypeList = () => {
             onClose={() => setEditModalOpen(false)}
             selected={selectedItem}
           />
-        </div>
-      )}
     </div>
   );
 };
