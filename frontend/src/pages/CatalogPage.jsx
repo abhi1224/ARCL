@@ -20,6 +20,7 @@ import {
   ShieldCheck,
   Package,
 } from "lucide-react";
+import { formatTitleCase } from "../utils/stringUtils.js";
 
 // Array of icons for category visual representation
 const categoryIcons = [
@@ -200,10 +201,10 @@ const CatalogPage = () => {
                     {/* Category Title & Equipment Type */}
                     <div className="space-y-1">
                       <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 block">
-                        {category.equipmentType?.name || "Equipment Type"}
+                        {formatTitleCase(category.equipmentType?.name || "Equipment Type")}
                       </span>
                       <h3 className="text-lg sm:text-xl font-bold text-gray-900 group-hover:text-[#021C57] transition leading-snug line-clamp-2">
-                        {category.name}
+                        {formatTitleCase(category.name)}
                       </h3>
                     </div>
 

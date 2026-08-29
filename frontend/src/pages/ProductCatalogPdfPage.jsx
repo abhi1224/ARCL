@@ -13,10 +13,11 @@ import {
   Building,
   Mail,
   Phone,
-  Globe,
   Calendar,
+  Cog,
 } from "lucide-react";
 import { toast } from "react-toastify";
+import { formatTitleCase } from "../utils/stringUtils.js";
 
 const ProductCatalogPdfPage = () => {
   const { slug } = useParams();
@@ -88,6 +89,12 @@ const ProductCatalogPdfPage = () => {
       ? product.images
       : "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&q=80&w=600";
 
+  const hasHowItWorks = Boolean(
+    product.category?.howItWorks ||
+      (product.category?.howItWorksSteps &&
+        product.category.howItWorksSteps.length > 0)
+  );
+
   return (
     <div className="min-h-screen bg-slate-100 py-8 px-4 sm:px-6 lg:px-8">
       {/* 1. TOP ACTION TOOLBAR (Hidden in Print) */}
@@ -102,7 +109,7 @@ const ProductCatalogPdfPage = () => {
         <div className="flex items-center gap-3 flex-wrap">
           <a
             href={`https://wa.me/918169695728?text=Hello%2C%20I%20have%20reviewed%20the%20catalog%20for%20${encodeURIComponent(
-              product.name
+              formatTitleCase(product.name)
             )}%20and%20would%20like%20a%20quote.`}
             target="_blank"
             rel="noopener noreferrer"
@@ -161,7 +168,7 @@ const ProductCatalogPdfPage = () => {
         <div className="bg-gradient-to-r from-[#021C57] to-[#043399] rounded-2xl p-6 text-white space-y-2">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <span className="bg-white/20 backdrop-blur-xs text-white text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">
-              {product.category?.name || "Laboratory Equipment"}
+              {formatTitleCase(product.category?.name || "Laboratory Equipment")}
             </span>
 
             {product.isFeatured && (
@@ -172,7 +179,7 @@ const ProductCatalogPdfPage = () => {
           </div>
 
           <h2 className="text-2xl md:text-3xl font-extrabold text-white leading-tight">
-            {product.name}
+            {formatTitleCase(product.name)}
           </h2>
         </div>
 
@@ -205,25 +212,24 @@ const ProductCatalogPdfPage = () => {
                 </span>
               </div>
 
-                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
-                  <span className="text-gray-400 block font-medium">Availability:</span>
-                  <span className="font-bold text-[#021C57]">
-                    Ready to Dispatch
-                  </span>
-                </div>
-                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
-                  <span className="text-gray-400 block font-medium">Support:</span>
-                  <span className="font-bold text-[#021C57]">
-                    Dedicated Support
-                  </span>
-                </div>
-                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
-                  <span className="text-gray-400 block font-medium">Quality:</span>
-                  <span className="font-bold text-[#021C57]">
-                    Quality Assured
-                  </span>
-                </div>
-               
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
+                <span className="text-gray-400 block font-medium">Availability:</span>
+                <span className="font-bold text-[#021C57]">
+                  Ready to Dispatch
+                </span>
+              </div>
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
+                <span className="text-gray-400 block font-medium">Support:</span>
+                <span className="font-bold text-[#021C57]">
+                  Dedicated Support
+                </span>
+              </div>
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
+                <span className="text-gray-400 block font-medium">Quality:</span>
+                <span className="font-bold text-[#021C57]">
+                  Quality Assured
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -252,7 +258,7 @@ const ProductCatalogPdfPage = () => {
                           className={idx % 2 === 0 ? "bg-white" : "bg-slate-50/70"}
                         >
                           <td className="p-3.5 font-semibold text-gray-700">
-                            {key}
+                            {formatTitleCase(key)}
                           </td>
                           <td className="p-3.5 text-gray-900 font-medium">
                             {String(val)}
@@ -265,6 +271,47 @@ const ProductCatalogPdfPage = () => {
               </div>
             </div>
           )}
+
+        {/* WORKING PRINCIPLE & OPERATING MECHANISM (IF AVAILABLE FOR THIS CATEGORY) */}
+        {hasHowItWorks && (
+          <div className="space-y-4">
+            <h3 className="text-lg font-bold text-[#021C57] flex items-center gap-2 border-b border-gray-100 pb-2">
+              <Cog className="w-5 h-5 text-amber-600" /> Working Principle & Operating Mechanism
+            </h3>
+
+            {product.category.howItWorks && (
+              <p className="text-xs sm:text-sm text-gray-700 leading-relaxed font-medium bg-amber-50/40 p-4 rounded-xl border border-amber-200/70">
+                {product.category.howItWorks}
+              </p>
+            )}
+
+            {product.category.howItWorksSteps &&
+              product.category.howItWorksSteps.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  {product.category.howItWorksSteps.map((step, idx) => (
+                    <div
+                      key={idx}
+                      className="bg-gray-50 border border-gray-200 rounded-xl p-3.5 space-y-1"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
+                          {step.stepNumber || idx + 1}
+                        </span>
+                        <span className="font-bold text-xs text-[#021C57] truncate">
+                          {step.title || `Step ${idx + 1}`}
+                        </span>
+                      </div>
+                      {step.description && (
+                        <p className="text-[11px] text-gray-600 leading-relaxed pl-7">
+                          {step.description}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+          </div>
+        )}
 
         {/* FEATURES & APPLICATIONS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -319,10 +366,8 @@ const ProductCatalogPdfPage = () => {
             <div className="flex items-center gap-2">
               <Mail size={16} className="text-[#021C57] shrink-0" />
               <span>
-                 <a
-                    href="mailto:arclinstruments@gmail.com"
-                  >
-                    arclinstruments@gmail.com
+                <a href="mailto:arclinstruments@gmail.com">
+                  arclinstruments@gmail.com
                 </a>
               </span>
             </div>

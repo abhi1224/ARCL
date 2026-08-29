@@ -8,6 +8,10 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaBox,
+  FaStar,
+  FaRegStar,
+  FaCheckCircle,
+  FaTimesCircle,
 } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { useProductStore } from "../../store/useProductStore.js";
@@ -18,6 +22,7 @@ import Tooltip from "../../components/admin/common/Tooltip.jsx";
 import ProductDetailsModal from "../../components/admin/product/ProductDetailsModal.jsx";
 import { toast } from "react-toastify";
 import { Eye } from "lucide-react";
+import { formatTitleCase } from "../../utils/stringUtils.js";
 
 const ProductList = () => {
   const {
@@ -281,7 +286,7 @@ const ProductList = () => {
                         </div>
                         <div className="max-w-xs sm:max-w-sm">
                           <div className="font-semibold text-gray-800 line-clamp-1">
-                            {product.name}
+                            {formatTitleCase(product.name)}
                           </div>
                           <div className="text-xs text-gray-400 font-mono mt-0.5">
                             {product.description ? product.description.slice(0, 30) + (product.description.length > 30 ? "..." : "") : "No description"}
@@ -293,7 +298,7 @@ const ProductList = () => {
                     {/* CATEGORY */}
                     <td className="p-4 text-gray-600 font-medium">
                       <span className="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-lg text-xs font-semibold">
-                        {product.category?.name || "—"}
+                        {formatTitleCase(product.category?.name || "—")}
                       </span>
                     </td>
 
@@ -308,43 +313,55 @@ const ProductList = () => {
                     </td>
 
                     {/* IS FEATURED TOGGLE */}
-                    <td className="p-4">
-                      <div className="flex items-center gap-2">
-                        <Toggle
-                          checked={product.isFeatured}
-                          onChange={() => handleToggleFeatured(product._id)}
-                          disabled={togglingId === product._id}
-                        />
-                        <span
-                          className={`text-xs font-medium ${
-                            product.isFeatured
-                              ? "text-yellow-600 font-semibold"
-                              : "text-gray-400"
-                          }`}
-                        >
-                          {product.isFeatured ? "Featured" : "Normal"}
-                        </span>
-                      </div>
+                    <td className="p-4 text-center">
+                      <button
+                        onClick={() => handleToggleFeatured(product._id)}
+                        disabled={togglingId === product._id}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition shadow-2xs cursor-pointer ${
+                          product.isFeatured
+                            ? "bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-300"
+                            : "bg-gray-100 text-gray-500 hover:bg-gray-200 border border-gray-200"
+                        } disabled:opacity-50`}
+                        title={
+                          product.isFeatured
+                            ? "Click to remove from featured"
+                            : "Click to mark as featured on homepage"
+                        }
+                      >
+                        {togglingId === product._id ? (
+                          <span className="w-3 h-3 border-2 border-amber-600 border-t-transparent rounded-full animate-spin"></span>
+                        ) : product.isFeatured ? (
+                          <FaStar className="text-amber-500" size={12} />
+                        ) : (
+                          <FaRegStar className="text-gray-400" size={12} />
+                        )}
+                        <span>{product.isFeatured ? "Featured" : "Standard"}</span>
+                      </button>
                     </td>
 
                     {/* IS ACTIVE TOGGLE */}
-                    <td className="p-4">
-                      <div className="flex items-center gap-2">
-                        <Toggle
-                          checked={product.isActive}
-                          onChange={() => handleToggleActive(product._id)}
-                          disabled={togglingId === product._id}
-                        />
-                        <span
-                          className={`text-xs font-medium ${
-                            product.isActive
-                              ? "text-green-600 font-semibold"
-                              : "text-red-500"
-                          }`}
-                        >
-                          {product.isActive ? "Active" : "Inactive"}
-                        </span>
-                      </div>
+                    <td className="p-4 text-center">
+                      <button
+                        onClick={() => handleToggleActive(product._id)}
+                        disabled={togglingId === product._id}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition shadow-2xs cursor-pointer ${
+                          product.isActive
+                            ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300"
+                            : "bg-red-100 text-red-700 hover:bg-red-200 border border-red-200"
+                        } disabled:opacity-50`}
+                        title={
+                          product.isActive
+                            ? "Click to deactivate / hide from website"
+                            : "Click to activate / publish on website"
+                        }
+                      >
+                        {product.isActive ? (
+                          <FaCheckCircle className="text-emerald-600" size={12} />
+                        ) : (
+                          <FaTimesCircle className="text-red-500" size={12} />
+                        )}
+                        <span>{product.isActive ? "Active" : "Inactive"}</span>
+                      </button>
                     </td>
 
                     {/* ACTIONS */}

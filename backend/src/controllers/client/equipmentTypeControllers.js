@@ -8,8 +8,8 @@ import EquipmentType from "../../models/equipmentType.js";
 export const getEquipmentTypes = async (req, res) => {
   try {
     const equipmentTypes = await EquipmentType.find({ isActive: true })
-      .select("name slug createdAt")
-      .sort({ name: 1 });
+      .select("name slug isFeatured createdAt")
+      .sort({ isFeatured: -1, name: 1 });
 
     return res.status(200).json({
       success: true,

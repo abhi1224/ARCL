@@ -3,6 +3,7 @@ import {
   deleteEquipmentType,
   getAdminEquipmentTypes,
   getEquipmentTypes,
+  toggleEquipmentTypeFeatured,
   toggleEquipmentTypeStatus,
   updateEquipmentType,
 } from "../api/equipmentTypeApi.js";
@@ -38,9 +39,15 @@ export const equipmentTypeService = {
     return id;
   },
 
-  // TOGGLE (Admin)
+  // TOGGLE STATUS (Admin)
   toggle: async (id) => {
     const res = await toggleEquipmentTypeStatus(id);
+    return res.data?.data || res.data;
+  },
+
+  // TOGGLE FEATURED (Admin)
+  toggleFeatured: async (id) => {
+    const res = await toggleEquipmentTypeFeatured(id);
     return res.data?.data || res.data;
   },
 };

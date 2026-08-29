@@ -11,7 +11,7 @@ import mongoose from "mongoose";
  */
 export const createEquipmentType = async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name, isFeatured } = req.body;
 
     // Validate input
     if (!name || !name.trim()) {
@@ -48,6 +48,7 @@ export const createEquipmentType = async (req, res) => {
       name: name.trim(),
       slug,
       isActive: true,
+      isFeatured: isFeatured === true || isFeatured === "true",
     });
 
     return res.status(201).json({
@@ -65,7 +66,7 @@ export const createEquipmentType = async (req, res) => {
 };
 
 /**
- * @desc    Get All Equipment Types
+ * @desc    Get All Equipment Types (Admin)
  * @route   GET /api/v1/admin/equipment-types
  * @access  Admin
  */
@@ -126,7 +127,7 @@ export const getSingleEquipmentType = async (req, res) => {
 export const updateEquipmentType = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name } = req.body;
+    const { name, isFeatured } = req.body;
 
     if (!name || !name.trim()) {
       return res.status(400).json({
@@ -164,6 +165,9 @@ export const updateEquipmentType = async (req, res) => {
 
     equipmentType.name = name.trim();
     equipmentType.slug = slug;
+    if (typeof isFeatured !== "undefined") {
+      equipmentType.isFeatured = isFeatured === true || isFeatured === "true";
+    }
 
     await equipmentType.save();
 
@@ -209,6 +213,42 @@ export const toggleEquipmentTypeStatus = async (req, res) => {
     });
   } catch (error) {
     console.error("Toggle Equipment Type Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * @desc    Toggle Equipment Type Featured Status
+ * @route   PATCH /api/v1/admin/equipment-types/:id/toggle-featured
+ * @access  Admin
+ */
+export const toggleEquipmentTypeFeatured = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const equipmentType = await EquipmentType.findById(id);
+
+    if (!equipmentType) {
+      return res.status(404).json({
+        success: false,
+        message: "Equipment type not found.",
+      });
+    }
+
+    equipmentType.isFeatured = !equipmentType.isFeatured;
+    await equipmentType.save();
+
+    return res.status(200).json({
+      success: true,
+      message: `Equipment type ${equipmentType.isFeatured ? "marked as featured" : "removed from featured"} successfully! ⭐`,
+      data: equipmentType,
+    });
+  } catch (error) {
+    console.error("Toggle Featured Equipment Type Error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error.",

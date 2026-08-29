@@ -4,6 +4,7 @@ import {
   deleteEquipmentType,
   getAllEquipmentTypes,
   getSingleEquipmentType,
+  toggleEquipmentTypeFeatured,
   toggleEquipmentTypeStatus,
   updateEquipmentType,
 } from "../../controllers/admin/equipmentTypeControllers.js";
@@ -15,6 +16,7 @@ router.get("/", getAllEquipmentTypes);
 router.get("/:id", getSingleEquipmentType);
 router.put("/:id", updateEquipmentType);
 router.patch("/:id/toggle", toggleEquipmentTypeStatus);
+router.patch("/:id/toggle-featured", toggleEquipmentTypeFeatured);
 router.delete("/:id", deleteEquipmentType);
 
 export default router;

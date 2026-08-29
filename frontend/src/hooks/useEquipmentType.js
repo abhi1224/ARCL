@@ -1,14 +1,15 @@
-// hooks/useEquipmentType.js
-
 import { useState } from "react";
-import { useEquipmentTypeStore } from "../store/useEquipmentTypeStore";
+import { useEquipmentTypeStore } from "../store/useEquipmentTypeStore.js";
+import { toast } from "react-toastify";
 
 const useEquipmentType = () => {
   const {
     equipmentTypes,
+    fetchAdminEquipmentTypes,
     fetchEquipmentTypes,
     removeEquipmentType,
     toggleStatus,
+    toggleFeatured,
     loading,
     error,
   } = useEquipmentTypeStore();
@@ -16,6 +17,7 @@ const useEquipmentType = () => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [togglingId, setTogglingId] = useState(null);
+  const [togglingFeaturedId, setTogglingFeaturedId] = useState(null);
 
   const handleEdit = (item, openEditModal) => {
     setSelectedItem(item);
@@ -26,8 +28,23 @@ const useEquipmentType = () => {
     try {
       setTogglingId(id);
       await toggleStatus(id);
+      toast.success("Equipment type status updated!");
+    } catch (err) {
+      toast.error("Failed to update status");
     } finally {
       setTogglingId(null);
+    }
+  };
+
+  const handleToggleFeatured = async (id) => {
+    try {
+      setTogglingFeaturedId(id);
+      await toggleFeatured(id);
+      toast.success("Featured status updated successfully! ⭐");
+    } catch (err) {
+      toast.error("Failed to update featured status");
+    } finally {
+      setTogglingFeaturedId(null);
     }
   };
 
@@ -43,10 +60,12 @@ const useEquipmentType = () => {
       )
     ) return;
 
-
     try {
       setDeletingId(id);
       await removeEquipmentType(id);
+      toast.success("Equipment type deleted successfully");
+    } catch (err) {
+      toast.error(err.message || "Failed to delete equipment type");
     } finally {
       setDeletingId(null);
     }
@@ -54,14 +73,16 @@ const useEquipmentType = () => {
 
   return {
     equipmentTypes,
-    fetchEquipmentTypes,
+    fetchEquipmentTypes: fetchAdminEquipmentTypes || fetchEquipmentTypes,
     loading,
     error,
     selectedItem,
     deletingId,
     togglingId,
+    togglingFeaturedId,
     handleEdit,
     handleToggle,
+    handleToggleFeatured,
     handleDelete,
   };
 };

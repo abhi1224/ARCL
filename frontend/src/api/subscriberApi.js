@@ -1,12 +1,12 @@
 import API from "./axios";
 
-// Public client subscription
-export const subscribeApi = (email, source = "website_home_subscription") =>
-  API.post("/client/subscribers", { email, source });
+// Admin APIs
+export const getAdminSubscribers = () => API.get("/admin/subscribers");
+export const getAdminSubscribersApi = getAdminSubscribers;
 
-// Admin get all subscribers
-export const getAdminSubscribersApi = () => API.get("/admin/subscribers");
+export const deleteSubscriber = (id) => API.delete(`/admin/subscribers/${id}`);
+export const deleteSubscriberApi = deleteSubscriber;
 
-// Admin delete subscriber
-export const deleteAdminSubscriberApi = (id) =>
-  API.delete(`/admin/subscribers/${id}`);
+// Client Public API
+export const subscribeClient = (data) => API.post("/client/subscribers", data);
+export const subscribeApi = subscribeClient;

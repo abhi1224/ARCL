@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Carousel from "../components/Carousel.jsx";
 import trustImg from "../assets/why-us/trust.png";
 import qualityImg from "../assets/why-us/quality.png";
@@ -6,41 +6,83 @@ import supportImg from "../assets/why-us/support.png";
 import { NavLink, Link } from "react-router-dom";
 import { useProductStore } from "../store/useProductStore.js";
 import { useCategoryStore } from "../store/useCategoryStore.js";
+import { useEquipmentTypeStore } from "../store/useEquipmentTypeStore.js";
 import ProductCard from "../components/products/ProductCard.jsx";
 import NewsletterSubscription from "../components/common/NewsletterSubscription.jsx";
 import FaqSection from "../components/home/FaqSection.jsx";
+import { formatTitleCase } from "../utils/stringUtils.js";
 import {
   ArrowRight,
   Sparkles,
   Award,
   Layers,
   CheckCircle2,
-  FileText,
+  ChevronRight,
 } from "lucide-react";
 
 const Home = () => {
-  const { products, fetchProducts, loading } = useProductStore();
-  const { categories, fetchCategories } = useCategoryStore();
-  const [activeCategoryTab, setActiveCategoryTab] = useState("all");
+  const { products, fetchProducts, loading: productsLoading } = useProductStore();
+  const { categories, fetchCategories, loading: categoriesLoading } = useCategoryStore();
+  const { equipmentTypes, fetchEquipmentTypes } = useEquipmentTypeStore();
 
   useEffect(() => {
-    // Fetch all active products
-    fetchProducts();
-    fetchCategories();
+    // Fetch all active entities in parallel
+    Promise.all([
+      fetchProducts(),
+      fetchCategories(),
+      fetchEquipmentTypes(),
+    ]).catch((err) => console.error("Home data fetch error:", err));
   }, []);
 
-  // Filter only featured products
-  const featuredProducts = products.filter((p) => p.isFeatured);
+  const loading = productsLoading || categoriesLoading;
 
-  // Categorized featured products
-  const displayedProducts =
-    activeCategoryTab === "all"
-      ? featuredProducts
-      : featuredProducts.filter(
-          (p) =>
-            p.category?._id === activeCategoryTab ||
-            p.category === activeCategoryTab
-        );
+  // Build Featured Equipment Types Structure:
+  // For each featured Equipment Type -> for each of its Categories -> pick exactly 1 representative product!
+  const featuredEquipmentSections = useMemo(() => {
+    if (!equipmentTypes || equipmentTypes.length === 0) return [];
+
+    // Filter featured equipment types, or fallback to all active if none are explicitly featured
+    let targetTypes = equipmentTypes.filter((eq) => eq.isFeatured);
+    if (targetTypes.length === 0) {
+      targetTypes = equipmentTypes.slice(0, 3);
+    }
+
+    return targetTypes
+      .map((eqType) => {
+        // Find categories belonging to this Equipment Type
+        const eqCategories = categories.filter((cat) => {
+          const catEqId = cat.equipmentType?._id || cat.equipmentType;
+          return catEqId && String(catEqId) === String(eqType._id);
+        });
+
+        // For each category, select only 1 representative product
+        const representativeProducts = [];
+
+        eqCategories.forEach((cat) => {
+          const catProducts = products.filter((p) => {
+            const pCatId = p.category?._id || p.category;
+            return pCatId && String(pCatId) === String(cat._id);
+          });
+
+          if (catProducts.length > 0) {
+            // Prefer featured product in category if available, otherwise first product
+            const repProduct = catProducts.find((p) => p.isFeatured) || catProducts[0];
+            representativeProducts.push({
+              ...repProduct,
+              category: cat,
+              equipmentTypeName: eqType.name,
+            });
+          }
+        });
+
+        return {
+          equipmentType: eqType,
+          categoriesCount: eqCategories.length,
+          products: representativeProducts,
+        };
+      })
+      .filter((sec) => sec.products.length > 0);
+  }, [equipmentTypes, categories, products]);
 
   const features = [
     {
@@ -69,22 +111,22 @@ const Home = () => {
       {/* 1. HERO CAROUSEL */}
       <Carousel />
 
-      {/* 2. FEATURED PRODUCTS SHOWCASE SECTION */}
-      <section className="py-16 px-4 md:px-10 lg:px-16 max-w-[1600px] mx-auto space-y-12">
+      {/* 2. FEATURED EQUIPMENT TYPES & REPRESENTATIVE PRODUCTS SHOWCASE */}
+      <section className="py-16 px-4 md:px-10 lg:px-16 max-w-[1600px] mx-auto space-y-16">
         
-        {/* Section Header */}
+        {/* Main Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-gray-200/80 pb-8">
           <div className="space-y-3 max-w-3xl">
-            <div className="inline-flex items-center gap-2 bg-amber-50 text-amber-900 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border border-amber-200">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Featured Laboratory Instruments
+            <div className="inline-flex items-center gap-2 bg-blue-50 text-[#021C57] px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border border-blue-200 shadow-2xs">
+              <Sparkles className="w-3.5 h-3.5 text-blue-600" /> Featured Industry Classifications
             </div>
             
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#021C57] tracking-tight">
-              Flagship Testing & Analytical Equipment
+              Specialized Laboratory Testing Instruments
             </h2>
             
             <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
-              Explore our premium range of precision instruments engineered to international testing and ISO quality benchmarks.
+              Explore key flagship instruments organized by industry equipment types. Each category is engineered to national calibration guidelines.
             </p>
           </div>
 
@@ -92,77 +134,80 @@ const Home = () => {
             to="/products"
             className="inline-flex items-center justify-center gap-2 bg-[#021C57] hover:bg-[#043399] text-white text-xs sm:text-sm font-bold px-7 py-3.5 rounded-2xl transition duration-200 shadow-md shrink-0 self-start md:self-auto cursor-pointer"
           >
-            Explore Full Catalogue ({products.length})
+            Browse All Catalogue ({products.length})
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
 
-        {/* Category Tabs Filter */}
-        {categories.length > 0 && featuredProducts.length > 0 && (
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            <button
-              onClick={() => setActiveCategoryTab("all")}
-              className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${
-                activeCategoryTab === "all"
-                  ? "bg-[#021C57] text-white shadow-sm"
-                  : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-100"
-              }`}
-            >
-              All Featured ({featuredProducts.length})
-            </button>
-
-            {categories.map((cat) => {
-              const catFeaturedCount = featuredProducts.filter(
-                (p) =>
-                  p.category?._id === cat._id || p.category === cat._id
-              ).length;
-
-              if (catFeaturedCount === 0) return null;
-
-              return (
-                <button
-                  key={cat._id}
-                  onClick={() => setActiveCategoryTab(cat._id)}
-                  className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${
-                    activeCategoryTab === cat._id
-                      ? "bg-[#021C57] text-white shadow-sm"
-                      : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  {cat.name} ({catFeaturedCount})
-                </button>
-              );
-            })}
-          </div>
-        )}
-
         {/* Loading Skeleton */}
         {loading && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-              <div
-                key={i}
-                className="h-84 bg-white rounded-3xl border border-gray-100 p-4 animate-pulse space-y-4 shadow-xs"
-              >
-                <div className="h-48 bg-gray-100 rounded-2xl w-full"></div>
-                <div className="h-4 bg-gray-100 rounded w-3/4"></div>
-                <div className="h-3 bg-gray-50 rounded w-1/2"></div>
+          <div className="space-y-12">
+            {[1, 2].map((group) => (
+              <div key={group} className="space-y-4">
+                <div className="h-8 bg-gray-200 rounded-xl w-64 animate-pulse"></div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div
+                      key={i}
+                      className="h-84 bg-white rounded-3xl border border-gray-100 p-4 animate-pulse space-y-4 shadow-xs"
+                    >
+                      <div className="h-48 bg-gray-100 rounded-2xl w-full"></div>
+                      <div className="h-4 bg-gray-100 rounded w-3/4"></div>
+                      <div className="h-3 bg-gray-50 rounded w-1/2"></div>
+                    </div>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
         )}
 
-        {/* FEATURED PRODUCTS RESPONSIVE GRID */}
-        {!loading && displayedProducts.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
-            {displayedProducts.map((product) => (
-              <ProductCard key={product._id} product={product} />
+        {/* SECTION-WISE EQUIPMENT TYPES DISPLAY */}
+        {!loading && featuredEquipmentSections.length > 0 && (
+          <div className="space-y-16">
+            {featuredEquipmentSections.map((section) => (
+              <div
+                key={section.equipmentType._id}
+                className="space-y-6 bg-white/60 p-6 sm:p-8 rounded-3xl border border-gray-200/70 shadow-xs"
+              >
+                {/* Equipment Type Heading Bar */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-200">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-[#021C57] text-white flex items-center justify-center shadow-md">
+                      <Layers size={18} />
+                    </div>
+                    <div>
+                      <h3 className="text-xl sm:text-2xl font-black text-[#021C57] tracking-tight">
+                        {formatTitleCase(section.equipmentType.name)}
+                      </h3>
+                      <p className="text-xs text-gray-500 font-medium">
+                        Showing 1 flagship instrument per category ({section.products.length} categories represented)
+                      </p>
+                    </div>
+                  </div>
+
+                  <Link
+                    to="/products"
+                    className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800 transition self-start sm:self-auto cursor-pointer"
+                  >
+                    View full {formatTitleCase(section.equipmentType.name)} range
+                    <ChevronRight size={14} />
+                  </Link>
+                </div>
+
+                {/* 1 Representative Product per Category Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
+                  {section.products.map((product) => (
+                    <ProductCard key={product._id} product={product} />
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         )}
 
-        {/* Fallback if no featured products yet */}
-        {!loading && displayedProducts.length === 0 && (
+        {/* Fallback if no products/equipment types available */}
+        {!loading && featuredEquipmentSections.length === 0 && (
           <div className="bg-white rounded-3xl p-12 text-center border border-gray-100 space-y-4 max-w-xl mx-auto shadow-xs">
             <div className="w-16 h-16 bg-blue-50 text-[#021C57] rounded-full flex items-center justify-center mx-auto">
               <Layers size={30} />

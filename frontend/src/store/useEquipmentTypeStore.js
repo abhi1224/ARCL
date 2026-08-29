@@ -109,12 +109,38 @@ export const useEquipmentTypeStore = create((set) => ({
 
       set((state) => ({
         equipmentTypes: state.equipmentTypes.map((item) =>
-          item._id === id ? updated : item
+          item._id === id ? { ...item, isActive: updated.data?.isActive ?? !item.isActive } : item
+        ),
+        adminEquipmentTypes: state.adminEquipmentTypes.map((item) =>
+          item._id === id ? { ...item, isActive: updated.data?.isActive ?? !item.isActive } : item
         ),
       }));
       return updated;
     } catch (err) {
       set({ error: "Toggle failed" });
+    }
+  },
+
+  // =========================
+  // TOGGLE FEATURED (Admin)
+  // =========================
+  toggleFeatured: async (id) => {
+    try {
+      const res = await equipmentTypeService.toggleFeatured(id);
+      const updated = res.data?.data || res.data || res;
+
+      set((state) => ({
+        equipmentTypes: state.equipmentTypes.map((item) =>
+          item._id === id ? { ...item, isFeatured: updated.isFeatured ?? !item.isFeatured } : item
+        ),
+        adminEquipmentTypes: state.adminEquipmentTypes.map((item) =>
+          item._id === id ? { ...item, isFeatured: updated.isFeatured ?? !item.isFeatured } : item
+        ),
+      }));
+      return updated;
+    } catch (err) {
+      set({ error: "Toggle featured failed" });
+      throw err;
     }
   },
 }));

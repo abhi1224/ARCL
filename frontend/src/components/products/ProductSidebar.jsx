@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Layers, ChevronRight, X, Sparkles } from "lucide-react";
+import { formatTitleCase } from "../../utils/stringUtils.js";
 
 const ProductSidebar = ({
   categories = [],
@@ -71,7 +72,7 @@ const ProductSidebar = ({
                   : "text-gray-700 hover:bg-gray-50"
               }`}
             >
-              <span className="truncate pr-2">{type.name}</span>
+              <span className="truncate pr-2">{formatTitleCase(type.name)}</span>
               {selectedEquipmentType === type._id && (
                 <span className="text-[10px]">●</span>
               )}
@@ -103,7 +104,7 @@ const ProductSidebar = ({
               className="w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium text-gray-700 hover:text-[#021C57] hover:bg-blue-50/70 border border-transparent hover:border-blue-200/60 transition flex items-center justify-between group"
             >
               <span className="truncate pr-2 group-hover:font-semibold">
-                {cat.name}
+                {formatTitleCase(cat.name)}
               </span>
               <ChevronRight
                 size={14}

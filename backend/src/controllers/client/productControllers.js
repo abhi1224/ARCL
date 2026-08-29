@@ -3,7 +3,7 @@ import Category from "../../models/category.js";
 import EquipmentType from "../../models/equipmentType.js";
 
 /**
- * Helper: Fallback to Category description, features, applications if product's own are empty
+ * Helper: Fallback to Category description, features, applications, and howItWorks if product's own are empty
  */
 const resolveProductInheritance = (prodDoc) => {
   if (!prodDoc) return null;
@@ -25,6 +25,14 @@ const resolveProductInheritance = (prodDoc) => {
     prod.category?.applications?.length > 0
   ) {
     prod.applications = prod.category.applications;
+  }
+
+  // Inherit category's "How It Works" working principle and process steps to the product
+  if (prod.category?.howItWorks) {
+    prod.howItWorks = prod.category.howItWorks;
+  }
+  if (prod.category?.howItWorksSteps && prod.category.howItWorksSteps.length > 0) {
+    prod.howItWorksSteps = prod.category.howItWorksSteps;
   }
 
   return prod;
@@ -119,7 +127,7 @@ export const getProducts = async (req, res) => {
       const limitNum = parseInt(limit);
       const total = await Product.countDocuments(filter);
       const products = await Product.find(filter)
-        .populate("category", "name slug description features applications")
+        .populate("category", "name slug description howItWorks howItWorksSteps features applications equipmentType")
         .sort(sortOption)
         .skip((pageNum - 1) * limitNum)
         .limit(limitNum);
@@ -136,7 +144,7 @@ export const getProducts = async (req, res) => {
     }
 
     const products = await Product.find(filter)
-      .populate("category", "name slug description features applications")
+      .populate("category", "name slug description howItWorks howItWorksSteps features applications equipmentType")
       .sort(sortOption);
 
     const resolvedProducts = products.map(resolveProductInheritance);
@@ -165,7 +173,7 @@ export const getProduct = async (req, res) => {
     const product = await Product.findOne({
       slug: req.params.slug,
       isActive: true,
-    }).populate("category", "name slug description features applications filters");
+    }).populate("category", "name slug description howItWorks howItWorksSteps features applications filters equipmentType");
 
     if (!product) {
       return res.status(404).json({
@@ -210,7 +218,7 @@ export const getProductsByCategory = async (req, res) => {
       category: category._id,
       isActive: true,
     })
-      .populate("category", "name slug description features applications")
+      .populate("category", "name slug description howItWorks howItWorksSteps features applications equipmentType")
       .sort({ isFeatured: -1, createdAt: -1 });
 
     const resolvedProducts = products.map(resolveProductInheritance);
@@ -222,6 +230,8 @@ export const getProductsByCategory = async (req, res) => {
         name: category.name,
         slug: category.slug,
         description: category.description,
+        howItWorks: category.howItWorks,
+        howItWorksSteps: category.howItWorksSteps,
         features: category.features,
         applications: category.applications,
         equipmentType: category.equipmentType,

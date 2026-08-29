@@ -25,22 +25,30 @@ import {
   Send,
   Truck,
   BadgeCheck,
+  Cog,
 } from "lucide-react";
 import { useProductStore } from "../store/useProductStore.js";
 import { useInquiryStore } from "../store/useInquiryStore.js";
 import { toast } from "react-toastify";
+import { formatTitleCase } from "../utils/stringUtils.js";
 
 const ProductDetailsPage = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
 
   // Stores
-  const { product, loading, error, fetchSingleProduct, categoryProducts, fetchProductsByCategory } =
-    useProductStore();
+  const {
+    product,
+    loading,
+    error,
+    fetchSingleProduct,
+    categoryProducts,
+    fetchProductsByCategory,
+  } = useProductStore();
   const { createInquiry, loading: inquiryLoading } = useInquiryStore();
 
   // State
-  const [activeTab, setActiveTab] = useState("specs"); // 'specs' | 'features' | 'applications' | 'compliance'
+  const [activeTab, setActiveTab] = useState("specs"); // 'specs' | 'features' | 'applications' | 'howItWorks' | 'compliance'
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [openQuoteModal, setOpenQuoteModal] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -60,9 +68,10 @@ const ProductDetailsPage = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
     fetchSingleProduct(slug);
     setSelectedImageIndex(0);
+    setActiveTab("specs");
   }, [slug]);
 
-  // Fetch related products in the same category
+  // Fetch related products in the same category (does not trigger full page loading skeleton)
   useEffect(() => {
     if (product?.category?.slug) {
       fetchProductsByCategory(product.category.slug);
@@ -110,9 +119,9 @@ const ProductDetailsPage = () => {
     try {
       await createInquiry({
         product: product._id,
-        productName: product.name,
+        productName: formatTitleCase(product.name),
         productSlug: product.slug,
-        category: product.category?.name || "General",
+        category: formatTitleCase(product.category?.name || "General"),
         ...formData,
       });
 
@@ -187,6 +196,21 @@ const ProductDetailsPage = () => {
     .filter((p) => p._id !== product._id)
     .slice(0, 3);
 
+  const categoryHowItWorks = product.category?.howItWorks;
+  const categoryHowItWorksSteps = product.category?.howItWorksSteps;
+  const hasHowItWorks = Boolean(
+    categoryHowItWorks || (categoryHowItWorksSteps && categoryHowItWorksSteps.length > 0)
+  );
+
+  // Tabs configuration
+  const tabsList = [
+    { id: "specs", label: "Technical Specifications", count: Object.keys(product.specifications || {}).length },
+    { id: "features", label: "Key Features", count: product.features?.length || 0 },
+    { id: "applications", label: "Lab Applications", count: product.applications?.length || 0 },
+    ...(hasHowItWorks ? [{ id: "howItWorks", label: "How It Works / Principle" }] : []),
+    { id: "compliance", label: "Testing Standards & Compliance" },
+  ];
+
   return (
     <div className="bg-slate-50/60 min-h-screen text-[#021C57] selection:bg-blue-900 selection:text-white pb-20">
       
@@ -210,13 +234,13 @@ const ProductDetailsPage = () => {
                   to={`/categories/${product.category.slug}`}
                   className="hover:text-[#021C57] text-blue-700 font-semibold truncate transition"
                 >
-                  {product.category.name}
+                  {formatTitleCase(product.category.name)}
                 </Link>
               </>
             )}
             <ChevronRight size={13} className="text-gray-400 shrink-0" />
             <span className="text-gray-800 font-bold truncate max-w-[200px] sm:max-w-xs">
-              {product.name}
+              {formatTitleCase(product.name)}
             </span>
           </div>
 
@@ -262,7 +286,6 @@ const ProductDetailsPage = () => {
                 className="max-h-[360px] sm:max-h-[420px] w-auto object-contain transition duration-500 group-hover:scale-105"
               />
 
-
             </div>
 
             {/* THUMBNAIL SELECTOR (IF MULTIPLE) */}
@@ -296,13 +319,11 @@ const ProductDetailsPage = () => {
                 <div className="text-[10px] text-gray-400">Safe & reliable dispatch</div>
               </div>
 
-
               <div className="bg-white border border-gray-200/70 p-3.5 rounded-2xl text-center space-y-1">
                 <BadgeCheck className="w-5 h-5 text-emerald-600 mx-auto" />
                 <div className="text-[11px] font-bold text-gray-800">Quality Tested</div>
                 <div className="text-[10px] text-gray-400">Tested before dispatch</div>
               </div>
-
 
               <div className="bg-white border border-gray-200/70 p-3.5 rounded-2xl text-center space-y-1">
                 <Building2 className="w-5 h-5 text-amber-600 mx-auto" />
@@ -322,7 +343,7 @@ const ProductDetailsPage = () => {
                 to={`/categories/${product.category?.slug}`}
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-blue-50 text-[#021C57] text-xs font-bold border border-blue-100 hover:bg-blue-100 transition"
               >
-                <Layers size={13} /> {product.category?.name || "Laboratory Instrument"}
+                <Layers size={13} /> {formatTitleCase(product.category?.name || "Laboratory Instrument")}
               </Link>
 
               <span className="text-xs text-gray-400 font-mono font-medium">
@@ -332,7 +353,7 @@ const ProductDetailsPage = () => {
 
             {/* TITLE */}
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#021C57] leading-tight tracking-tight">
-              {product.name}
+              {formatTitleCase(product.name)}
             </h1>
 
             {/* QUICK HIGHLIGHT BADGES */}
@@ -351,6 +372,8 @@ const ProductDetailsPage = () => {
                 {product.description}
               </p>
             </div>
+
+            
 
             {/* SPECIFICATIONS TEASER (FIRST 4 SPECS) */}
             {product.specifications && Object.keys(product.specifications).length > 0 && (
@@ -378,7 +401,7 @@ const ProductDetailsPage = () => {
                         className="bg-white border border-gray-200/80 p-3 rounded-xl shadow-2xs"
                       >
                         <div className="text-[11px] font-bold text-gray-400 truncate uppercase">
-                          {key}
+                          {formatTitleCase(key)}
                         </div>
                         <div className="text-xs font-bold text-[#021C57] truncate mt-0.5">
                           {val}
@@ -389,9 +412,8 @@ const ProductDetailsPage = () => {
               </div>
             )}
 
-            {/* ================= ACTION BUTTONS (HIGH CONVERTING) ================= */}
+            {/* ACTION BUTTONS ROW */}
             <div className="bg-white border border-gray-200/80 rounded-3xl p-6 shadow-sm space-y-4">
-              
               <div className="flex items-center justify-between text-xs font-semibold text-gray-500">
                 <span>Enterprise Inquiries & Tender Supply</span>
                 <span className="text-emerald-600 font-bold flex items-center gap-1">
@@ -421,7 +443,7 @@ const ProductDetailsPage = () => {
               <div className="flex items-center gap-3 pt-2">
                 <a
                   href={`https://wa.me/918169695728?text=Hello%20ARCL%20Team,%20I%20am%20interested%20in%20obtaining%20a%20technical%20quote%20for%20${encodeURIComponent(
-                    product.name
+                    formatTitleCase(product.name)
                   )}%20(SKU:%20${product.slug})`}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -439,7 +461,6 @@ const ProductDetailsPage = () => {
                   Call Engineering Desk
                 </a>
               </div>
-
             </div>
 
           </div>
@@ -456,12 +477,7 @@ const ProductDetailsPage = () => {
           
           {/* TAB HEADERS */}
           <div className="flex border-b border-gray-200 overflow-x-auto bg-gray-50/60 p-2 gap-2">
-            {[
-              { id: "specs", label: "Technical Specifications", count: Object.keys(product.specifications || {}).length },
-              { id: "features", label: "Key Features", count: product.features?.length || 0 },
-              { id: "applications", label: "Lab Applications", count: product.applications?.length || 0 },
-              { id: "compliance", label: "Testing Standards & Compliance" },
-            ].map((tab) => (
+            {tabsList.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
@@ -498,7 +514,7 @@ const ProductDetailsPage = () => {
                     Technical Specifications Table
                   </h3>
                   <p className="text-xs text-gray-500 mt-1">
-                    Standard testing parameters according to national calibration guidelines.
+                    Custom technical parameters and testing boundaries for this instrument.
                   </p>
                 </div>
 
@@ -521,9 +537,9 @@ const ProductDetailsPage = () => {
                           >
                             <td className="p-4 font-semibold text-gray-800 flex items-center gap-2">
                               <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                              {key}
+                              {formatTitleCase(key)}
                             </td>
-                            <td className="p-4 text-gray-700 font-mono text-xs sm:text-sm font-medium">
+                            <td className="p-4 text-gray-700 font-mono text-xs sm:text-sm font-bold">
                               {val}
                             </td>
                           </tr>
@@ -533,7 +549,7 @@ const ProductDetailsPage = () => {
                   </div>
                 ) : (
                   <div className="p-8 text-center text-gray-400 bg-gray-50 rounded-2xl">
-                    Standard technical parameters apply. Download the official PDF Catalog for complete engineering schematics.
+                    Standard laboratory specifications apply. Contact our engineering desk or request a quote for customized parameters.
                   </div>
                 )}
               </div>
@@ -607,7 +623,56 @@ const ProductDetailsPage = () => {
               </div>
             )}
 
-            {/* TAB 4: COMPLIANCE */}
+            {/* TAB 4: HOW IT WORKS */}
+            {activeTab === "howItWorks" && hasHowItWorks && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-xl font-bold text-[#021C57] flex items-center gap-2">
+                    <Cog className="w-5 h-5 text-amber-600" />
+                    How It Works & Operating Mechanism
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Operating mechanism and procedural steps for the {formatTitleCase(product.category?.name)} category.
+                  </p>
+                </div>
+
+                {categoryHowItWorks && (
+                  <div className="bg-amber-50/50 border border-amber-200 p-5 rounded-2xl">
+                    <p className="text-sm sm:text-base text-gray-800 leading-relaxed font-medium">
+                      {categoryHowItWorks}
+                    </p>
+                  </div>
+                )}
+
+                {categoryHowItWorksSteps && categoryHowItWorksSteps.length > 0 && (
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+                    {categoryHowItWorksSteps.map((step, idx) => (
+                      <div
+                        key={idx}
+                        className="bg-white p-5 rounded-2xl border border-amber-200/80 shadow-2xs hover:shadow-md transition space-y-2 relative overflow-hidden"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <span className="w-7 h-7 rounded-xl bg-amber-500 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                            {step.stepNumber || idx + 1}
+                          </span>
+                          <h4 className="font-bold text-sm text-[#021C57] line-clamp-1">
+                            {step.title || `Step ${idx + 1}`}
+                          </h4>
+                        </div>
+
+                        {step.description && (
+                          <p className="text-xs text-gray-600 leading-relaxed pl-9">
+                            {step.description}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* TAB 5: COMPLIANCE */}
             {activeTab === "compliance" && (
               <div className="space-y-6">
                 <div>
@@ -653,7 +718,7 @@ const ProductDetailsPage = () => {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-extrabold text-[#021C57]">
-                Related {product.category?.name} Equipment
+                Related {formatTitleCase(product.category?.name)} Equipment
               </h2>
               <p className="text-xs text-gray-500 mt-0.5">
                 Explore complementary testing instruments for your laboratory setup.
@@ -684,7 +749,7 @@ const ProductDetailsPage = () => {
                   </div>
 
                   <h3 className="font-bold text-[#021C57] text-base line-clamp-1 group-hover:text-blue-600 transition">
-                    {rel.name}
+                    {formatTitleCase(rel.name)}
                   </h3>
 
                   <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
@@ -741,10 +806,10 @@ const ProductDetailsPage = () => {
 
                   <div>
                     <h3 className="text-xl font-bold text-white leading-snug">
-                      {product.name}
+                      {formatTitleCase(product.name)}
                     </h3>
                     <p className="text-xs text-blue-200 mt-1">
-                      Category: {product.category?.name}
+                      Category: {formatTitleCase(product.category?.name)}
                     </p>
                   </div>
 
@@ -800,26 +865,26 @@ const ProductDetailsPage = () => {
                       <input
                         type="text"
                         name="customerName"
-                        placeholder="e.g. Dr. Rajesh Sharma"
+                        required
                         value={formData.customerName}
                         onChange={handleChange}
-                        required
-                        className="w-full border border-gray-200 rounded-xl p-3 text-sm mt-1 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                        placeholder="e.g. Dr. Rajesh Sharma"
+                        className="w-full mt-1 border border-gray-200 rounded-xl p-3 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition"
                       />
                     </div>
 
                     <div>
                       <label className="text-xs font-bold text-gray-700">
-                        Phone Number <span className="text-red-500">*</span>
+                        Email Address <span className="text-red-500">*</span>
                       </label>
                       <input
-                        type="tel"
-                        name="phone"
-                        placeholder="e.g. +91 98765 43210"
-                        value={formData.phone}
-                        onChange={handleChange}
+                        type="email"
+                        name="email"
                         required
-                        className="w-full border border-gray-200 rounded-xl p-3 text-sm mt-1 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                        value={formData.email}
+                        onChange={handleChange}
+                        placeholder="name@organization.com"
+                        className="w-full mt-1 border border-gray-200 rounded-xl p-3 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition"
                       />
                     </div>
                   </div>
@@ -827,16 +892,16 @@ const ProductDetailsPage = () => {
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
                       <label className="text-xs font-bold text-gray-700">
-                        Official Email <span className="text-red-500">*</span>
+                        Phone / WhatsApp <span className="text-red-500">*</span>
                       </label>
                       <input
-                        type="email"
-                        name="email"
-                        placeholder="e.g. lab@company.com"
-                        value={formData.email}
-                        onChange={handleChange}
+                        type="tel"
+                        name="phone"
                         required
-                        className="w-full border border-gray-200 rounded-xl p-3 text-sm mt-1 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        placeholder="+91 98765 43210"
+                        className="w-full mt-1 border border-gray-200 rounded-xl p-3 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition"
                       />
                     </div>
 
@@ -847,89 +912,79 @@ const ProductDetailsPage = () => {
                       <input
                         type="text"
                         name="company"
-                        placeholder="e.g. L&T Labs / IIT Mumbai"
                         value={formData.company}
                         onChange={handleChange}
-                        className="w-full border border-gray-200 rounded-xl p-3 text-sm mt-1 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                        placeholder="e.g. IIT Bombay / L&T Labs"
+                        className="w-full mt-1 border border-gray-200 rounded-xl p-3 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition"
                       />
                     </div>
                   </div>
 
                   <div>
                     <label className="text-xs font-bold text-gray-700">
-                      Required Quantity
+                      Quantity Required
                     </label>
                     <div className="flex items-center gap-3 mt-1">
-                      <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden bg-white">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              quantity: Math.max(1, (Number(prev.quantity) || 1) - 1),
-                            }))
-                          }
-                          className="p-3 text-gray-500 hover:bg-gray-100 transition cursor-pointer"
-                        >
-                          <Minus size={14} />
-                        </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            quantity: Math.max(1, (parseInt(prev.quantity) || 1) - 1),
+                          }))
+                        }
+                        className="w-10 h-10 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center font-bold text-gray-700 hover:bg-gray-100 transition cursor-pointer"
+                      >
+                        <Minus size={14} />
+                      </button>
 
-                        <input
-                          type="number"
-                          name="quantity"
-                          min="1"
-                          value={formData.quantity}
-                          onChange={handleChange}
-                          className="w-16 text-center font-bold text-sm outline-none border-none p-2"
-                        />
+                      <input
+                        type="number"
+                        name="quantity"
+                        min="1"
+                        value={formData.quantity}
+                        onChange={handleChange}
+                        className="w-20 border border-gray-200 rounded-xl p-2.5 text-center text-xs font-bold outline-none"
+                      />
 
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              quantity: (Number(prev.quantity) || 1) + 1,
-                            }))
-                          }
-                          className="p-3 text-gray-500 hover:bg-gray-100 transition cursor-pointer"
-                        >
-                          <Plus size={14} />
-                        </button>
-                      </div>
-                      <span className="text-xs text-gray-400">Unit(s) with accessories</span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            quantity: (parseInt(prev.quantity) || 1) + 1,
+                          }))
+                        }
+                        className="w-10 h-10 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center font-bold text-gray-700 hover:bg-gray-100 transition cursor-pointer"
+                      >
+                        <Plus size={14} />
+                      </button>
                     </div>
                   </div>
 
                   <div>
                     <label className="text-xs font-bold text-gray-700">
-                      Specific Requirements / Delivery Location
+                      Project Notes / Technical Specifications
                     </label>
                     <textarea
                       name="message"
                       rows="3"
-                      placeholder="Mention any custom specifications, delivery timeline, or tender reference..."
                       value={formData.message}
                       onChange={handleChange}
-                      className="w-full border border-gray-200 rounded-xl p-3 text-sm mt-1 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 resize-none"
-                    />
+                      placeholder="Specify test capacity, calibration requirements or delivery timeframe..."
+                      className="w-full mt-1 border border-gray-200 rounded-xl p-3 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition"
+                    ></textarea>
                   </div>
 
-                  <button
-                    type="submit"
-                    disabled={inquiryLoading}
-                    className="w-full bg-[#021C57] hover:bg-[#03308f] text-white py-3.5 rounded-xl font-bold shadow-md transition disabled:opacity-50 flex items-center justify-center gap-2 text-sm cursor-pointer"
-                  >
-                    {inquiryLoading ? (
-                      <>
-                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                        Submitting Quotation Request...
-                      </>
-                    ) : (
-                      <>
-                        <Send size={15} /> Send Quotation Request
-                      </>
-                    )}
-                  </button>
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      disabled={inquiryLoading}
+                      className="w-full bg-[#021C57] hover:bg-[#03308f] text-white py-3.5 px-6 rounded-2xl font-bold transition shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-xs uppercase tracking-wider disabled:opacity-50 cursor-pointer"
+                    >
+                      {inquiryLoading ? "Submitting Inquiry..." : "Submit Quotation Request"}
+                    </button>
+                  </div>
 
                 </form>
 

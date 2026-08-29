@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
+import { FaEdit, FaTrash, FaPlus, FaStar, FaRegStar } from "react-icons/fa";
 import EquipmentTypeModal from "../../components/admin/equipmentType/EquipmentTypeModal.jsx";
 import EquipmentTypeEditModal from "../../components/admin/equipmentType/EquipmentTypeEditModal.jsx";
 import Tooltip from "../../components/admin/common/Tooltip.jsx";
 import SkeletonLoader from "../../components/admin/common/SkeletonLoader.jsx";
 import useEquipmentType from "../../hooks/useEquipmentType.js";
+import { formatTitleCase } from "../../utils/stringUtils.js";
 import { toast } from "react-toastify";
 
 const EquipmentTypeList = () => {
@@ -15,7 +16,9 @@ const EquipmentTypeList = () => {
     error,
     selectedItem,
     deletingId,
+    togglingFeaturedId,
     handleEdit,
+    handleToggleFeatured,
     handleDelete,
   } = useEquipmentType();
 
@@ -29,9 +32,8 @@ const EquipmentTypeList = () => {
   const onDeleteConfirm = async (id) => {
     try {
       await handleDelete(id);
-      toast.success("Equipment type deleted successfully");
     } catch (err) {
-      toast.error(err.message || "Failed to delete equipment type");
+      // Handled inside hook
     }
   };
 
@@ -83,70 +85,100 @@ const EquipmentTypeList = () => {
           <table className="w-full text-left">
             <thead className="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100">
               <tr>
-                <th className="p-4">Name</th>
-                <th className="p-4">Slug</th>
+                <th className="p-4">Equipment Type Name</th>
+                <th className="p-4 text-center">Featured on Home</th>
                 <th className="p-4 text-center">Actions</th>
               </tr>
             </thead>
 
             <tbody className="divide-y divide-gray-100 text-sm">
-              {equipmentTypes.map((item) => (
-                <tr key={item._id} className="hover:bg-gray-50/80 transition">
-                  {/* NAME */}
-                  <td className="p-4 font-semibold text-gray-800">
-                    {item.name.toUpperCase()}
-                  </td>
+              {equipmentTypes.map((item) => {
+                const isFeatured = Boolean(item.isFeatured);
+                const isToggling = togglingFeaturedId === item._id;
 
-                  {/* SLUG */}
-                  <td className="p-4 text-gray-500 font-mono text-xs">
-                    /{item.slug}
-                  </td>
+                return (
+                  <tr key={item._id} className="hover:bg-gray-50/80 transition">
+                    {/* NAME */}
+                    <td className="p-4 font-semibold text-gray-800">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-[#021C57]"></span>
+                        <span>{formatTitleCase(item.name)}</span>
+                      </div>
+                    </td>
 
-                  {/* ACTIONS */}
-                  <td className="p-4">
-                    <div className="flex justify-center items-center gap-3">
-                      <Tooltip text="Edit">
-                        <button
-                          onClick={() => handleEdit(item, setEditModalOpen)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer"
-                        >
-                          <FaEdit size={16} />
-                        </button>
-                      </Tooltip>
+                    {/* FEATURED TOGGLE BUTTON */}
+                    <td className="p-4 text-center">
+                      <button
+                        onClick={() => handleToggleFeatured(item._id)}
+                        disabled={isToggling}
+                        className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition shadow-2xs cursor-pointer ${
+                          isFeatured
+                            ? "bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-300"
+                            : "bg-gray-100 text-gray-500 hover:bg-gray-200 border border-gray-200"
+                        } disabled:opacity-50`}
+                        title={
+                          isFeatured
+                            ? "Click to remove from homepage showcase"
+                            : "Click to feature this equipment type on homepage"
+                        }
+                      >
+                        {isToggling ? (
+                          <span className="w-3 h-3 border-2 border-amber-600 border-t-transparent rounded-full animate-spin"></span>
+                        ) : isFeatured ? (
+                          <FaStar className="text-amber-500" size={13} />
+                        ) : (
+                          <FaRegStar className="text-gray-400" size={13} />
+                        )}
+                        <span>{isFeatured ? "Featured" : "Standard"}</span>
+                      </button>
+                    </td>
 
-                      <Tooltip text="Delete">
-                        <button
-                          onClick={() => onDeleteConfirm(item._id)}
-                          disabled={deletingId === item._id}
-                          className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition disabled:opacity-50 cursor-pointer"
-                        >
-                          {deletingId === item._id ? (
-                            <span className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin inline-block"></span>
-                          ) : (
-                            <FaTrash size={16} />
-                          )}
-                        </button>
-                      </Tooltip>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    {/* ACTIONS */}
+                    <td className="p-4">
+                      <div className="flex justify-center items-center gap-3">
+                        <Tooltip text="Edit">
+                          <button
+                            onClick={() => handleEdit(item, setEditModalOpen)}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer"
+                          >
+                            <FaEdit size={16} />
+                          </button>
+                        </Tooltip>
+
+                        <Tooltip text="Delete">
+                          <button
+                            onClick={() => onDeleteConfirm(item._id)}
+                            disabled={deletingId === item._id}
+                            className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition disabled:opacity-50 cursor-pointer"
+                          >
+                            {deletingId === item._id ? (
+                              <span className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin inline-block"></span>
+                            ) : (
+                              <FaTrash size={16} />
+                            )}
+                          </button>
+                        </Tooltip>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       )}
 
-       {/* MODALS */}
-          <EquipmentTypeModal
-            isOpen={openModal}
-            onClose={() => setOpenModal(false)}
-          />
+      {/* MODALS */}
+      <EquipmentTypeModal
+        isOpen={openModal}
+        onClose={() => setOpenModal(false)}
+      />
 
-          <EquipmentTypeEditModal
-            isOpen={editModalOpen}
-            onClose={() => setEditModalOpen(false)}
-            selected={selectedItem}
-          />
+      <EquipmentTypeEditModal
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        selected={selectedItem}
+      />
     </div>
   );
 };

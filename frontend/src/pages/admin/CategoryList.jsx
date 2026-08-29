@@ -10,6 +10,8 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaLayerGroup,
+  FaStar,
+  FaRegStar,
 } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import Toggle from "../../components/admin/common/Toggle.jsx";
@@ -18,6 +20,7 @@ import Tooltip from "../../components/admin/common/Tooltip.jsx";
 import CategoryDetailsModal from "../../components/admin/category/CategoryDetailsModal.jsx";
 import { toast } from "react-toastify";
 import { Eye } from "lucide-react";
+import { formatTitleCase } from "../../utils/stringUtils.js";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -239,7 +242,7 @@ const CategoryList = () => {
                   >
                     {/* NAME */}
                     <td className="p-4 font-semibold text-gray-800">
-                      <div>{cat.name}</div>
+                      <div>{formatTitleCase(cat.name)}</div>
                       <div className="text-xs text-gray-400 font-mono mt-0.5">
                        {cat.description? `${cat.description.slice(0, 30)}${cat.description.length > 30 ? "..." : ""}`
                           : "Equipment Description"}
@@ -250,7 +253,7 @@ const CategoryList = () => {
                     {/* EQUIPMENT TYPE */}
                     <td className="p-4 text-gray-600 font-medium">
                       <span className="bg-blue-50 text-[#021C57] px-2.5 py-1 rounded-lg text-xs font-semibold">
-                        {cat.equipmentType?.name || "—"}
+                        {formatTitleCase(cat.equipmentType?.name || "—")}
                       </span>
                     </td>
 
@@ -262,23 +265,30 @@ const CategoryList = () => {
                     </td>
 
                     {/* FEATURED TOGGLE */}
-                    <td className="p-4">
-                      <div className="flex items-center gap-2">
-                        <Toggle
-                          checked={cat.isFeatured}
-                          onChange={() => handleToggleFeatured(cat._id)}
-                          disabled={togglingId === cat._id}
-                        />
-                        <span
-                          className={`text-xs font-medium ${
-                            cat.isFeatured
-                              ? "text-yellow-600 font-semibold"
-                              : "text-gray-400"
-                          }`}
-                        >
-                          {cat.isFeatured ? "Featured" : "Normal"}
-                        </span>
-                      </div>
+                    <td className="p-4 text-center">
+                      <button
+                        onClick={() => handleToggleFeatured(cat._id)}
+                        disabled={togglingId === cat._id}
+                        className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition shadow-2xs cursor-pointer ${
+                          cat.isFeatured
+                            ? "bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-300"
+                            : "bg-gray-100 text-gray-500 hover:bg-gray-200 border border-gray-200"
+                        } disabled:opacity-50`}
+                        title={
+                          cat.isFeatured
+                            ? "Click to remove from featured showcase"
+                            : "Click to mark as featured on homepage"
+                        }
+                      >
+                        {togglingId === cat._id ? (
+                          <span className="w-3 h-3 border-2 border-amber-600 border-t-transparent rounded-full animate-spin"></span>
+                        ) : cat.isFeatured ? (
+                          <FaStar className="text-amber-500" size={13} />
+                        ) : (
+                          <FaRegStar className="text-gray-400" size={13} />
+                        )}
+                        <span>{cat.isFeatured ? "Featured" : "Standard"}</span>
+                      </button>
                     </td>
 
                     {/* ACTIONS */}

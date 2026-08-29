@@ -8,7 +8,8 @@ import {
   FaCalendarAlt,
   FaTag,
 } from "react-icons/fa";
-import { X, CheckCircle2, ShieldCheck, FileText, Sparkles } from "lucide-react";
+import { X, CheckCircle2, ShieldCheck, FileText, Cog } from "lucide-react";
+import { formatTitleCase } from "../../../utils/stringUtils.js";
 
 const ProductDetailsModal = ({ isOpen, onClose, product }) => {
   if (!isOpen || !product) return null;
@@ -24,22 +25,28 @@ const ProductDetailsModal = ({ isOpen, onClose, product }) => {
     product.description || product.category?.description || "No description provided.";
 
   const features =
-    Array.isArray(product.features) && product.features.length > 0
+    product.features?.length > 0
       ? product.features
-      : product.category?.features?.length > 0
-      ? product.category.features
-      : [];
+      : product.category?.features || [];
 
   const applications =
-    Array.isArray(product.applications) && product.applications.length > 0
+    product.applications?.length > 0
       ? product.applications
-      : product.category?.applications?.length > 0
-      ? product.category.applications
+      : product.category?.applications || [];
+
+  const howItWorks = product.howItWorks || product.category?.howItWorks;
+  const howItWorksSteps =
+    (product.howItWorksSteps && product.howItWorksSteps.length > 0)
+      ? product.howItWorksSteps
+      : (product.category?.howItWorksSteps && product.category.howItWorksSteps.length > 0)
+      ? product.category.howItWorksSteps
       : [];
+
+  const hasHowItWorks = Boolean(howItWorks || (howItWorksSteps && howItWorksSteps.length > 0));
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-gray-100 relative animate-scale-up">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-gray-100 relative animate-scale-up">
         
         {/* MODAL HEADER */}
         <div className="sticky top-0 bg-white/95 backdrop-blur-md px-6 py-4 border-b border-gray-100 flex items-center justify-between z-10">
@@ -49,7 +56,7 @@ const ProductDetailsModal = ({ isOpen, onClose, product }) => {
             </span>
             <div>
               <h2 className="text-lg font-bold text-gray-800 line-clamp-1">
-                Product Specifications & Details
+                Product Quick Details
               </h2>
               <p className="text-xs text-gray-400 font-mono">
                 ID: {product._id}
@@ -66,27 +73,27 @@ const ProductDetailsModal = ({ isOpen, onClose, product }) => {
         </div>
 
         {/* MODAL CONTENT */}
-        <div className="p-6 md:p-8 space-y-8">
+        <div className="p-6 md:p-8 space-y-6">
           
-          {/* TOP SECTION: IMAGE & PRIMARY INFO */}
+          {/* TOP SECTION: IMAGE + DETAILS */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
             
             {/* Image */}
-            <div className="md:col-span-4 bg-gray-50 rounded-2xl border border-gray-200 p-2 overflow-hidden flex items-center justify-center">
+            <div className="md:col-span-4 bg-gray-50 rounded-2xl border border-gray-200 overflow-hidden shadow-inner flex items-center justify-center p-2">
               <img
                 src={imageUrl}
                 alt={product.name}
-                className="w-full h-56 object-cover rounded-xl"
+                className="w-full h-44 object-contain rounded-xl"
               />
             </div>
 
             {/* Main Info */}
-            <div className="md:col-span-8 space-y-3">
+            <div className="md:col-span-8 space-y-2.5">
               
               {/* Badges */}
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="bg-[#021C57] text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1.5">
-                  <FaLayerGroup size={11} /> {product.category?.name || "Equipment"}
+                  <FaLayerGroup size={11} /> {formatTitleCase(product.category?.name || "Equipment")}
                 </span>
 
                 <span
@@ -109,7 +116,7 @@ const ProductDetailsModal = ({ isOpen, onClose, product }) => {
 
               {/* Title */}
               <h3 className="text-xl md:text-2xl font-bold text-gray-900 leading-snug">
-                {product.name}
+                {formatTitleCase(product.name)}
               </h3>
 
               {/* Slug */}
@@ -141,7 +148,7 @@ const ProductDetailsModal = ({ isOpen, onClose, product }) => {
             Object.keys(product.specifications).length > 0 && (
               <div className="space-y-3">
                 <h4 className="text-sm font-bold text-[#021C57] flex items-center gap-2 border-b border-gray-100 pb-2">
-                  <ShieldCheck size={16} className="text-blue-600" /> Dynamic Technical Specifications (Filter Values)
+                  <ShieldCheck size={16} className="text-blue-600" /> Dynamic Technical Specifications
                 </h4>
 
                 <div className="border border-gray-200 rounded-2xl overflow-hidden text-xs sm:text-sm shadow-2xs">
@@ -160,7 +167,7 @@ const ProductDetailsModal = ({ isOpen, onClose, product }) => {
                             className={idx % 2 === 0 ? "bg-white" : "bg-gray-50/50"}
                           >
                             <td className="p-3.5 font-semibold text-gray-700">
-                              {key}
+                              {formatTitleCase(key)}
                             </td>
                             <td className="p-3.5 text-gray-900 font-bold">{String(val)}</td>
                           </tr>
@@ -171,6 +178,46 @@ const ProductDetailsModal = ({ isOpen, onClose, product }) => {
                 </div>
               </div>
             )}
+
+          {/* HOW IT WORKS / WORKING PRINCIPLE & OPERATIONAL STEPS */}
+          {hasHowItWorks && (
+            <div className="bg-amber-50/50 border border-amber-200/70 p-5 rounded-2xl space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
+                <Cog size={15} className="text-amber-700" /> Working Principle & Operating Mechanism
+              </h4>
+
+              {howItWorks && (
+                <p className="text-xs text-gray-700 leading-relaxed font-medium">
+                  {howItWorks}
+                </p>
+              )}
+
+              {howItWorksSteps.length > 0 && (
+                <div className="grid sm:grid-cols-2 gap-2.5 pt-1">
+                  {howItWorksSteps.map((step, idx) => (
+                    <div
+                      key={idx}
+                      className="bg-white p-3 rounded-xl border border-amber-200 shadow-2xs space-y-1"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
+                          {step.stepNumber || idx + 1}
+                        </span>
+                        <span className="font-bold text-xs text-[#021C57] truncate">
+                          {step.title || `Step ${idx + 1}`}
+                        </span>
+                      </div>
+                      {step.description && (
+                        <p className="text-[11px] text-gray-600 leading-relaxed pl-7">
+                          {step.description}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* FEATURES & APPLICATIONS */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -7,7 +7,9 @@ import {
   Layers,
   Sparkles,
   Package,
+  Cog,
 } from "lucide-react";
+import { formatTitleCase } from "../../utils/stringUtils.js";
 
 const CategoryProductsCatalogModal = ({
   isOpen,
@@ -25,6 +27,10 @@ const CategoryProductsCatalogModal = ({
       p.category?.slug === category.slug
   );
 
+  const hasHowItWorks = Boolean(
+    category.howItWorks || (category.howItWorksSteps && category.howItWorksSteps.length > 0)
+  );
+
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-gray-100 relative animate-scale-up flex flex-col justify-between">
@@ -38,14 +44,14 @@ const CategoryProductsCatalogModal = ({
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-[#021C57] px-2.5 py-0.5 rounded-full">
-                  {category.equipmentType?.name || "Equipment Collection"}
+                  {formatTitleCase(category.equipmentType?.name || "Equipment Collection")}
                 </span>
                 <span className="text-xs text-gray-400 font-medium">
                   {categoryProducts.length} Instruments Available
                 </span>
               </div>
               <h2 className="text-xl font-bold text-gray-900 leading-tight mt-0.5">
-                {category.name}
+                {formatTitleCase(category.name)}
               </h2>
             </div>
           </div>
@@ -69,10 +75,50 @@ const CategoryProductsCatalogModal = ({
             </div>
           )}
 
+          {/* Working Principle & Operational Steps (If Available) */}
+          {hasHowItWorks && (
+            <div className="bg-amber-50/60 border border-amber-200/80 p-5 rounded-2xl space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
+                <Cog size={14} className="text-amber-700" /> Working Principle & Operational Steps
+              </h4>
+
+              {category.howItWorks && (
+                <p className="text-xs text-gray-700 leading-relaxed font-medium">
+                  {category.howItWorks}
+                </p>
+              )}
+
+              {category.howItWorksSteps && category.howItWorksSteps.length > 0 && (
+                <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-2.5 pt-1">
+                  {category.howItWorksSteps.map((step, idx) => (
+                    <div
+                      key={idx}
+                      className="bg-white p-3 rounded-xl border border-amber-200 shadow-2xs space-y-1"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
+                          {step.stepNumber || idx + 1}
+                        </span>
+                        <span className="font-bold text-xs text-[#021C57] truncate">
+                          {step.title || `Step ${idx + 1}`}
+                        </span>
+                      </div>
+                      {step.description && (
+                        <p className="text-[11px] text-gray-600 leading-relaxed pl-7">
+                          {step.description}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Callout Notice */}
-          <div className="flex items-center justify-between bg-amber-50/80 border border-amber-200 p-3.5 rounded-2xl text-xs text-amber-900">
+          <div className="flex items-center justify-between bg-blue-50/80 border border-blue-200 p-3.5 rounded-2xl text-xs text-blue-900">
             <span className="font-semibold flex items-center gap-1.5">
-              <Sparkles size={14} className="text-amber-500" />
+              <Sparkles size={14} className="text-blue-600" />
               Click any equipment below to view and download its official technical PDF catalog brochure.
             </span>
           </div>
@@ -107,7 +153,7 @@ const CategoryProductsCatalogModal = ({
 
                       <div className="space-y-1 min-w-0">
                         <h4 className="text-sm font-bold text-[#021C57] group-hover:text-blue-600 transition line-clamp-1">
-                          {product.name}
+                          {formatTitleCase(product.name)}
                         </h4>
                         <p className="text-[11px] text-gray-500 line-clamp-2 leading-tight">
                           {product.description || "Testing instrument"}
@@ -134,8 +180,8 @@ const CategoryProductsCatalogModal = ({
 
                       {/* WhatsApp Inquiry */}
                       <a
-                        href={`https://wa.me/918169695728?text=Hello%20I%20am%20interested%20in%20${encodeURIComponent(
-                          product.name
+                        href={`https://wa.me/918169695728?text=Hello%20ARCL%20Team,%20I%20am%20interested%20in%20obtaining%20a%20technical%20quote%20for%20${encodeURIComponent(
+                          formatTitleCase(product.name)
                         )}`}
                         target="_blank"
                         rel="noopener noreferrer"

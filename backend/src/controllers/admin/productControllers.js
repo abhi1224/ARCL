@@ -63,6 +63,14 @@ const resolveProductInheritance = (prodDoc) => {
     prod.applications = prod.category.applications;
   }
 
+  // Inherit category's "How It Works" working principle and process steps to the product
+  if (prod.category?.howItWorks) {
+    prod.howItWorks = prod.category.howItWorks;
+  }
+  if (prod.category?.howItWorksSteps && prod.category.howItWorksSteps.length > 0) {
+    prod.howItWorksSteps = prod.category.howItWorksSteps;
+  }
+
   return prod;
 };
 
@@ -198,7 +206,7 @@ export const createProduct = async (req, res) => {
       isActive,
     });
 
-    await product.populate("category", "name slug description features applications filters");
+    await product.populate("category", "name slug description howItWorks howItWorksSteps features applications filters equipmentType");
 
     return res.status(201).json({
       success: true,
@@ -256,7 +264,7 @@ export const getProducts = async (req, res) => {
     sortOptions[sort] = order === "asc" ? 1 : -1;
 
     const products = await Product.find(filter)
-      .populate("category", "name slug description features applications filters")
+      .populate("category", "name slug description howItWorks howItWorksSteps features applications filters equipmentType")
       .sort(sortOptions);
 
     const resolvedProducts = products.map(resolveProductInheritance);
@@ -284,7 +292,7 @@ export const getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id).populate(
       "category",
-      "name slug description features applications filters"
+      "name slug description howItWorks howItWorksSteps features applications filters equipmentType"
     );
 
     if (!product) {
@@ -316,7 +324,7 @@ export const getProduct = async (req, res) => {
   try {
     const product = await Product.findOne({
       slug: req.params.slug,
-    }).populate("category", "name slug description features applications filters");
+    }).populate("category", "name slug description howItWorks howItWorksSteps features applications filters equipmentType");
 
     if (!product) {
       return res.status(404).json({
@@ -427,7 +435,7 @@ export const updateProduct = async (req, res) => {
     if (typeof isActive !== "undefined") product.isActive = isActive;
 
     await product.save();
-    await product.populate("category", "name slug description features applications filters");
+    await product.populate("category", "name slug description howItWorks howItWorksSteps features applications filters equipmentType");
 
     return res.status(200).json({
       success: true,
@@ -559,7 +567,7 @@ export const getProductsByCategory = async (req, res) => {
 
     const products = await Product.find({
       category: category._id,
-    }).populate("category", "name slug description features applications filters");
+    }).populate("category", "name slug description howItWorks howItWorksSteps features applications filters equipmentType");
 
     const resolvedProducts = products.map(resolveProductInheritance);
 

@@ -5,11 +5,17 @@ import {
   FaLayerGroup,
   FaCalendarAlt,
   FaSlidersH,
+  FaCogs,
 } from "react-icons/fa";
-import { X, CheckCircle2, ShieldCheck, FileText } from "lucide-react";
+import { X, CheckCircle2, ShieldCheck, FileText, ArrowRight } from "lucide-react";
+import { formatTitleCase } from "../../../utils/stringUtils.js";
 
 const CategoryDetailsModal = ({ isOpen, onClose, category }) => {
   if (!isOpen || !category) return null;
+
+  const hasHowItWorks = Boolean(
+    category.howItWorks || (category.howItWorksSteps && category.howItWorksSteps.length > 0)
+  );
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
@@ -46,7 +52,7 @@ const CategoryDetailsModal = ({ isOpen, onClose, category }) => {
           <div className="space-y-3">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="bg-[#021C57] text-white text-xs font-semibold px-3 py-1 rounded-full">
-                {category.equipmentType?.name || "Equipment Type"}
+                {formatTitleCase(category.equipmentType?.name || "Equipment Type")}
               </span>
 
               {category.isFeatured && (
@@ -57,13 +63,14 @@ const CategoryDetailsModal = ({ isOpen, onClose, category }) => {
             </div>
 
             <h3 className="text-2xl font-bold text-gray-900 leading-snug">
-              {category.name}
+              {formatTitleCase(category.name)}
             </h3>
 
             <p className="text-xs text-gray-400 font-mono">
               Slug: <span className="text-blue-600">/categories/{category.slug}</span>
             </p>
 
+            {/* DESCRIPTION */}
             <div className="bg-gray-50 border border-gray-200/80 p-4 rounded-2xl">
               <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
                 Master Category Description
@@ -72,6 +79,46 @@ const CategoryDetailsModal = ({ isOpen, onClose, category }) => {
                 {category.description || "No category description provided."}
               </p>
             </div>
+
+            {/* HOW IT WORKS / WORKING PRINCIPLE & DYNAMIC STEPS */}
+            {hasHowItWorks && (
+              <div className="bg-amber-50/50 border border-amber-200/70 p-5 rounded-2xl space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
+                  <FaCogs className="text-amber-600" /> Working Principle & Operating Steps
+                </h4>
+
+                {category.howItWorks && (
+                  <p className="text-xs text-gray-700 leading-relaxed">
+                    {category.howItWorks}
+                  </p>
+                )}
+
+                {category.howItWorksSteps && category.howItWorksSteps.length > 0 && (
+                  <div className="grid sm:grid-cols-2 gap-2.5 pt-1">
+                    {category.howItWorksSteps.map((step, idx) => (
+                      <div
+                        key={idx}
+                        className="bg-white p-3 rounded-xl border border-amber-200 shadow-2xs space-y-1"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="w-5 h-5 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
+                            {step.stepNumber || idx + 1}
+                          </span>
+                          <span className="font-bold text-xs text-amber-950 truncate">
+                            {step.title || `Step ${idx + 1}`}
+                          </span>
+                        </div>
+                        {step.description && (
+                          <p className="text-[11px] text-gray-600 leading-relaxed pl-7">
+                            {step.description}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="pt-1 flex items-center gap-4 text-xs text-gray-400">
               <span className="flex items-center gap-1">
@@ -97,7 +144,7 @@ const CategoryDetailsModal = ({ isOpen, onClose, category }) => {
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-gray-800 text-xs uppercase tracking-wide">
-                        {filter.name}
+                        {formatTitleCase(filter.name)}
                       </span>
                       <span className="text-[10px] text-gray-400 font-mono">
                         ({filter.key})
@@ -135,7 +182,7 @@ const CategoryDetailsModal = ({ isOpen, onClose, category }) => {
             
             {/* Features */}
             {category.features && category.features.length > 0 && (
-              <div className="bg-blue-50/60 p-4 rounded-2xl border border-blue-100 space-y-2">
+              <div className="bg-blue-50/60 p-4.5 rounded-2xl border border-blue-100 space-y-2">
                 <h4 className="text-xs font-bold text-[#021C57] uppercase tracking-wider">
                   Master Key Features ({category.features.length})
                 </h4>
@@ -152,7 +199,7 @@ const CategoryDetailsModal = ({ isOpen, onClose, category }) => {
 
             {/* Applications */}
             {category.applications && category.applications.length > 0 && (
-              <div className="bg-emerald-50/60 p-4 rounded-2xl border border-emerald-100 space-y-2">
+              <div className="bg-emerald-50/60 p-4.5 rounded-2xl border border-emerald-100 space-y-2">
                 <h4 className="text-xs font-bold text-emerald-900 uppercase tracking-wider">
                   Master Applications ({category.applications.length})
                 </h4>

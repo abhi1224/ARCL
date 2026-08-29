@@ -10,6 +10,7 @@ export const useProductStore = create((set, get) => ({
   product: null,
   featuredShowcase: [],
   loading: false,
+  categoryProductsLoading: false,
   error: null,
   totalProducts: 0,
   categoryProducts: [],
@@ -41,20 +42,20 @@ export const useProductStore = create((set, get) => ({
   // =========================
   fetchProductsByCategory: async (slug, params = {}) => {
     try {
-      set({ loading: true, error: null });
+      set({ categoryProductsLoading: true, error: null });
       const data = await productService.getByCategory(slug, params);
 
       set({
         categoryProducts: data.products || [],
         categoryData: data.category || null,
-        loading: false,
+        categoryProductsLoading: false,
       });
       return data;
     } catch (err) {
       console.error("Fetch category products failed:", err);
       set({
         error: err.response?.data?.message || "Failed to fetch category products",
-        loading: false,
+        categoryProductsLoading: false,
       });
     }
   },

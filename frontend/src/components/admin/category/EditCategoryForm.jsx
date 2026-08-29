@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FaPlus, FaTrash } from "react-icons/fa";
+import { FaPlus, FaTrash, FaCogs } from "react-icons/fa";
 import { MdClose } from "react-icons/md";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -8,6 +8,7 @@ import {
   updateCategory,
 } from "../../../api/categoryApi.js";
 import { getAdminEquipmentTypes } from "../../../api/equipmentTypeApi.js";
+import { formatTitleCase } from "../../../utils/stringUtils.js";
 
 const EditCategoryForm = () => {
   const navigate = useNavigate();
@@ -21,6 +22,14 @@ const EditCategoryForm = () => {
   const [form, setForm] = useState({
     name: "",
     description: "",
+    howItWorks: "",
+    howItWorksSteps: [
+      {
+        stepNumber: 1,
+        title: "",
+        description: "",
+      },
+    ],
     features: [""],
     applications: [""],
     equipmentType: "",
@@ -58,6 +67,15 @@ const EditCategoryForm = () => {
         setForm({
           name: data.name || "",
           description: data.description || "",
+          howItWorks: data.howItWorks || "",
+          howItWorksSteps:
+            Array.isArray(data.howItWorksSteps) && data.howItWorksSteps.length > 0
+              ? data.howItWorksSteps.map((s, idx) => ({
+                  stepNumber: s.stepNumber || idx + 1,
+                  title: s.title || "",
+                  description: s.description || "",
+                }))
+              : [{ stepNumber: 1, title: "", description: "" }],
           features:
             Array.isArray(data.features) && data.features.length > 0
               ? data.features
@@ -86,6 +104,49 @@ const EditCategoryForm = () => {
     } finally {
       setPageLoading(false);
     }
+  };
+
+  // HOW IT WORKS DYNAMIC STEPS
+  const addStep = () => {
+    setForm((prev) => ({
+      ...prev,
+      howItWorksSteps: [
+        ...prev.howItWorksSteps,
+        {
+          stepNumber: prev.howItWorksSteps.length + 1,
+          title: "",
+          description: "",
+        },
+      ],
+    }));
+  };
+
+  const removeStep = (index) => {
+    if (form.howItWorksSteps.length === 1) {
+      setForm((prev) => ({
+        ...prev,
+        howItWorksSteps: [{ stepNumber: 1, title: "", description: "" }],
+      }));
+      return;
+    }
+
+    const updated = form.howItWorksSteps
+      .filter((_, i) => i !== index)
+      .map((s, i) => ({ ...s, stepNumber: i + 1 }));
+
+    setForm((prev) => ({
+      ...prev,
+      howItWorksSteps: updated,
+    }));
+  };
+
+  const handleStepChange = (index, field, value) => {
+    const updated = [...form.howItWorksSteps];
+    updated[index] = { ...updated[index], [field]: value };
+    setForm((prev) => ({
+      ...prev,
+      howItWorksSteps: updated,
+    }));
   };
 
   // FEATURES
@@ -194,12 +255,18 @@ const EditCategoryForm = () => {
             .filter(Boolean),
         }));
 
+      const cleanSteps = form.howItWorksSteps.filter(
+        (s) => s.title.trim() || s.description.trim()
+      );
+
       const cleanFeatures = form.features.filter((f) => f && f.trim());
       const cleanApplications = form.applications.filter((a) => a && a.trim());
 
       const payload = {
         name: form.name.trim(),
         description: form.description.trim(),
+        howItWorks: form.howItWorks.trim(),
+        howItWorksSteps: cleanSteps,
         features: cleanFeatures,
         applications: cleanApplications,
         equipmentType: form.equipmentType,
@@ -240,7 +307,7 @@ const EditCategoryForm = () => {
             Edit Category & Master Specifications
           </h2>
           <p className="text-gray-500 text-sm mt-1">
-            Update category master description, features, applications, and dynamic filters.
+            Update category master description, working principle steps, features, applications, and dynamic filters.
           </p>
         </div>
 
@@ -276,7 +343,7 @@ const EditCategoryForm = () => {
                 <option value="">Select Equipment Type</option>
                 {equipmentTypes.map((item) => (
                   <option key={item._id} value={item._id}>
-                    {item.name}
+                    {formatTitleCase(item.name)}
                   </option>
                 ))}
               </select>
@@ -289,13 +356,107 @@ const EditCategoryForm = () => {
               Master Category Description (Applies to all products under this category)
             </label>
             <textarea
-              rows="4"
+              rows="3"
               value={form.description}
               className="w-full mt-2 border border-gray-200 rounded-xl p-3.5 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition"
               onChange={(e) =>
                 setForm({ ...form, description: e.target.value })
               }
             />
+          </div>
+
+          {/* HOW IT WORKS / WORKING PRINCIPLE WITH DYNAMIC STEPS */}
+          <div className="bg-amber-50/40 p-6 rounded-2xl border border-amber-200/70 space-y-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold text-amber-900 flex items-center gap-2">
+                  <FaCogs className="text-amber-700" /> How It Works / Working Principle (Optional)
+                </h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Dynamic step-by-step process boxes (e.g. 3, 5, or 10 steps).
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={addStep}
+                className="text-xs font-bold text-amber-900 bg-white hover:bg-amber-100 px-3.5 py-1.5 rounded-xl border border-amber-300 shadow-2xs transition cursor-pointer"
+              >
+                + Add Step
+              </button>
+            </div>
+
+            {/* Overview / Intro */}
+            <div>
+              <label className="text-xs font-semibold text-amber-950 uppercase tracking-wide">
+                Principle Overview Summary
+              </label>
+              <textarea
+                rows="2"
+                value={form.howItWorks}
+                placeholder="e.g. The apparatus functions on planetary blade motion coupled with counter-current batch circulation..."
+                className="w-full mt-1.5 border border-gray-200 rounded-xl p-3 text-xs bg-white outline-none focus:border-amber-500"
+                onChange={(e) =>
+                  setForm({ ...form, howItWorks: e.target.value })
+                }
+              />
+            </div>
+
+            {/* Dynamic Step Boxes */}
+            <div className="space-y-3 pt-1">
+              <label className="text-xs font-semibold text-amber-950 uppercase tracking-wide block">
+                Dynamic Step-by-Step Process Boxes ({form.howItWorksSteps.length})
+              </label>
+
+              {form.howItWorksSteps.map((step, index) => (
+                <div
+                  key={index}
+                  className="bg-white p-4 rounded-xl border border-amber-200/80 shadow-2xs space-y-3 relative"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-amber-100 text-amber-900 font-bold text-xs">
+                      Step {index + 1}
+                    </span>
+
+                    {form.howItWorksSteps.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeStep(index)}
+                        className="text-red-500 hover:text-red-700 text-xs flex items-center gap-1 cursor-pointer"
+                      >
+                        <FaTrash size={10} /> Remove Step
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="grid sm:grid-cols-3 gap-3">
+                    <div className="sm:col-span-1">
+                      <input
+                        type="text"
+                        value={step.title}
+                        placeholder={`Step ${index + 1} Title`}
+                        className="w-full border border-gray-200 p-2.5 rounded-lg text-xs bg-gray-50/50 outline-none focus:border-amber-500 font-semibold"
+                        onChange={(e) =>
+                          handleStepChange(index, "title", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <input
+                        type="text"
+                        value={step.description}
+                        placeholder="Detailed operational action or test mechanism description..."
+                        className="w-full border border-gray-200 p-2.5 rounded-lg text-xs bg-gray-50/50 outline-none focus:border-amber-500"
+                        onChange={(e) =>
+                          handleStepChange(index, "description", e.target.value)
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* MASTER KEY FEATURES */}
@@ -387,7 +548,7 @@ const EditCategoryForm = () => {
             <div className="flex justify-between items-center">
               <div>
                 <h3 className="text-lg font-bold text-gray-800">
-                  Dynamic Specification Filters
+                  Dynamic Specification Filters (Distinguishing Attributes)
                 </h3>
                 <p className="text-xs text-gray-500 mt-0.5">
                   Attributes used by products belonging to this category (e.g. Size: 60, 70, 80, 90, 100).

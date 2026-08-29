@@ -29,6 +29,7 @@ import InquiryPage from './pages/admin/InquiryPage.jsx'
 import ContactPage from './pages/admin/ContactPage.jsx'
 import CategoryProductsPage from './pages/CategoryProductPage.jsx'
 import UserManagementPage from './pages/admin/UserManagementPage.jsx'
+import SubscriberListPage from './pages/admin/SubscriberListPage.jsx'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -64,6 +65,7 @@ const router = createBrowserRouter(
           <Route path="users" element={<UserManagementPage />} />
           <Route path="inquiry" element={<InquiryPage />} />
           <Route path="contact-messages" element={<ContactPage />} />
+          <Route path="subscribers" element={<SubscriberListPage />} />
         </Route>
       </Route>
     </>

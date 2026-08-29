@@ -6,11 +6,12 @@ import {
   updateProduct,
 } from "../../api/productApi.js";
 import { useProductStore } from "../../store/useProductStore.js";
-import { FaUpload, FaSlidersH, FaLayerGroup } from "react-icons/fa";
+import { FaUpload, FaPlus, FaTrash, FaLayerGroup, FaSlidersH } from "react-icons/fa";
 import { MdClose } from "react-icons/md";
-import { CheckCircle2, ChevronDown, Sparkles } from "lucide-react";
+import { CheckCircle2, ChevronDown, Sparkles, SlidersHorizontal, Info } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import { formatTitleCase } from "../../utils/stringUtils.js";
 
 const ProductForm = () => {
   const { id } = useParams();
@@ -24,12 +25,17 @@ const ProductForm = () => {
     name: "",
     description: "",
     category: "",
-    specifications: {},
     features: [""],
     applications: [""],
     isFeatured: false,
     isActive: true,
   });
+
+  // 1. Specific values chosen for the category's distinguishing dynamic filters: { [filterKey]: "selectedValue" }
+  const [categoryFilterSelections, setCategoryFilterSelections] = useState({});
+
+  // 2. Separate General Technical Specifications: Array of { key: "", value: "" } (can have 0, 5, 10, 20 items)
+  const [generalSpecsList, setGeneralSpecsList] = useState([]);
 
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -65,12 +71,35 @@ const ProductForm = () => {
           );
           setSelectedCategory(matchedCategory || null);
 
+          // Separate category filters vs general specs
+          const filterSelections = {};
+          const otherSpecs = [];
+
+          if (prod.specifications && typeof prod.specifications === "object") {
+            const categoryFilterKeys = new Set(
+              (matchedCategory?.filters || []).map((f) =>
+                f.name.toLowerCase().trim()
+              )
+            );
+
+            Object.entries(prod.specifications).forEach(([k, v]) => {
+              const normalizedK = k.toLowerCase().trim();
+              if (categoryFilterKeys.has(normalizedK)) {
+                filterSelections[k] = String(v || "");
+              } else {
+                otherSpecs.push({ key: k, value: String(v || "") });
+              }
+            });
+          }
+
+          setCategoryFilterSelections(filterSelections);
+          setGeneralSpecsList(otherSpecs);
+
           setForm({
             name: prod.name || "",
             description:
               prod.description || matchedCategory?.description || "",
             category: prod.category?._id || prod.category || "",
-            specifications: prod.specifications || {},
             features:
               Array.isArray(prod.features) && prod.features.length > 0
                 ? prod.features
@@ -104,14 +133,10 @@ const ProductForm = () => {
     const category = categories.find((c) => c._id === catId);
     setSelectedCategory(category || null);
 
-    const specs = {};
-    if (category?.filters) {
-      category.filters.forEach((f) => {
-        specs[f.key] = form.specifications[f.key] || (f.values?.length ? f.values[0] : "");
-      });
-    }
+    // Clear previous filter selections (let admin select the specific value for THIS product)
+    setCategoryFilterSelections({});
 
-    // Auto-inherit description, features, applications from the selected category!
+    // Auto-inherit description, features, applications from the selected category
     const inheritedDesc = category?.description || form.description || "";
     const inheritedFeatures =
       category?.features && category.features.length > 0
@@ -129,7 +154,6 @@ const ProductForm = () => {
     setForm({
       ...form,
       category: catId,
-      specifications: specs,
       description: inheritedDesc,
       features: inheritedFeatures,
       applications: inheritedApps,
@@ -140,17 +164,29 @@ const ProductForm = () => {
     }
   };
 
-  const handleSpecChange = (key, value) => {
-    setForm({
-      ...form,
-      specifications: {
-        ...form.specifications,
-        [key]: value,
-      },
+  // CATEGORY FILTER VALUE SELECTION
+  const handleCategoryFilterSelect = (filterName, val) => {
+    setCategoryFilterSelections((prev) => ({
+      ...prev,
+      [filterName]: val,
+    }));
+  };
+
+  // GENERAL TECHNICAL SPECIFICATIONS (UNLIMITED DYNAMIC ROWS)
+  const addGeneralSpecRow = () => {
+    setGeneralSpecsList((prev) => [...prev, { key: "", value: "" }]);
+  };
+
+  const removeGeneralSpecRow = (index) => {
+    setGeneralSpecsList((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleGeneralSpecChange = (index, field, val) => {
+    setGeneralSpecsList((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: val };
+      return updated;
     });
-    if (errors[`spec_${key}`]) {
-      setErrors((prev) => ({ ...prev, [`spec_${key}`]: null }));
-    }
   };
 
   // FEATURES
@@ -225,16 +261,6 @@ const ProductForm = () => {
       newErrors.image = "Product image is required. Please upload an image file.";
     }
 
-    // Dynamic category specifications validation
-    if (selectedCategory && selectedCategory.filters?.length > 0) {
-      selectedCategory.filters.forEach((filter) => {
-        const val = form.specifications[filter.key];
-        if (!val || !String(val).trim()) {
-          newErrors[`spec_${filter.key}`] = `${filter.name} specification is required.`;
-        }
-      });
-    }
-
     return newErrors;
   };
 
@@ -254,6 +280,23 @@ const ProductForm = () => {
       setLoading(true);
       setErrors({});
 
+      // MERGE: Category Filter Selections + General Technical Specifications into specifications object
+      const mergedSpecifications = {};
+
+      // 1. Add category filter selections (e.g. Size: "60")
+      Object.entries(categoryFilterSelections).forEach(([k, v]) => {
+        if (k && k.trim() && v && String(v).trim()) {
+          mergedSpecifications[k.trim()] = String(v).trim();
+        }
+      });
+
+      // 2. Add general technical specifications (e.g. Motor Power: "3.0 HP", Weight: "120kg", etc.)
+      generalSpecsList.forEach((spec) => {
+        if (spec.key && spec.key.trim()) {
+          mergedSpecifications[spec.key.trim()] = spec.value ? spec.value.trim() : "";
+        }
+      });
+
       const formData = new FormData();
       formData.append("name", form.name.trim());
       formData.append(
@@ -266,7 +309,7 @@ const ProductForm = () => {
 
       formData.append(
         "specifications",
-        JSON.stringify(form.specifications || {})
+        JSON.stringify(mergedSpecifications)
       );
 
       const cleanFeatures = form.features.filter((f) => f && f.trim());
@@ -338,9 +381,10 @@ const ProductForm = () => {
                 {isEditMode ? "Edit Product" : "Create New Product"}
               </h2>
               <p className="text-gray-500 text-xs sm:text-sm mt-1">
-                Select a category to auto-inherit its description, features, and applications. Just enter product name, image, and dynamic filter values!
+                Select a category to auto-inherit its description, features, and applications. Just enter product name, image, and dynamic filter values and add general technical specifications.
               </p>
             </div>
+
           </div>
         </div>
 
@@ -361,10 +405,10 @@ const ProductForm = () => {
               }`}
               onChange={(e) => handleCategoryChange(e.target.value)}
             >
-              <option value="">-- Choose Category --</option>
+              <option value="">Choose Category </option>
               {categories.map((c) => (
                 <option key={c._id} value={c._id}>
-                  {c.name} {c.equipmentType?.name ? `(${c.equipmentType.name})` : ""}
+                  {formatTitleCase(c.name)} {c.equipmentType?.name ? `(${formatTitleCase(c.equipmentType.name)})` : ""}
                 </option>
               ))}
             </select>
@@ -378,115 +422,182 @@ const ProductForm = () => {
             {selectedCategory && (
               <div className="text-xs text-blue-900 bg-white/80 p-3 rounded-xl border border-blue-200/80 flex items-center justify-between flex-wrap gap-2">
                 <span>
-                  ✓ Auto-inheriting default description, features, & applications from <strong>{selectedCategory.name}</strong>.
+                  ✓ Auto-inheriting default description, features, & applications from <strong>{formatTitleCase(selectedCategory.name)}</strong>.
                 </span>
                 <span className="font-semibold text-blue-700">
-                  {selectedCategory.filters?.length || 0} Dynamic Filters Defined
+                  Category: {formatTitleCase(selectedCategory.name)}
                 </span>
               </div>
             )}
           </div>
 
-          {/* STEP 2: PRODUCT NAME & DYNAMIC SPECIFICATION FILTERS */}
-          <div className="grid md:grid-cols-2 gap-6">
-            
-            {/* PRODUCT NAME */}
-            <div>
-              <label className="text-sm font-bold text-gray-700">
-                Product Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={form.name}
-                placeholder="Enter product name "
-                className={`w-full border p-3.5 rounded-xl mt-1.5 focus:ring-2 focus:ring-blue-100 outline-none transition ${
-                  errors.name
-                    ? "border-red-400 bg-red-50/20 focus:border-red-500"
-                    : "border-gray-200 focus:border-blue-500"
-                }`}
-                onChange={(e) => {
-                  setForm({ ...form, name: e.target.value });
-                  if (errors.name) setErrors({ ...errors, name: null });
-                }}
-              />
-              {errors.name && (
-                <p className="text-red-500 text-xs font-semibold mt-1">
-                  {errors.name}
+          {/* STEP 2: CATEGORY DISTINGUISHING FILTER SELECTION (IF CATEGORY HAS FILTERS) */}
+          {selectedCategory?.filters && selectedCategory.filters.length > 0 && (
+            <div className="bg-emerald-50/40 p-5 rounded-2xl border border-emerald-200/80 space-y-4">
+              <div>
+                <h3 className="text-sm font-bold text-emerald-950 flex items-center gap-2">
+                  <FaSlidersH className="text-emerald-700" /> Category Filter Attributes 
+                </h3>
+                <p className="text-xs text-emerald-800/80 mt-0.5">
+                  Select which specific filter value this product represents (e.g. Size: 60, or Capacity: 100L). Create 1 product for each filter option.
                 </p>
-              )}
-            </div>
+              </div>
 
-            {/* DYNAMIC SPECIFICATION FILTERS (e.g. Size / Capacity) */}
-            {selectedCategory && selectedCategory.filters?.length > 0 ? (
-              <div className="space-y-3">
-                {selectedCategory.filters.map((f) => {
-                  const specError = errors[`spec_${f.key}`];
+              <div className="grid sm:grid-cols-2 gap-4">
+                {selectedCategory.filters.map((filter) => {
+                  const currentValue = categoryFilterSelections[filter.name] || "";
+
                   return (
-                    <div key={f.key}>
-                      <label className="text-sm font-bold text-gray-700 flex items-center justify-between">
-                        <span>
-                          {f.name} (Filter) <span className="text-red-500">*</span>
-                        </span>
-                        <span className="text-[11px] text-gray-400 font-mono">
-                          {f.key}
-                        </span>
+                    <div
+                      key={filter.name}
+                      className="bg-white p-4 rounded-xl border border-emerald-200 shadow-2xs space-y-2"
+                    >
+                      <label className="text-xs font-bold text-gray-700 uppercase tracking-wide block">
+                        {formatTitleCase(filter.name)}
                       </label>
 
-                      {f.values?.length > 0 ? (
+                      {filter.values && filter.values.length > 0 ? (
                         <select
-                          value={form.specifications[f.key] || ""}
-                          className={`w-full border p-3.5 rounded-xl mt-1.5 text-sm bg-white cursor-pointer outline-none ${
-                            specError
-                              ? "border-red-400 focus:border-red-500"
-                              : "border-gray-200 focus:border-blue-500"
-                          }`}
+                          value={currentValue}
                           onChange={(e) =>
-                            handleSpecChange(f.key, e.target.value)
+                            handleCategoryFilterSelect(filter.name, e.target.value)
                           }
+                          className="w-full border border-gray-200 p-2.5 rounded-lg text-xs bg-white focus:border-emerald-500 outline-none font-semibold text-gray-800"
                         >
-                          <option value="">Select {f.name} value</option>
-                          {f.values.map((v, i) => (
-                            <option key={i} value={v}>
-                              {v}
+                          <option value="">-- Choose {formatTitleCase(filter.name)} Value --</option>
+                          {filter.values.map((val, idx) => (
+                            <option key={idx} value={val}>
+                              {val}
                             </option>
                           ))}
                         </select>
                       ) : (
                         <input
                           type="text"
-                          value={form.specifications[f.key] || ""}
-                          placeholder="Enter value for this specification"
-                          className={`w-full border p-3.5 rounded-xl mt-1.5 text-sm outline-none ${
-                            specError
-                              ? "border-red-400 focus:border-red-500"
-                              : "border-gray-200 focus:border-blue-500"
-                          }`}
+                          value={currentValue}
+                          placeholder={`Enter ${filter.name} value`}
+                          className="w-full border border-gray-200 p-2.5 rounded-lg text-xs outline-none focus:border-emerald-500"
                           onChange={(e) =>
-                            handleSpecChange(f.key, e.target.value)
+                            handleCategoryFilterSelect(filter.name, e.target.value)
                           }
                         />
-                      )}
-
-                      {specError && (
-                        <p className="text-red-500 text-xs font-semibold mt-1">
-                          {specError}
-                        </p>
                       )}
                     </div>
                   );
                 })}
               </div>
-            ) : (
-              <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 flex items-center text-xs text-gray-500">
-                {selectedCategory
-                  ? "This category has no variable dynamic filters configured."
-                  : "Select a category to load its dynamic specification filters."}
-              </div>
-            )}
+            </div>
+          )}
 
+          {/* STEP 3: PRODUCT NAME */}
+          <div>
+            <label className="text-sm font-bold text-gray-700">
+              Product Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={form.name}
+              placeholder="Enter product name..."
+              className={`w-full border p-3.5 rounded-xl mt-1.5 focus:ring-2 focus:ring-blue-100 outline-none transition ${
+                errors.name
+                  ? "border-red-400 bg-red-50/20 focus:border-red-500"
+                  : "border-gray-200 focus:border-blue-500"
+              }`}
+              onChange={(e) => {
+                setForm({ ...form, name: e.target.value });
+                if (errors.name) setErrors({ ...errors, name: null });
+              }}
+            />
+            {errors.name && (
+              <p className="text-red-500 text-xs font-semibold mt-1">
+                {errors.name}
+              </p>
+            )}
           </div>
 
-          {/* STEP 3: IMAGE UPLOAD */}
+          {/* STEP 4: GENERAL TECHNICAL SPECIFICATIONS (UNLIMITED DYNAMIC ROWS: 5, 10, 20 SPECS) */}
+          <div className="bg-slate-50/80 p-5 rounded-2xl border border-gray-200/80 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <h3 className="text-sm font-bold text-[#021C57] flex items-center gap-2">
+                  <SlidersHorizontal size={15} className="text-blue-600" />
+                  General Technical Specifications ({generalSpecsList.length})
+                  <span className="text-[11px] font-normal text-gray-500">(Optional)</span>
+                </h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Add full technical specification parameters.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={addGeneralSpecRow}
+                className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition cursor-pointer shadow-2xs self-start sm:self-auto"
+              >
+                <FaPlus size={10} /> Add Specification Row
+              </button>
+            </div>
+
+            {generalSpecsList.length > 0 ? (
+              <div className="space-y-3">
+                {generalSpecsList.map((spec, index) => (
+                  <div
+                    key={index}
+                    className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center bg-white p-3.5 rounded-xl border border-gray-200/80 shadow-2xs"
+                  >
+                    <div className="sm:col-span-5">
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">
+                        Parameter / Attribute
+                      </label>
+                      <input
+                        type="text"
+                        value={spec.key}
+                        placeholder="e.g. Motor Power / Speed / Weight"
+                        className="w-full border border-gray-200 p-2.5 rounded-lg text-xs bg-gray-50/40 focus:bg-white outline-none focus:border-blue-500"
+                        onChange={(e) =>
+                          handleGeneralSpecChange(index, "key", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div className="sm:col-span-6">
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">
+                        Specification Value
+                      </label>
+                      <input
+                        type="text"
+                        value={spec.value}
+                        placeholder="e.g. 3.0 HP 3-Phase / 1400 RPM"
+                        className="w-full border border-gray-200 p-2.5 rounded-lg text-xs bg-gray-50/40 focus:bg-white outline-none focus:border-blue-500"
+                        onChange={(e) =>
+                          handleGeneralSpecChange(index, "value", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div className="sm:col-span-1 flex sm:justify-center pt-2 sm:pt-4">
+                      <button
+                        type="button"
+                        onClick={() => removeGeneralSpecRow(index)}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                        title="Delete parameter"
+                      >
+                        <FaTrash size={12} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white p-6 rounded-xl border border-gray-200/70 text-center space-y-2">
+                <p className="text-xs text-gray-500">
+                  No additional technical specifications added. Click &quot;Add Specification Row&quot; above to add custom parameters.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* STEP 5: IMAGE UPLOAD */}
           <div>
             <label className="text-sm font-bold text-gray-700">
               Product Image {!isEditMode && <span className="text-red-500">*</span>}
@@ -543,7 +654,7 @@ const ProductForm = () => {
             )}
           </div>
 
-          {/* STEP 4: OPTIONAL ADVANCED OVERRIDES ACCORDION */}
+          {/* STEP 6: OPTIONAL ADVANCED OVERRIDES ACCORDION */}
           <div className="border border-gray-200 rounded-2xl overflow-hidden bg-gray-50/40">
             <button
               type="button"

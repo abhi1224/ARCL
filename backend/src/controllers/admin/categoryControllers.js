@@ -5,6 +5,29 @@ import slugify from "slugify";
 import mongoose from "mongoose";
 
 /**
+ * Helper to clean and format howItWorksSteps
+ */
+const formatSteps = (steps) => {
+  if (typeof steps === "string") {
+    try {
+      steps = JSON.parse(steps);
+    } catch (e) {
+      steps = [];
+    }
+  }
+
+  if (!Array.isArray(steps)) return [];
+
+  return steps
+    .filter((s) => s && (s.title?.trim() || s.description?.trim()))
+    .map((s, idx) => ({
+      stepNumber: typeof s.stepNumber === "number" ? s.stepNumber : idx + 1,
+      title: s.title ? s.title.trim() : `Step ${idx + 1}`,
+      description: s.description ? s.description.trim() : "",
+    }));
+};
+
+/**
  * @desc    Create Category
  * @route   POST /api/v1/admin/categories
  * @access  Admin
@@ -14,6 +37,8 @@ export const createCategory = async (req, res) => {
     let {
       name,
       description,
+      howItWorks,
+      howItWorksSteps,
       features,
       applications,
       equipmentType,
@@ -95,10 +120,14 @@ export const createCategory = async (req, res) => {
         }))
       : [];
 
+    const formattedSteps = formatSteps(howItWorksSteps);
+
     const category = await Category.create({
       name: name.trim(),
       slug,
       description: description ? description.trim() : "",
+      howItWorks: howItWorks ? howItWorks.trim() : "",
+      howItWorksSteps: formattedSteps,
       features: cleanFeatures,
       applications: cleanApplications,
       equipmentType,
@@ -285,6 +314,8 @@ export const updateCategory = async (req, res) => {
     let {
       name,
       description,
+      howItWorks,
+      howItWorksSteps,
       features,
       applications,
       equipmentType,
@@ -344,6 +375,14 @@ export const updateCategory = async (req, res) => {
 
     if (typeof description !== "undefined") {
       category.description = description;
+    }
+
+    if (typeof howItWorks !== "undefined") {
+      category.howItWorks = howItWorks;
+    }
+
+    if (typeof howItWorksSteps !== "undefined") {
+      category.howItWorksSteps = formatSteps(howItWorksSteps);
     }
 
     if (typeof features !== "undefined") {

@@ -3,7 +3,8 @@ import { useParams, Link } from "react-router-dom";
 import { useProductStore } from "../store/useProductStore.js";
 import ProductCard from "../components/products/ProductCard.jsx";
 import ProductToolbar from "../components/products/ProductToolbar.jsx";
-import { Filter, X, RotateCcw, ChevronRight, Layers, SlidersHorizontal, Check } from "lucide-react";
+import { Filter, X, RotateCcw, ChevronRight, Layers, SlidersHorizontal, Cog } from "lucide-react";
+import { formatTitleCase } from "../utils/stringUtils.js";
 
 /**
  * Helper to normalize key strings for robust matching
@@ -12,8 +13,10 @@ const normalizeKey = (k) => String(k || "").toLowerCase().replace(/[\s_-]+/g, ""
 
 const CategoryProductPage = () => {
   const { slug } = useParams();
-  const { categoryProducts, categoryData, fetchProductsByCategory, loading } =
+  const { categoryProducts, categoryData, fetchProductsByCategory, categoryProductsLoading, loading: globalLoading } =
     useProductStore();
+
+  const loading = categoryProductsLoading || globalLoading;
 
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("latest");
@@ -82,7 +85,6 @@ const CategoryProductPage = () => {
       result = result.filter((product) => {
         const rawSpecs = product.specifications;
         
-        // Convert specs to a normalized key-value object
         let specsObj = {};
         if (rawSpecs instanceof Map) {
           specsObj = Object.fromEntries(rawSpecs);
@@ -98,26 +100,21 @@ const CategoryProductPage = () => {
           const targetNormalizedKey = normalizeKey(filterKey);
 
           // Find matching key in product specifications
-          const foundKey = Object.keys(specsObj).find(
-            (k) =>
-              normalizeKey(k) === targetNormalizedKey ||
-              k.toLowerCase().trim() === filterKey.toLowerCase().trim()
+          const matchedSpecKey = Object.keys(specsObj).find(
+            (k) => normalizeKey(k) === targetNormalizedKey
           );
 
-          const productVal = foundKey ? specsObj[foundKey] : "";
-          const productValStr = String(productVal || "").toLowerCase().trim();
+          if (!matchedSpecKey) return false;
 
-          // Check if ANY selected value matches the product's spec
+          const productSpecVal = String(specsObj[matchedSpecKey]).toLowerCase().trim();
+
+          // Check if any of selected values match the product's spec
           return selectedValues.some((val) => {
-            const valLower = String(val).toLowerCase().trim();
-            if (!valLower) return true;
-
-            // Direct match, contains match, or word-boundary match
+            const v = String(val).toLowerCase().trim();
             return (
-              productValStr === valLower ||
-              productValStr.split(/[\s,/-]+/).includes(valLower) ||
-              productValStr.includes(valLower) ||
-              valLower.includes(productValStr)
+              productSpecVal === v ||
+              productSpecVal.includes(v) ||
+              v.includes(productSpecVal)
             );
           });
         });
@@ -132,7 +129,6 @@ const CategoryProductPage = () => {
     } else if (sort === "popular") {
       result.sort((a, b) => (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0));
     } else {
-      // latest
       result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     }
 
@@ -153,7 +149,7 @@ const CategoryProductPage = () => {
             <Link to="/products" className="hover:text-blue-600">Catalogue</Link>
             <ChevronRight size={12} />
             <span className="text-[#021C57] font-semibold">
-              {categoryData?.name || slug}
+              {formatTitleCase(categoryData?.name || slug)}
             </span>
           </nav>
 
@@ -161,15 +157,55 @@ const CategoryProductPage = () => {
           <div>
             <div className="flex items-center gap-2 text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1">
               <Layers className="w-3.5 h-3.5" />
-              {categoryData?.equipmentType?.name || "Equipment Category"}
+              {formatTitleCase(categoryData?.equipmentType?.name || "Equipment Category")}
             </div>
             <h1 className="text-2xl md:text-4xl font-bold text-[#021C57]">
-              {categoryData?.name || "Category Products"}
+              {formatTitleCase(categoryData?.name || "Category Products")}
             </h1>
             {categoryData?.description && (
               <p className="text-gray-600 text-sm md:text-base max-w-3xl mt-1.5 leading-relaxed">
                 {categoryData.description}
               </p>
+            )}
+
+            {/* How It Works & Operating Mechanism Section (If Available) */}
+            {(categoryData?.howItWorks || (categoryData?.howItWorksSteps && categoryData.howItWorksSteps.length > 0)) && (
+              <div className="mt-5 bg-amber-50/60 border border-amber-200/80 p-5 rounded-2xl max-w-4xl space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
+                  <Cog size={14} className="text-amber-700" /> Working Principle & Operating Steps
+                </h4>
+
+                {categoryData.howItWorks && (
+                  <p className="text-xs sm:text-sm text-gray-700 leading-relaxed font-medium">
+                    {categoryData.howItWorks}
+                  </p>
+                )}
+
+                {categoryData.howItWorksSteps && categoryData.howItWorksSteps.length > 0 && (
+                  <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3 pt-1">
+                    {categoryData.howItWorksSteps.map((step, idx) => (
+                      <div
+                        key={idx}
+                        className="bg-white p-3.5 rounded-xl border border-amber-200 shadow-2xs space-y-1"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="w-5 h-5 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
+                            {step.stepNumber || idx + 1}
+                          </span>
+                          <span className="font-bold text-xs text-[#021C57] truncate">
+                            {step.title || `Step ${idx + 1}`}
+                          </span>
+                        </div>
+                        {step.description && (
+                          <p className="text-[11px] text-gray-600 leading-relaxed pl-7">
+                            {step.description}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             )}
           </div>
 
@@ -229,7 +265,7 @@ const CategoryProductPage = () => {
                 <div key={filter.key || filter.name} className="space-y-3">
                   <div className="flex items-center justify-between">
                     <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-                      {filter.name}
+                      {formatTitleCase(filter.name)}
                     </h4>
                     {selectedFilters[filter.key]?.length > 0 && (
                       <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">

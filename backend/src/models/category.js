@@ -19,6 +19,26 @@ const filterSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const howItWorksStepSchema = new mongoose.Schema(
+  {
+    stepNumber: {
+      type: Number,
+      default: 1,
+    },
+    title: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    description: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+  },
+  { _id: false }
+);
+
 const categorySchema = new mongoose.Schema(
   {
     name: {
@@ -39,6 +59,15 @@ const categorySchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+
+    // Optional Overview of "How It Works"
+    howItWorks: {
+      type: String,
+      default: "",
+    },
+
+    // Dynamic Step-by-Step Working Principle Boxes (e.g. 3, 5, 10 steps)
+    howItWorksSteps: [howItWorksStepSchema],
 
     // Master Key Features for all products in this category
     features: [

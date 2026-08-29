@@ -6,6 +6,7 @@ import {
   FaBox,
   FaEnvelope,
   FaUsers,
+  FaBell,
 } from "react-icons/fa";
 import { RiAdminFill } from "react-icons/ri";
 
@@ -17,6 +18,7 @@ const menuItems = [
   { name: "Users & Roles", path: "/admin/users", icon: <FaUsers /> },
   { name: "Inquiries", path: "/admin/inquiry", icon: <FaEnvelope /> },
   { name: "Contact Messages", path: "/admin/contact-messages", icon: <FaEnvelope /> },
+  { name: "Subscribers", path: "/admin/subscribers", icon: <FaBell /> },
 ];
 
 const Sidebar = () => {
