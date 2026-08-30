@@ -163,7 +163,7 @@ const ProductDetailsPage = () => {
   }
 
   // ERROR
-  if (error || !product) {
+  if (!loading && (!product || error)) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <div className="bg-white p-8 sm:p-12 rounded-3xl border border-gray-200 shadow-xl max-w-lg text-center space-y-4">

@@ -181,6 +181,59 @@ export const getProducts = async (req, res) => {
 };
 
 /**
+ * @desc    Get Products By Category Slug (Client - for Category Product Listing Page with Dynamic Filters)
+ * @route   GET /api/v1/client/products/category/:slug
+ * @access  Public
+ */
+export const getProductsByCategory = async (req, res) => {
+  try {
+    const { slug } = req.params;
+
+    let category = null;
+    if (slug.match(/^[0-9a-fA-F]{24}$/)) {
+      category = await Category.findOne({
+        _id: slug,
+        isActive: true,
+      }).populate("equipmentType", "name slug");
+    } else {
+      category = await Category.findOne({
+        slug,
+        isActive: true,
+      }).populate("equipmentType", "name slug");
+    }
+
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: "Category not found",
+      });
+    }
+
+    const products = await Product.find({
+      category: category._id,
+      isActive: true,
+    })
+      .populate(categoryPopulateConfig)
+      .sort({ isFeatured: -1, createdAt: -1 });
+
+    const resolvedProducts = products.map(resolveProductInheritance);
+
+    return res.status(200).json({
+      success: true,
+      category,
+      products: resolvedProducts,
+      count: resolvedProducts.length,
+    });
+  } catch (error) {
+    console.error("Get Products By Category Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to fetch category products",
+    });
+  }
+};
+
+/**
  * @desc    Get Single Active Product by Slug (Client)
  * @route   GET /api/v1/client/products/:slug
  * @access  Public

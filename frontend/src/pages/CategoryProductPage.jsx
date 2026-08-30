@@ -261,48 +261,51 @@ const CategoryProductPage = () => {
                 )}
               </div>
 
-              {categoryData.filters.map((filter) => (
-                <div key={filter.key || filter.name} className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-                      {formatTitleCase(filter.name)}
-                    </h4>
-                    {selectedFilters[filter.key]?.length > 0 && (
-                      <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
-                        {selectedFilters[filter.key].length} selected
-                      </span>
-                    )}
-                  </div>
+              {categoryData.filters.map((filter) => {
+                const fKey = filter.key || filter.name;
+                return (
+                  <div key={fKey} className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        {formatTitleCase(filter.name)}
+                      </h4>
+                      {selectedFilters[fKey]?.length > 0 && (
+                        <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                          {selectedFilters[fKey].length} selected
+                        </span>
+                      )}
+                    </div>
 
-                  <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                    {filter.values?.map((val, idx) => {
-                      const isChecked =
-                        selectedFilters[filter.key]?.includes(val) || false;
+                    <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                      {filter.values?.map((val, idx) => {
+                        const isChecked =
+                          selectedFilters[fKey]?.includes(val) || false;
 
-                      return (
-                        <label
-                          key={idx}
-                          className={`flex items-center gap-2.5 text-xs px-2.5 py-1.5 rounded-xl cursor-pointer select-none transition ${
-                            isChecked
-                              ? "bg-blue-50/80 text-[#021C57] font-bold"
-                              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={isChecked}
-                            onChange={() =>
-                              handleFilterToggle(filter.key, val)
-                            }
-                            className="w-4 h-4 rounded-md accent-[#021C57] cursor-pointer"
-                          />
-                          <span className="truncate">{val}</span>
-                        </label>
-                      );
-                    })}
+                        return (
+                          <label
+                            key={idx}
+                            className={`flex items-center gap-2.5 text-xs px-2.5 py-1.5 rounded-xl cursor-pointer select-none transition ${
+                              isChecked
+                                ? "bg-blue-50/80 text-[#021C57] font-bold"
+                                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() =>
+                                handleFilterToggle(fKey, val)
+                              }
+                              className="w-4 h-4 rounded-md accent-[#021C57] cursor-pointer"
+                            />
+                            <span className="truncate">{val}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </aside>
           )}
 
