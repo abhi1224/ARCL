@@ -196,11 +196,17 @@ const Home = () => {
                 </div>
 
                 {/* 1 Representative Product per Category Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
-                  {section.products.map((product) => (
-                    <ProductCard key={product._id} product={product} />
-                  ))}
-                </div>
+               <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
+                {section.products.map((product) => (
+                  <div
+                    key={product._id}
+                    className="shrink-0 w-70 sm:w-75 lg:w-[320px]"
+                  >
+                    <ProductCard product={product} />
+                  </div>
+                ))}
+              </div>
+
               </div>
             ))}
           </div>
