@@ -311,6 +311,43 @@ const ProductDetailsPage = () => {
               </div>
             )}
 
+            {/* PRODUCT IDENTIFIERS: PRODUCT CODE & HSN CODE BADGE BOXES (BELOW IMAGE) */}
+            {(product.productCode || product.hsnCode) && (
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                {product.productCode && (
+                  <div className="bg-white border border-blue-200 rounded-2xl p-3.5 shadow-2xs flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                        Product Code / SKU
+                      </span>
+                      <span className="text-xs sm:text-sm font-mono font-extrabold text-[#021C57]">
+                        {product.productCode.toUpperCase()}
+                      </span>
+                    </div>
+                    <span className="w-7 h-7 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center font-mono text-[11px] font-black shrink-0">
+                      SKU
+                    </span>
+                  </div>
+                )}
+
+                {product.hsnCode && (
+                  <div className="bg-white border border-emerald-200 rounded-2xl p-3.5 shadow-2xs flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                        HSN Code
+                      </span>
+                      <span className="text-xs sm:text-sm font-mono font-extrabold text-emerald-800">
+                        {product.hsnCode.toUpperCase()}
+                      </span>
+                    </div>
+                    <span className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center font-mono text-[11px] font-black shrink-0">
+                      HSN
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* INDUSTRIAL SERVICE PROMISES */}
             <div className="grid grid-cols-3 gap-3 pt-2">
               <div className="bg-white border border-gray-200/70 p-3.5 rounded-2xl text-center space-y-1">

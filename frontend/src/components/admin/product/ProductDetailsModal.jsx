@@ -119,10 +119,22 @@ const ProductDetailsModal = ({ isOpen, onClose, product }) => {
                 {formatTitleCase(product.name)}
               </h3>
 
-              {/* Slug */}
-              <p className="text-xs text-gray-400 font-mono">
-                Slug: <span className="text-blue-600">/products/{product.slug}</span>
-              </p>
+              {/* Slug & Product/HSN Codes */}
+              <div className="flex items-center gap-2 flex-wrap text-xs font-mono">
+                <span className="text-gray-400">
+                  Slug: <span className="text-blue-600">/products/{product.slug}</span>
+                </span>
+                {product.productCode && (
+                  <span className="bg-blue-50 text-[#021C57] font-bold px-2 py-0.5 rounded-md border border-blue-200">
+                    SKU: {product.productCode.toUpperCase()}
+                  </span>
+                )}
+                {product.hsnCode && (
+                  <span className="bg-emerald-50 text-emerald-800 font-bold px-2 py-0.5 rounded-md border border-emerald-200">
+                    HSN: {product.hsnCode.toUpperCase()}
+                  </span>
+                )}
+              </div>
 
               {/* Description */}
               <p className="text-sm text-gray-600 leading-relaxed pt-1">

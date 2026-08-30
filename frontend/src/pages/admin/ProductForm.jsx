@@ -23,6 +23,8 @@ const ProductForm = () => {
 
   const [form, setForm] = useState({
     name: "",
+    productCode: "",
+    hsnCode: "",
     description: "",
     category: "",
     features: [""],
@@ -97,6 +99,8 @@ const ProductForm = () => {
 
           setForm({
             name: prod.name || "",
+            productCode: prod.productCode || "",
+            hsnCode: prod.hsnCode || "",
             description:
               prod.description || matchedCategory?.description || "",
             category: prod.category?._id || prod.category || "",
@@ -300,6 +304,14 @@ const ProductForm = () => {
       const formData = new FormData();
       formData.append("name", form.name.trim());
       formData.append(
+        "productCode",
+        (form.productCode || "").trim().toUpperCase()
+      );
+      formData.append(
+        "hsnCode",
+        (form.hsnCode || "").trim().toUpperCase()
+      );
+      formData.append(
         "description",
         form.description.trim() || selectedCategory?.description || ""
       );
@@ -489,30 +501,66 @@ const ProductForm = () => {
             </div>
           )}
 
-          {/* STEP 3: PRODUCT NAME */}
-          <div>
-            <label className="text-sm font-bold text-gray-700">
-              Product Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={form.name}
-              placeholder="Enter product name..."
-              className={`w-full border p-3.5 rounded-xl mt-1.5 focus:ring-2 focus:ring-blue-100 outline-none transition ${
-                errors.name
-                  ? "border-red-400 bg-red-50/20 focus:border-red-500"
-                  : "border-gray-200 focus:border-blue-500"
-              }`}
-              onChange={(e) => {
-                setForm({ ...form, name: e.target.value });
-                if (errors.name) setErrors({ ...errors, name: null });
-              }}
-            />
-            {errors.name && (
-              <p className="text-red-500 text-xs font-semibold mt-1">
-                {errors.name}
-              </p>
-            )}
+          {/* STEP 3: PRODUCT NAME, PRODUCT CODE, AND HSN CODE */}
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-bold text-gray-700">
+                Product Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={form.name}
+                placeholder="e.g. Lab Pan Mixer 60 Litres"
+                className={`w-full border p-3.5 rounded-xl mt-1.5 focus:ring-2 focus:ring-blue-100 outline-none transition ${
+                  errors.name
+                    ? "border-red-400 bg-red-50/20 focus:border-red-500"
+                    : "border-gray-200 focus:border-blue-500"
+                }`}
+                onChange={(e) => {
+                  setForm({ ...form, name: e.target.value });
+                  if (errors.name) setErrors({ ...errors, name: null });
+                }}
+              />
+              {errors.name && (
+                <p className="text-red-500 text-xs font-semibold mt-1">
+                  {errors.name}
+                </p>
+              )}
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-bold text-gray-700 uppercase tracking-wide flex items-center justify-between">
+                  <span>Product Code / SKU</span>
+                  <span className="text-[10px] text-gray-400 font-normal">Auto-Uppercase</span>
+                </label>
+                <input
+                  type="text"
+                  value={form.productCode}
+                  placeholder="e.g. ARCL-LPM-60"
+                  className="w-full border border-gray-200 p-3.5 rounded-xl mt-1.5 text-xs font-mono font-bold uppercase focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition"
+                  onChange={(e) =>
+                    setForm({ ...form, productCode: e.target.value.toUpperCase() })
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-gray-700 uppercase tracking-wide flex items-center justify-between">
+                  <span>HSN Code</span>
+                  <span className="text-[10px] text-gray-400 font-normal">Auto-Uppercase</span>
+                </label>
+                <input
+                  type="text"
+                  value={form.hsnCode}
+                  placeholder="e.g. 8474 / 9031"
+                  className="w-full border border-gray-200 p-3.5 rounded-xl mt-1.5 text-xs font-mono font-bold uppercase focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition"
+                  onChange={(e) =>
+                    setForm({ ...form, hsnCode: e.target.value.toUpperCase() })
+                  }
+                />
+              </div>
+            </div>
           </div>
 
           {/* STEP 4: GENERAL TECHNICAL SPECIFICATIONS (UNLIMITED DYNAMIC ROWS: 5, 10, 20 SPECS) */}

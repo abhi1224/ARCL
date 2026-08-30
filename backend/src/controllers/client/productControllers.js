@@ -3,6 +3,18 @@ import Category from "../../models/category.js";
 import EquipmentType from "../../models/equipmentType.js";
 
 /**
+ * Standard Client Category Population Config with nested EquipmentType
+ */
+const categoryPopulateConfig = {
+  path: "category",
+  select: "name slug description howItWorks howItWorksSteps features applications filters equipmentType",
+  populate: {
+    path: "equipmentType",
+    select: "name slug",
+  },
+};
+
+/**
  * Helper: Fallback to Category description, features, applications, and howItWorks if product's own are empty
  */
 const resolveProductInheritance = (prodDoc) => {
@@ -33,6 +45,11 @@ const resolveProductInheritance = (prodDoc) => {
   }
   if (prod.category?.howItWorksSteps && prod.category.howItWorksSteps.length > 0) {
     prod.howItWorksSteps = prod.category.howItWorksSteps;
+  }
+
+  if (prod.category?.equipmentType?.name) {
+    prod.equipmentTypeName = prod.category.equipmentType.name;
+    prod.equipmentTypeId = prod.category.equipmentType._id;
   }
 
   return prod;
@@ -127,7 +144,7 @@ export const getProducts = async (req, res) => {
       const limitNum = parseInt(limit);
       const total = await Product.countDocuments(filter);
       const products = await Product.find(filter)
-        .populate("category", "name slug description howItWorks howItWorksSteps features applications equipmentType")
+        .populate(categoryPopulateConfig)
         .sort(sortOption)
         .skip((pageNum - 1) * limitNum)
         .limit(limitNum);
@@ -144,7 +161,7 @@ export const getProducts = async (req, res) => {
     }
 
     const products = await Product.find(filter)
-      .populate("category", "name slug description howItWorks howItWorksSteps features applications equipmentType")
+      .populate(categoryPopulateConfig)
       .sort(sortOption);
 
     const resolvedProducts = products.map(resolveProductInheritance);
@@ -173,7 +190,7 @@ export const getProduct = async (req, res) => {
     const product = await Product.findOne({
       slug: req.params.slug,
       isActive: true,
-    }).populate("category", "name slug description howItWorks howItWorksSteps features applications filters equipmentType");
+    }).populate(categoryPopulateConfig);
 
     if (!product) {
       return res.status(404).json({
@@ -187,7 +204,6 @@ export const getProduct = async (req, res) => {
       data: resolveProductInheritance(product),
     });
   } catch (error) {
-    console.error("Client Get Product Error:", error);
     return res.status(500).json({
       success: false,
       message: error.message || "Failed to fetch product",
@@ -196,54 +212,67 @@ export const getProduct = async (req, res) => {
 };
 
 /**
- * @desc    Get Products by Category Slug (Client)
- * @route   GET /api/v1/client/products/category/:slug
+ * @desc    Get Related Products (Client)
+ * @route   GET /api/v1/client/products/:id/related
  * @access  Public
  */
-export const getProductsByCategory = async (req, res) => {
+export const getRelatedProducts = async (req, res) => {
   try {
-    const category = await Category.findOne({
-      slug: req.params.slug,
-      isActive: true,
-    }).populate("equipmentType", "name slug");
+    const product = await Product.findById(req.params.id);
 
-    if (!category) {
+    if (!product) {
       return res.status(404).json({
         success: false,
-        message: "Category not found",
+        message: "Product not found",
       });
     }
 
-    const products = await Product.find({
-      category: category._id,
+    const related = await Product.find({
+      category: product.category,
+      _id: { $ne: product._id },
       isActive: true,
     })
-      .populate("category", "name slug description howItWorks howItWorksSteps features applications equipmentType")
-      .sort({ isFeatured: -1, createdAt: -1 });
+      .populate(categoryPopulateConfig)
+      .limit(4);
+
+    const resolvedRelated = related.map(resolveProductInheritance);
+
+    return res.status(200).json({
+      success: true,
+      data: resolvedRelated,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to fetch related products",
+    });
+  }
+};
+
+/**
+ * @desc    Get Featured Products (Client)
+ * @route   GET /api/v1/client/products/featured
+ * @access  Public
+ */
+export const getFeaturedProducts = async (req, res) => {
+  try {
+    const products = await Product.find({
+      isFeatured: true,
+      isActive: true,
+    })
+      .populate(categoryPopulateConfig)
+      .limit(8);
 
     const resolvedProducts = products.map(resolveProductInheritance);
 
     return res.status(200).json({
       success: true,
-      category: {
-        _id: category._id,
-        name: category.name,
-        slug: category.slug,
-        description: category.description,
-        howItWorks: category.howItWorks,
-        howItWorksSteps: category.howItWorksSteps,
-        features: category.features,
-        applications: category.applications,
-        equipmentType: category.equipmentType,
-        filters: category.filters,
-      },
-      products: resolvedProducts,
+      data: resolvedProducts,
     });
   } catch (error) {
-    console.error("Client Get Products By Category Error:", error);
     return res.status(500).json({
       success: false,
-      message: error.message || "Failed to fetch category products",
+      message: error.message || "Failed to fetch featured products",
     });
   }
 };

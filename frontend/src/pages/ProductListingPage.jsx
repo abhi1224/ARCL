@@ -3,6 +3,7 @@ import ProductSidebar from "../components/products/ProductSidebar.jsx";
 import ProductToolbar from "../components/products/ProductToolbar.jsx";
 import ProductCard from "../components/products/ProductCard.jsx";
 import ProductGrid from "../components/products/ProductGrid.jsx";
+import EquipmentTypeProductRow from "../components/products/EquipmentTypeProductRow.jsx";
 
 import { useProductStore } from "../store/useProductStore.js";
 import { useCategoryStore } from "../store/useCategoryStore.js";
@@ -138,7 +139,7 @@ const ProductListingPage = () => {
       </section>
 
       {/* MAIN CONTENT AREA */}
-      <section className="max-w-[1600px] mx-auto px-4 md:px-8 py-8">
+      <section className="max-w-full mx-auto px-4 md:px-8 py-8">
         
         {/* MOBILE FILTER TOGGLE & RESET */}
         <div className="lg:hidden mb-4 flex items-center justify-between gap-3">
@@ -192,7 +193,7 @@ const ProductListingPage = () => {
           </div>
 
           {/* MAIN PRODUCT LIST & TOOLBAR */}
-          <div className="flex-1 w-full space-y-8">
+          <div className="flex-1 w-full space-y-8 overflow-hidden">
             <ProductToolbar
               search={search}
               setSearch={setSearch}
@@ -208,44 +209,13 @@ const ProductListingPage = () => {
               <ProductGrid products={products} loading={loading} />
             ) : (
               /* CASE B: DEFAULT VIEW -> SECTION-WISE BY EQUIPMENT TYPE (1 PRODUCT PER CATEGORY) */
-              <div className="space-y-12">
+              <div className="space-y-10">
                 {equipmentTypeSections.slice(0, visibleSectionsCount).map((section) => (
-                  <div
+                  <EquipmentTypeProductRow
                     key={section.equipmentType._id}
-                    className="bg-white rounded-3xl border border-gray-200/80 p-6 sm:p-8 space-y-6 shadow-2xs"
-                  >
-                    {/* Section Header */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-gray-100">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-[#021C57] text-white flex items-center justify-center shadow-md">
-                          <Layers size={18} />
-                        </div>
-                        <div>
-                          <h2 className="text-xl sm:text-2xl font-black text-[#021C57] tracking-tight">
-                            {formatTitleCase(section.equipmentType.name)}
-                          </h2>
-                          <p className="text-xs text-gray-500 font-medium">
-                            1 representative product per category ({section.products.length} categories represented)
-                          </p>
-                        </div>
-                      </div>
-
-                      <button
-                        onClick={() => setSelectedEquipmentType(section.equipmentType._id)}
-                        className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-800 bg-blue-50 px-3.5 py-1.5 rounded-xl border border-blue-100 transition cursor-pointer self-start sm:self-auto"
-                      >
-                        Explore all in {formatTitleCase(section.equipmentType.name)}
-                        <ArrowRight size={13} />
-                      </button>
-                    </div>
-
-                    {/* Product Cards Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 items-stretch">
-                      {section.products.map((product) => (
-                        <ProductCard key={product._id} product={product} />
-                      ))}
-                    </div>
-                  </div>
+                    section={section}
+                    onSelectType={(typeId) => setSelectedEquipmentType(typeId)}
+                  />
                 ))}
 
                 {/* SCROLL SENTINEL / LOAD MORE FOR ON-SCROLL PROGRESSIVE LOADING */}

@@ -196,16 +196,16 @@ const Home = () => {
                 </div>
 
                 {/* 1 Representative Product per Category Grid */}
-               <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
-                {section.products.map((product) => (
-                  <div
-                    key={product._id}
-                    className="shrink-0 w-70 sm:w-75 lg:w-[320px]"
-                  >
-                    <ProductCard product={product} />
-                  </div>
-                ))}
-              </div>
+                <div className="flex gap-5 sm:gap-6 overflow-x-auto pb-2 scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  {section.products.map((product) => (
+                    <div
+                      key={product._id}
+                      className="shrink-0 w-[280px] sm:w-[310px] lg:w-[320px]"
+                    >
+                      <ProductCard product={product} />
+                    </div>
+                  ))}
+                </div>
 
               </div>
             ))}

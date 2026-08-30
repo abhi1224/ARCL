@@ -4,6 +4,18 @@ import slugify from "slugify";
 import cloudinary from "../../config/cloudinary.js";
 
 /**
+ * Standard Category Population Config including nested EquipmentType
+ */
+const categoryPopulateConfig = {
+  path: "category",
+  select: "name slug description howItWorks howItWorksSteps features applications filters equipmentType",
+  populate: {
+    path: "equipmentType",
+    select: "name slug",
+  },
+};
+
+/**
  * Helper: Upload buffer to Cloudinary with safe Data URI fallback
  */
 const uploadBufferToCloudinary = async (fileBuffer, mimetype) => {
@@ -71,6 +83,12 @@ const resolveProductInheritance = (prodDoc) => {
     prod.howItWorksSteps = prod.category.howItWorksSteps;
   }
 
+  // Ensure equipmentTypeName is attached directly
+  if (prod.category?.equipmentType?.name) {
+    prod.equipmentTypeName = prod.category.equipmentType.name;
+    prod.equipmentTypeId = prod.category.equipmentType._id;
+  }
+
   return prod;
 };
 
@@ -83,6 +101,8 @@ export const createProduct = async (req, res) => {
   try {
     let {
       name,
+      productCode,
+      hsnCode,
       description,
       specifications,
       applications,
@@ -196,6 +216,8 @@ export const createProduct = async (req, res) => {
     const product = await Product.create({
       name: name.trim(),
       slug,
+      productCode: productCode ? String(productCode).trim().toUpperCase() : "",
+      hsnCode: hsnCode ? String(hsnCode).trim().toUpperCase() : "",
       description: finalDescription,
       specifications: specifications || {},
       applications: cleanApplications,
@@ -206,7 +228,7 @@ export const createProduct = async (req, res) => {
       isActive,
     });
 
-    await product.populate("category", "name slug description howItWorks howItWorksSteps features applications filters equipmentType");
+    await product.populate(categoryPopulateConfig);
 
     return res.status(201).json({
       success: true,
@@ -256,6 +278,8 @@ export const getProducts = async (req, res) => {
       filter.$or = [
         { name: { $regex: search.trim(), $options: "i" } },
         { slug: { $regex: search.trim(), $options: "i" } },
+        { productCode: { $regex: search.trim(), $options: "i" } },
+        { hsnCode: { $regex: search.trim(), $options: "i" } },
         { description: { $regex: search.trim(), $options: "i" } },
       ];
     }
@@ -264,7 +288,7 @@ export const getProducts = async (req, res) => {
     sortOptions[sort] = order === "asc" ? 1 : -1;
 
     const products = await Product.find(filter)
-      .populate("category", "name slug description howItWorks howItWorksSteps features applications filters equipmentType")
+      .populate(categoryPopulateConfig)
       .sort(sortOptions);
 
     const resolvedProducts = products.map(resolveProductInheritance);
@@ -290,10 +314,7 @@ export const getProducts = async (req, res) => {
  */
 export const getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id).populate(
-      "category",
-      "name slug description howItWorks howItWorksSteps features applications filters equipmentType"
-    );
+    const product = await Product.findById(req.params.id).populate(categoryPopulateConfig);
 
     if (!product) {
       return res.status(404).json({
@@ -324,7 +345,7 @@ export const getProduct = async (req, res) => {
   try {
     const product = await Product.findOne({
       slug: req.params.slug,
-    }).populate("category", "name slug description howItWorks howItWorksSteps features applications filters equipmentType");
+    }).populate(categoryPopulateConfig);
 
     if (!product) {
       return res.status(404).json({
@@ -354,6 +375,8 @@ export const updateProduct = async (req, res) => {
   try {
     let {
       name,
+      productCode,
+      hsnCode,
       description,
       specifications,
       applications,
@@ -423,6 +446,11 @@ export const updateProduct = async (req, res) => {
         : baseSlug;
     }
 
+    if (typeof productCode !== "undefined")
+      product.productCode = productCode ? String(productCode).trim().toUpperCase() : "";
+    if (typeof hsnCode !== "undefined")
+      product.hsnCode = hsnCode ? String(hsnCode).trim().toUpperCase() : "";
+
     if (typeof description !== "undefined") product.description = description;
     if (typeof specifications !== "undefined")
       product.specifications = specifications;
@@ -435,7 +463,7 @@ export const updateProduct = async (req, res) => {
     if (typeof isActive !== "undefined") product.isActive = isActive;
 
     await product.save();
-    await product.populate("category", "name slug description howItWorks howItWorksSteps features applications filters equipmentType");
+    await product.populate(categoryPopulateConfig);
 
     return res.status(200).json({
       success: true,
@@ -452,14 +480,13 @@ export const updateProduct = async (req, res) => {
 };
 
 /**
- * @desc    Toggle Product Active Status (Admin)
+ * @desc    Toggle Product Active Status
  * @route   PATCH /api/v1/admin/products/:id/toggle-active
  * @access  Admin
  */
 export const toggleProductActive = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-
     if (!product) {
       return res.status(404).json({
         success: false,
@@ -475,7 +502,7 @@ export const toggleProductActive = async (req, res) => {
       message: `Product ${
         product.isActive ? "activated" : "deactivated"
       } successfully`,
-      data: { id: product._id, isActive: product.isActive },
+      data: product,
     });
   } catch (error) {
     return res.status(500).json({
@@ -486,14 +513,13 @@ export const toggleProductActive = async (req, res) => {
 };
 
 /**
- * @desc    Toggle Product Featured Status (Admin)
+ * @desc    Toggle Product Featured Status
  * @route   PATCH /api/v1/admin/products/:id/toggle-featured
  * @access  Admin
  */
 export const toggleProductFeatured = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-
     if (!product) {
       return res.status(404).json({
         success: false,
@@ -506,28 +532,27 @@ export const toggleProductFeatured = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: `Product marked as ${
-        product.isFeatured ? "featured" : "standard"
-      }`,
-      data: { id: product._id, isFeatured: product.isFeatured },
+      message: `Product ${
+        product.isFeatured ? "featured" : "unfeatured"
+      } successfully`,
+      data: product,
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: error.message || "Failed to toggle featured status",
+      message: error.message || "Failed to toggle featured",
     });
   }
 };
 
 /**
- * @desc    Delete Product (Admin)
+ * @desc    Delete Product
  * @route   DELETE /api/v1/admin/products/:id
  * @access  Admin
  */
 export const deleteProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-
     if (!product) {
       return res.status(404).json({
         success: false,
@@ -539,7 +564,7 @@ export const deleteProduct = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "Product deleted successfully",
+      message: "Product deleted successfully! 🗑️",
     });
   } catch (error) {
     return res.status(500).json({
@@ -550,24 +575,17 @@ export const deleteProduct = async (req, res) => {
 };
 
 /**
- * @desc    Get Products By Category Slug (Public/Admin)
- * @route   GET /api/v1/admin/products/category/:slug
- * @access  Public/Admin
+ * @desc    Get Products by Category ID
+ * @route   GET /api/v1/admin/products/category/:categoryId
+ * @access  Admin
  */
 export const getProductsByCategory = async (req, res) => {
   try {
-    const category = await Category.findOne({ slug: req.params.slug });
-
-    if (!category) {
-      return res.status(404).json({
-        success: false,
-        message: "Category not found",
-      });
-    }
+    const { categoryId } = req.params;
 
     const products = await Product.find({
-      category: category._id,
-    }).populate("category", "name slug description howItWorks howItWorksSteps features applications filters equipmentType");
+      category: categoryId,
+    }).populate(categoryPopulateConfig);
 
     const resolvedProducts = products.map(resolveProductInheritance);
 
@@ -579,7 +597,7 @@ export const getProductsByCategory = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: error.message || "Failed to fetch products for category",
+      message: error.message || "Failed to fetch products",
     });
   }
 };

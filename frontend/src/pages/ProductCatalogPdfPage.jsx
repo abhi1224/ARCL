@@ -205,6 +205,24 @@ const ProductCatalogPdfPage = () => {
             </p>
 
             <div className="grid grid-cols-2 gap-3 pt-2">
+              {product.productCode && (
+                <div className="bg-blue-50/70 border border-blue-200 rounded-xl p-3 text-xs">
+                  <span className="text-gray-500 block font-medium uppercase tracking-wider text-[10px]">Product Code / SKU:</span>
+                  <span className="font-mono font-black text-[#021C57] text-sm">
+                    {product.productCode.toUpperCase()}
+                  </span>
+                </div>
+              )}
+
+              {product.hsnCode && (
+                <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-3 text-xs">
+                  <span className="text-gray-500 block font-medium uppercase tracking-wider text-[10px]">HSN Code:</span>
+                  <span className="font-mono font-black text-emerald-800 text-sm">
+                    {product.hsnCode.toUpperCase()}
+                  </span>
+                </div>
+              )}
+
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
                 <span className="text-gray-400 block font-medium">Reliability:</span>
                 <span className="font-bold text-[#021C57]">
@@ -216,18 +234,6 @@ const ProductCatalogPdfPage = () => {
                 <span className="text-gray-400 block font-medium">Availability:</span>
                 <span className="font-bold text-[#021C57]">
                   Ready to Dispatch
-                </span>
-              </div>
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
-                <span className="text-gray-400 block font-medium">Support:</span>
-                <span className="font-bold text-[#021C57]">
-                  Dedicated Support
-                </span>
-              </div>
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
-                <span className="text-gray-400 block font-medium">Quality:</span>
-                <span className="font-bold text-[#021C57]">
-                  Quality Assured
                 </span>
               </div>
             </div>
