@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, MessageCircle, FileText, Sparkles, ArrowUpRight, Layers } from "lucide-react";
+import { ArrowRight, MessageCircle, FileText, Sparkles, ArrowUpRight, Layers, ShoppingBag } from "lucide-react";
 import { formatTitleCase } from "../../utils/stringUtils.js";
+import { useQuoteCartStore } from "../../store/useQuoteCartStore.js";
 
 const ProductCard = ({ product }) => {
+  const { addItem, isInCart } = useQuoteCartStore();
   if (!product) return null;
 
   const imageUrl =
@@ -122,6 +124,27 @@ const ProductCard = ({ product }) => {
             <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover/btn:translate-x-0.5" />
           </Link>
           
+          {/* Add to Quote Basket Button */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              addItem(product, 1);
+            }}
+            title={isInCart(product._id) ? "In Quote Basket (Click to add +1)" : "Add to Quote Basket"}
+            className={`p-2 rounded-xl border transition cursor-pointer shrink-0 active:scale-95 ${
+              isInCart(product._id)
+                ? "bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100 shadow-2xs"
+                : "bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-[#021C57] border-slate-200"
+            }`}
+          >
+            <ShoppingBag
+              className={`w-4 h-4 ${
+                isInCart(product._id) ? "text-amber-600 font-bold" : "text-slate-600"
+              }`}
+            />
+          </button>
+
           {/* PDF Catalog Icon Button */}
           <Link
             to={`/products/${product.slug}/catalog`}

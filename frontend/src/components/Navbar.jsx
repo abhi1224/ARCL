@@ -1,4 +1,4 @@
-import { Menu, X } from "lucide-react";
+import { Menu, X, ShoppingBag } from "lucide-react";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
@@ -11,8 +11,12 @@ import { FaPhoneAlt } from "react-icons/fa";
 import "../index.css";
 
 import { useCategoryStore } from "../store/useCategoryStore.js";
+import { useQuoteCartStore } from "../store/useQuoteCartStore.js";
 
 const Navbar = () => {
+  const { openCart, getItemCount } = useQuoteCartStore();
+  const cartItemCount = getItemCount();
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const [query, setQuery] = useState("");
@@ -241,43 +245,32 @@ const Navbar = () => {
               )}
             </div>
 
-            {/* PHONE */}
-
-            <div
-              className="
-            flex
-            justify-center
-            items-center
-            gap-5
-          "
-            >
+            {/* PHONE & QUOTE BASKET */}
+            <div className="flex justify-center items-center gap-3 sm:gap-4">
               <a
-                className="
-              text-[#021C57]
-              md:block
-              font-semibold
-              hover:underline
-              transition
-            "
-                href="
-              tel:+918169695728
-            "
+                className="text-[#021C57] font-semibold hover:underline transition flex items-center gap-2 text-xs sm:text-sm"
+                href="tel:+918169695728"
               >
-                <span className="hidden md:block">Call +91 8169695728</span>
-
-                <FaPhoneAlt
-                  className="
-                md:hidden
-                w-10
-                h-10
-                rounded-full
-                hover:bg-[#021C57]
-                transition
-                border-2
-                p-1.5
-              "
-                />
+                <span className="hidden md:inline">Call +91 8169695728</span>
+                <FaPhoneAlt className="md:hidden w-8 h-8 rounded-full hover:bg-[#021C57] hover:text-white transition border border-gray-300 p-2" />
               </a>
+
+              {/* QUOTE BASKET BUTTON */}
+              <button
+                onClick={openCart}
+                className="inline-flex items-center gap-1.5 sm:gap-2 bg-[#021C57] hover:bg-[#032d88] text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition shadow-2xs cursor-pointer active:scale-95"
+                title="View Multi-Product Quote Basket"
+              >
+                <ShoppingBag size={14} className="text-cyan-300" />
+                <span className="hidden sm:inline">Quote Basket</span>
+                {cartItemCount > 0 ? (
+                  <span className="bg-amber-400 text-gray-900 text-[10px] font-black px-1.5 py-0.2 rounded-full">
+                    {cartItemCount}
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-blue-200">(0)</span>
+                )}
+              </button>
             </div>
           </div>
 
@@ -442,6 +435,22 @@ const Navbar = () => {
                     {link.name}
                   </Link>
                 ))}
+
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    openCart();
+                  }}
+                  className="mt-4 flex items-center justify-between bg-[#021C57] text-white p-3 rounded-xl text-xs font-bold shadow-md cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <ShoppingBag size={16} className="text-cyan-300" />
+                    <span>Quote Basket</span>
+                  </div>
+                  <span className="bg-amber-400 text-gray-900 px-2 py-0.5 rounded-full text-[10px] font-black">
+                    {cartItemCount}
+                  </span>
+                </button>
               </div>
             )}
           </nav>

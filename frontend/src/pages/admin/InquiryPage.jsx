@@ -319,18 +319,25 @@ const InquiryPage = () => {
                           <Package size={13} className="text-blue-600 shrink-0" />
                           <span>{formatTitleCase(item.productName || "Product")}</span>
                         </div>
-                        {item.category && (
-                          <span className="inline-block text-[11px] text-gray-500 font-medium">
-                            Category: {formatTitleCase(item.category)}
-                          </span>
-                        )}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {item.isInquiryBasket || (item.items && item.items.length > 1) ? (
+                            <span className="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-1.5 py-0.2 rounded border border-indigo-100">
+                              📋 Basket ({item.items?.length || 0} items)
+                            </span>
+                          ) : null}
+                          {item.category && (
+                            <span className="inline-block text-[11px] text-gray-500 font-medium">
+                              Category: {formatTitleCase(item.category)}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </td>
 
                     {/* QUANTITY */}
                     <td className="py-3.5 px-3 text-center">
                       <span className="bg-slate-100 text-slate-800 font-bold px-2.5 py-1 rounded-md text-xs font-mono">
-                        {item.quantity || "1 Unit"}
+                        {item.totalItems || item.quantity || 1} {((item.totalItems || item.quantity || 1) > 1) ? "Units" : "Unit"}
                       </span>
                     </td>
 

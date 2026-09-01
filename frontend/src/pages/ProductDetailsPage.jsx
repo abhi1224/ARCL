@@ -26,13 +26,16 @@ import {
   Truck,
   BadgeCheck,
   Cog,
+  ShoppingBag,
 } from "lucide-react";
 import { useProductStore } from "../store/useProductStore.js";
 import { useInquiryStore } from "../store/useInquiryStore.js";
+import { useQuoteCartStore } from "../store/useQuoteCartStore.js";
 import { toast } from "react-toastify";
 import { formatTitleCase } from "../utils/stringUtils.js";
 
 const ProductDetailsPage = () => {
+  const { addItem, openCart, isInCart } = useQuoteCartStore();
   const { slug } = useParams();
   const navigate = useNavigate();
 
@@ -458,21 +461,37 @@ const ProductDetailsPage = () => {
                 </span>
               </div>
 
-              <div className="grid sm:grid-cols-2 gap-3">
+              <div className="grid sm:grid-cols-3 gap-3">
                 {/* 1. REQUEST QUOTE BUTTON */}
                 <button
                   onClick={() => setOpenQuoteModal(true)}
-                  className="w-full bg-[#021C57] hover:bg-[#03308f] text-white py-3.5 px-6 rounded-2xl font-bold transition shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-sm cursor-pointer"
+                  className="w-full bg-[#021C57] hover:bg-[#03308f] text-white py-3.5 px-4 rounded-2xl font-bold transition shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-xs sm:text-sm cursor-pointer active:scale-95"
                 >
-                  <Send size={16} /> Request Official Quote
+                  <Send size={15} /> Single Quote
                 </button>
 
-                {/* 2. DOWNLOAD PDF CATALOG */}
+                {/* 2. ADD TO QUOTE BASKET */}
+                <button
+                  onClick={() => {
+                    addItem(product, 1);
+                    openCart();
+                  }}
+                  className={`w-full py-3.5 px-4 rounded-2xl font-bold transition shadow-xs flex items-center justify-center gap-2 text-xs sm:text-sm cursor-pointer active:scale-95 border ${
+                    isInCart(product._id)
+                      ? "bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100"
+                      : "bg-blue-50 text-[#021C57] border-blue-200 hover:bg-blue-100"
+                  }`}
+                >
+                  <ShoppingBag size={15} className={isInCart(product._id) ? "text-amber-600" : "text-blue-600"} />
+                  <span>{isInCart(product._id) ? "In Basket (View)" : "Add to Basket"}</span>
+                </button>
+
+                {/* 3. DOWNLOAD PDF CATALOG */}
                 <Link
                   to={`/products/${product.slug}/catalog`}
-                  className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold py-3.5 px-6 rounded-2xl flex items-center justify-center gap-2 transition shadow-md hover:shadow-lg text-sm cursor-pointer"
+                  className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 transition shadow-md hover:shadow-lg text-xs sm:text-sm cursor-pointer active:scale-95"
                 >
-                  <Download size={16} /> Catalog & Specsheet (PDF)
+                  <Download size={15} /> PDF Specsheet
                 </Link>
               </div>
 
