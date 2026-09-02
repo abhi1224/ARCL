@@ -168,7 +168,7 @@ const ProductCatalogPdfPage = () => {
         <div className="bg-gradient-to-r from-[#021C57] to-[#043399] rounded-2xl p-6 text-white space-y-2">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <span className="bg-white/20 backdrop-blur-xs text-white text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">
-              {formatTitleCase(product.category?.name || "Laboratory Equipment")}
+              {formatTitleCase(product.category?.equipmentType?.name || "Laboratory Equipment")}
             </span>
 
             {product.isFeatured && (
