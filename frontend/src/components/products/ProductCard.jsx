@@ -20,11 +20,11 @@ const ProductCard = ({ product }) => {
       ? Object.entries(product.specifications).slice(0, 2)
       : [];
 
-  const categoryName = product.category?.name
-    ? formatTitleCase(product.category.name)
-    : typeof product.category === "string" && product.category.length < 24
-    ? formatTitleCase(product.category)
-    : "Testing Equipment";
+  // const categoryName = product.category?.name
+  //   ? formatTitleCase(product.category.name)
+  //   : typeof product.category === "string" && product.category.length < 24
+  //   ? formatTitleCase(product.category)
+  //   : "Testing Equipment";
 
   const equipmentTypeName = product.category?.equipmentType?.name
     ? formatTitleCase(product.category.equipmentType.name)
@@ -68,10 +68,10 @@ const ProductCard = ({ product }) => {
           
           {/* CATEGORY & EQUIPMENT & SKU BADGES */}
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] sm:text-[11px] font-bold text-[#021C57] bg-blue-50/90 border border-blue-100">
+            {/* <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] sm:text-[11px] font-bold text-[#021C57] bg-blue-50/90 border border-blue-100">
               <span className="w-1.5 h-1.5 rounded-full bg-[#021C57]" />
               {categoryName}
-            </span>
+            </span> */}
 
             {equipmentTypeName && (
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] sm:text-[10px] font-medium text-slate-500 bg-slate-100">
