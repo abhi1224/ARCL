@@ -383,12 +383,8 @@ const ProductDetailsPage = () => {
                 to={`/categories/${product.category?.slug}`}
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-blue-50 text-[#021C57] text-xs font-bold border border-blue-100 hover:bg-blue-100 transition"
               >
-                <Layers size={13} /> {formatTitleCase(product.category?.name || "Laboratory Instrument")}
+                <Layers size={13} /> {formatTitleCase(product.category?.equipmentType?.name || "Laboratory Instrument")}
               </Link>
-
-              <span className="text-xs text-gray-400 font-mono font-medium">
-                SKU: ARCL-{product.slug?.toUpperCase().slice(0, 10)}
-              </span>
             </div>
 
             {/* TITLE */}
