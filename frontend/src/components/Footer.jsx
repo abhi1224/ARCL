@@ -13,7 +13,9 @@ const Footer = () => {
     { name: "Home", to: "/" },
     { name: "Laboratry Equipments", to: "/products" },
     { name: "Catalog", to: "/catalog" },
+    { name: "Calibration Services", to: "/calibration-services" },
     { name: "About", to: "/about" },
+    { name: "Company Profile", to: "/Arcl-Brochure-BHkUyuaF.pdf", isExternal: true },
     { name: "Contact", to: "/contact" },
   ];
   return (
@@ -46,18 +48,29 @@ const Footer = () => {
           <ul className="space-y-2">
             {navLinks.map((link) => (
               <li key={link.name}>
-                <NavLink
-                  to={link.to}
-                  className={({ isActive }) =>
-                    `transition-all ${
-                      isActive
-                        ? "text-blue-700 border-b-2 border-blue-700"
-                        : "text-white"
-                    }`
-                  }
-                >
-                  {link.name}
-                </NavLink>
+                {link.isExternal ? (
+                  <a
+                    href={link.to}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="transition-all text-white hover:text-blue-400"
+                  >
+                    {link.name}
+                  </a>
+                ) : (
+                  <NavLink
+                    to={link.to}
+                    className={({ isActive }) =>
+                      `transition-all ${
+                        isActive
+                          ? "text-blue-700 border-b-2 border-blue-700"
+                          : "text-white hover:text-blue-400"
+                      }`
+                    }
+                  >
+                    {link.name}
+                  </NavLink>
+                )}
               </li>
             ))}
           </ul>

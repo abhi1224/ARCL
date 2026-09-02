@@ -10,7 +10,7 @@ const FloatingQuoteCartButton = () => {
   const totalQuantity = getTotalQuantity();
 
   return (
-    <div className="fixed bottom-6 right-6 z-40 animate-bounce-subtle">
+    <div className="fixed bottom-6 left-6 z-40 animate-bounce-subtle">
       <button
         onClick={openCart}
         className="group bg-gradient-to-r from-[#021C57] to-[#043399] hover:from-[#032d88] hover:to-[#021C57] text-white p-3.5 sm:px-5 sm:py-3.5 rounded-full shadow-2xl flex items-center gap-3 transition-all duration-300 hover:scale-105 active:scale-95 border-2 border-white/20 cursor-pointer"

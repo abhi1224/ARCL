@@ -14,6 +14,8 @@ import Home from './pages/Home.jsx'
 import About from './pages/About.jsx'
 import Contact from './pages/Contact.jsx'
 import CatalogPage from './pages/CatalogPage.jsx'
+import CalibrationServices from './pages/CalibrationServices.jsx'
+import CompanyProfile from './pages/CompanyProfile.jsx'
 import Layout from './components/admin/layout/Layout.jsx'
 import ProtectedRoute from './components/admin/ProtectedRoute.jsx'
 import AdminLogin from './pages/admin/AdminLogin.jsx'
@@ -43,6 +45,8 @@ const router = createBrowserRouter(
         <Route path="catalog" element={<CatalogPage />} />
         <Route path="products" element={<ProductListingPage />} />
         <Route path="products/:slug" element={<ProductDetailsPage />} />
+        <Route path="calibration-services" element={<CalibrationServices />} />
+        <Route path="company-profile" element={<CompanyProfile />} />
         <Route path="contact" element={<Contact />} />
         <Route path="categories/:slug" element={<CategoryProductsPage />} />
       </Route>

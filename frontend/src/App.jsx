@@ -4,6 +4,7 @@ import { Outlet } from 'react-router-dom'
 import Footer from './components/Footer'
 import QuoteCartDrawer from './components/quoteCart/QuoteCartDrawer'
 import FloatingQuoteCartButton from './components/quoteCart/FloatingQuoteCartButton'
+import FloatingContactButtons from './components/common/FloatingContactButtons'
 
 const App = () => {
   return (
@@ -13,6 +14,7 @@ const App = () => {
       <Footer />
       <QuoteCartDrawer />
       <FloatingQuoteCartButton />
+      <FloatingContactButtons />
     </>
   )
 }

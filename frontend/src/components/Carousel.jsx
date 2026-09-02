@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import image1 from '../assets/Slider/CalibrationMaintenanceService.jpg';
 import image2 from '../assets/Slider/CivilAndMechanicalLabEqu.jpg';
 import image3 from '../assets/Slider/MedicalAndScientificInstruments.jpg';
-import image4 from '../assets/Slider/PORTABLE.webp';
+
 
 
 const images = [
@@ -23,11 +23,7 @@ const images = [
     text: "ARCL provides a comprehensive range of precision medical and scientific instruments designed to meet the demands of modern laboratories and research institutions, conforming to national and international standards."
   },
   
-  {
-    image: image4,
-    heading: "Portable Cabins Office Cabins, Security Cabins, Multi Storey Cabins",
-    text: "ARCL offers premium-quality portable cabins tailored for site offices, laboratories, and custom utility needs, engineered for durability, safety, and flexibility across multiple industries."
-  }
+  
 ];
 
 const Carousel = () => {

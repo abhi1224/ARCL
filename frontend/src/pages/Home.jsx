@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import Carousel from "../components/Carousel.jsx";
 import trustImg from "../assets/why-us/trust.png";
 import qualityImg from "../assets/why-us/quality.png";
@@ -8,6 +8,7 @@ import { useProductStore } from "../store/useProductStore.js";
 import { useCategoryStore } from "../store/useCategoryStore.js";
 import { useEquipmentTypeStore } from "../store/useEquipmentTypeStore.js";
 import ProductCard from "../components/products/ProductCard.jsx";
+import EquipmentTypeProductRow from "../components/products/EquipmentTypeProductRow.jsx";
 import NewsletterSubscription from "../components/common/NewsletterSubscription.jsx";
 import FaqSection from "../components/home/FaqSection.jsx";
 import { formatTitleCase } from "../utils/stringUtils.js";
@@ -16,14 +17,28 @@ import {
   Sparkles,
   Award,
   Layers,
-  CheckCircle2,
   ChevronRight,
 } from "lucide-react";
 
 const Home = () => {
-  const { products, fetchProducts, loading: productsLoading } = useProductStore();
-  const { categories, fetchCategories, loading: categoriesLoading } = useCategoryStore();
-  const { equipmentTypes, fetchEquipmentTypes } = useEquipmentTypeStore();
+  const {
+    products: storeProducts,
+    fetchProducts,
+    loading: productsLoading,
+  } = useProductStore();
+  const {
+    categories: storeCategories,
+    fetchCategories,
+    loading: categoriesLoading,
+  } = useCategoryStore();
+  const { equipmentTypes: storeEquipmentTypes, fetchEquipmentTypes } =
+    useEquipmentTypeStore();
+
+  const products = Array.isArray(storeProducts) ? storeProducts : [];
+  const categories = Array.isArray(storeCategories) ? storeCategories : [];
+  const equipmentTypes = Array.isArray(storeEquipmentTypes)
+    ? storeEquipmentTypes
+    : [];
 
   useEffect(() => {
     // Fetch all active entities in parallel
@@ -32,7 +47,7 @@ const Home = () => {
       fetchCategories(),
       fetchEquipmentTypes(),
     ]).catch((err) => console.error("Home data fetch error:", err));
-  }, []);
+  }, [fetchProducts, fetchCategories, fetchEquipmentTypes]);
 
   const loading = productsLoading || categoriesLoading;
 
@@ -41,8 +56,10 @@ const Home = () => {
   const featuredEquipmentSections = useMemo(() => {
     if (!equipmentTypes || equipmentTypes.length === 0) return [];
 
-    // Filter featured equipment types, or fallback to all active if none are explicitly featured
-    let targetTypes = equipmentTypes.filter((eq) => eq.isFeatured);
+    // Prefer featured equipment types; if none are featured, show the first 3 available types.
+    let targetTypes = equipmentTypes.filter(
+      (eq) => eq && eq.isFeatured && eq.isActive !== false,
+    );
     if (targetTypes.length === 0) {
       targetTypes = equipmentTypes.slice(0, 3);
     }
@@ -52,7 +69,12 @@ const Home = () => {
         // Find categories belonging to this Equipment Type
         const eqCategories = categories.filter((cat) => {
           const catEqId = cat.equipmentType?._id || cat.equipmentType;
-          return catEqId && String(catEqId) === String(eqType._id);
+          return (
+            cat &&
+            cat.isActive !== false &&
+            catEqId &&
+            String(catEqId) === String(eqType._id)
+          );
         });
 
         // For each category, select only 1 representative product
@@ -61,12 +83,18 @@ const Home = () => {
         eqCategories.forEach((cat) => {
           const catProducts = products.filter((p) => {
             const pCatId = p.category?._id || p.category;
-            return pCatId && String(pCatId) === String(cat._id);
+            return (
+              p &&
+              p.isActive !== false &&
+              pCatId &&
+              String(pCatId) === String(cat._id)
+            );
           });
 
           if (catProducts.length > 0) {
             // Prefer featured product in category if available, otherwise first product
-            const repProduct = catProducts.find((p) => p.isFeatured) || catProducts[0];
+            const repProduct =
+              catProducts.find((p) => p.isFeatured) || catProducts[0];
             representativeProducts.push({
               ...repProduct,
               category: cat,
@@ -107,26 +135,158 @@ const Home = () => {
 
   return (
     <main className="min-h-screen bg-gray-50">
-      
       {/* 1. HERO CAROUSEL */}
       <Carousel />
 
       {/* 2. FEATURED EQUIPMENT TYPES & REPRESENTATIVE PRODUCTS SHOWCASE */}
       <section className="py-16 px-4 md:px-10 lg:px-16 max-w-[1600px] mx-auto space-y-16">
-        
+        {/* =========================================================
+    SECTION 1: ABOUT ARCL
+========================================================= */}
+          <div className="max-w-6xl mx-auto">
+            {/* Section Heading */}
+            <div className="text-center mb-10">
+              <h2 className="mt-4 text-3xl md:text-4xl lg:text-5xl font-black text-[#021C57]">
+                Laboratory Instruments & Testing Equipment
+              </h2>
+            </div>
+
+            {/* Content */}
+            <div className="bg-gray-50 rounded-3xl border border-gray-100 p-6 md:p-10 shadow-sm">
+              <p className="text-gray-700 text-sm md:text-base leading-8">
+                <strong className="text-[#021C57]">
+                  ARCL Instruments Private Limited
+                </strong>{" "}
+                manufactures and supplies a wide range of laboratory
+                instruments, including equipment for concrete, cement,
+                aggregate, soil, bitumen, surveying, and scientific
+                applications.
+              </p>
+
+              <p className="mt-5 text-gray-700 text-sm md:text-base leading-8">
+                We use flexible management practices to quickly adapt to
+                changing market needs. Our focus on science and innovation
+                enables us to develop new laboratory instruments while
+                maintaining strong connections with customers, industry experts,
+                and professionals.
+              </p>
+
+              <p className="mt-5 text-gray-700 text-sm md:text-base leading-8">
+                ARCL is an{" "}
+                <strong className="text-[#021C57]">
+                  ISO 9001:2015 Certified Company
+                </strong>
+                , and our products are designed to meet stringent international
+                standards and laboratory quality requirements, including{" "}
+                <strong className="text-[#021C57]">ISO/IEC 17025:2017</strong>.
+              </p>
+
+              {/* Highlight Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8">
+                <div className="bg-white rounded-2xl border border-gray-100 p-5 text-center">
+                  <h3 className="text-lg font-bold text-[#021C57]">
+                    ISO 9001:2015
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Certified Company
+                  </p>
+                </div>
+
+                <div className="bg-white rounded-2xl border border-gray-100 p-5 text-center">
+                  <h3 className="text-lg font-bold text-[#021C57]">
+                    International Standards
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Quality-Focused Products
+                  </p>
+                </div>
+
+                <div className="bg-white rounded-2xl border border-gray-100 p-5 text-center">
+                  <h3 className="text-lg font-bold text-[#021C57]">
+                    Innovation
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Science & Technology Driven
+                  </p>
+                </div>
+              </div>
+            </div>
+                  <section className="py-6 md:py-6 px-6 md:px-12 lg:px-16 bg-gray-50">
+          <div className="max-w-6xl mx-auto">
+            {/* Section Heading */}
+            <div className="text-center mb-10">
+              <h2 className="mt-4 text-3xl md:text-4xl lg:text-5xl font-black text-[#021C57]">
+                Civil Laboratory Equipment
+              </h2>
+
+              <p className="mt-4 max-w-3xl mx-auto text-gray-600 text-sm md:text-base leading-7">
+                Precision-engineered laboratory equipment for reliable testing,
+                measurement, research, and quality control applications.
+              </p>
+            </div>
+
+            {/* Main Content Card */}
+            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 md:p-10">
+              <p className="text-gray-700 text-sm md:text-base leading-8">
+                ARCL offers a wide range of laboratory equipment designed to
+                enhance precision, reliability, and efficiency across various
+                scientific and engineering applications.
+              </p>
+
+              <p className="mt-5 text-gray-700 text-sm md:text-base leading-8">
+                Our advanced range includes{" "}
+                <strong className="text-[#021C57]">
+                  fully automatic Compression Testing Machines
+                </strong>{" "}
+                for precise concrete strength testing, laboratory ovens that
+                provide uniform heating, and{" "}
+                <strong className="text-[#021C57]">Pan Mixers</strong> for
+                consistent and efficient material mixing.
+              </p>
+
+              <p className="mt-5 text-gray-700 text-sm md:text-base leading-8">
+                Our precision{" "}
+                <strong className="text-[#021C57]">laboratory balances</strong>{" "}
+                provide accurate material measurements, while our{" "}
+                <strong className="text-[#021C57]">
+                  Non-Destructive Testing (NDT) instruments
+                </strong>{" "}
+                use advanced technology to deliver reliable testing data.
+              </p>
+
+              <p className="mt-5 text-gray-700 text-sm md:text-base leading-8">
+                ARCL laboratory equipment is designed with user-friendly
+                controls and practical operating features to support high
+                standards of performance, accuracy, reliability, and safety.
+              </p>
+
+              {/* Equipment Categories */}
+            </div>
+          </div>
+        </section>
+
+          </div>
+
+        {/* =========================================================
+    SECTION 2: CIVIL LABORATORY EQUIPMENT
+========================================================= */}
+  
         {/* Main Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-gray-200/80 pb-8">
           <div className="space-y-3 max-w-3xl">
             <div className="inline-flex items-center gap-2 bg-blue-50 text-[#021C57] px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border border-blue-200 shadow-2xs">
-              <Sparkles className="w-3.5 h-3.5 text-blue-600" /> Featured Industry Classifications
+              <Sparkles className="w-3.5 h-3.5 text-blue-600" /> Featured
+              Industry Classifications
             </div>
-            
+
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#021C57] tracking-tight">
               Specialized Laboratory Testing Instruments
             </h2>
-            
+
             <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
-              Explore key flagship instruments organized by industry equipment types. Each category is engineered to national calibration guidelines.
+              Explore key flagship instruments organized by industry equipment
+              types. Each category is engineered to national calibration
+              guidelines.
             </p>
           </div>
 
@@ -149,7 +309,7 @@ const Home = () => {
                   {[1, 2, 3, 4].map((i) => (
                     <div
                       key={i}
-                      className="h-84 bg-white rounded-3xl border border-gray-100 p-4 animate-pulse space-y-4 shadow-xs"
+                      className="h-[336px] bg-white rounded-3xl border border-gray-100 p-4 animate-pulse space-y-4 shadow-xs"
                     >
                       <div className="h-48 bg-gray-100 rounded-2xl w-full"></div>
                       <div className="h-4 bg-gray-100 rounded w-3/4"></div>
@@ -166,48 +326,10 @@ const Home = () => {
         {!loading && featuredEquipmentSections.length > 0 && (
           <div className="space-y-16">
             {featuredEquipmentSections.map((section) => (
-              <div
+              <EquipmentTypeProductRow
                 key={section.equipmentType._id}
-                className="space-y-6 bg-white/60 p-6 sm:p-8 rounded-3xl border border-gray-200/70 shadow-xs"
-              >
-                {/* Equipment Type Heading Bar */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-200">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-[#021C57] text-white flex items-center justify-center shadow-md">
-                      <Layers size={18} />
-                    </div>
-                    <div>
-                      <h3 className="text-xl sm:text-2xl font-black text-[#021C57] tracking-tight">
-                        {formatTitleCase(section.equipmentType.name)}
-                      </h3>
-                      <p className="text-xs text-gray-500 font-medium">
-                        Showing 1 flagship instrument per category ({section.products.length} categories represented)
-                      </p>
-                    </div>
-                  </div>
-
-                  <Link
-                    to="/products"
-                    className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800 transition self-start sm:self-auto cursor-pointer"
-                  >
-                    View full {formatTitleCase(section.equipmentType.name)} range
-                    <ChevronRight size={14} />
-                  </Link>
-                </div>
-
-                {/* 1 Representative Product per Category Grid */}
-                <div className="flex gap-5 sm:gap-6 overflow-x-auto pb-2 scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                  {section.products.map((product) => (
-                    <div
-                      key={product._id}
-                      className="shrink-0 w-[280px] sm:w-[310px] lg:w-[320px]"
-                    >
-                      <ProductCard product={product} />
-                    </div>
-                  ))}
-                </div>
-
-              </div>
+                section={section}
+              />
             ))}
           </div>
         )}
@@ -222,7 +344,8 @@ const Home = () => {
               Explore Our Comprehensive Catalogue
             </h3>
             <p className="text-gray-500 text-sm">
-              Browse our full inventory of civil, mechanical, scientific, and testing laboratory equipment.
+              Browse our full inventory of civil, mechanical, scientific, and
+              testing laboratory equipment.
             </p>
             <Link
               to="/products"
@@ -232,7 +355,6 @@ const Home = () => {
             </Link>
           </div>
         )}
-
       </section>
 
       {/* 3. NEWSLETTER / EQUIPMENT ALERT SUBSCRIPTION */}
@@ -246,7 +368,9 @@ const Home = () => {
           </div>
           <h2 className="text-3xl md:text-4xl font-bold">Why Choose ARCL</h2>
           <p className="text-gray-600 max-w-2xl mx-auto text-base">
-            We deliver exceptional precision, comprehensive ISO compliance, and reliable engineering solutions tailored to your laboratory requirements.
+            We deliver exceptional precision, comprehensive ISO compliance, and
+            reliable engineering solutions tailored to your laboratory
+            requirements.
           </p>
         </div>
 
@@ -282,7 +406,8 @@ const Home = () => {
             Need Custom Laboratory Equipment or Calibration?
           </h2>
           <p className="text-blue-100 text-sm md:text-base max-w-2xl mx-auto">
-            Our engineering specialists are ready to help you configure testing instruments according to national & international standards.
+            Our engineering specialists are ready to help you configure testing
+            instruments according to national & international standards.
           </p>
           <div className="pt-2">
             <NavLink

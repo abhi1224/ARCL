@@ -38,10 +38,22 @@ const Navbar = () => {
       name: "Catalog",
       to: "/catalog",
     },
+
+     {
+      name: "Calibration Services",
+      to: "/calibration-services",
+    },
+
     {
       name: "About",
       to: "/about",
-    },   
+    },  
+    
+    {
+      name: "Company Profile",
+      to: "/arclcompany.pdf",
+      isExternal: true,
+    },
     
     {
       name: "Contact",
@@ -357,28 +369,40 @@ const Navbar = () => {
               gap-6
             "
               >
-                {navLinks.map((link) => (
-                  <NavLink
-                    key={link.name}
-                    to={link.to}
-                    className={({ isActive }) =>
-                      `
-                      font-medium
-                      px-2
-                      py-1
-                      transition-all
+                {navLinks.map((link) =>
+                  link.isExternal ? (
+                    <a
+                      key={link.name}
+                      href={link.to}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium px-2 py-1 text-gray-700 hover:text-[#021C57] transition-all"
+                    >
+                      {link.name}
+                    </a>
+                  ) : (
+                    <NavLink
+                      key={link.name}
+                      to={link.to}
+                      className={({ isActive }) =>
+                        `
+                        font-medium
+                        px-2
+                        py-1
+                        transition-all
 
-                      ${
-                        isActive
-                          ? "text-[#021C57] border-b-2 border-[#021C57]"
-                          : "text-gray-700"
+                        ${
+                          isActive
+                            ? "text-[#021C57] border-b-2 border-[#021C57]"
+                            : "text-gray-700 hover:text-[#021C57]"
+                        }
+                      `
                       }
-                    `
-                    }
-                  >
-                    {link.name}
-                  </NavLink>
-                ))}
+                    >
+                      {link.name}
+                    </NavLink>
+                  )
+                )}
               </div>
 
               {/* MOBILE MENU */}
@@ -420,21 +444,39 @@ const Navbar = () => {
 
                 {/* MOBILE LINKS */}
 
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.name}
-                    to={link.to}
-                    className="
-                      text-gray-800
-                      hover:text-blue-700
-                      text-sm
-                      font-medium
-                    "
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {link.name}
-                  </Link>
-                ))}
+                {navLinks.map((link) =>
+                  link.isExternal ? (
+                    <a
+                      key={link.name}
+                      href={link.to}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="
+                        text-gray-800
+                        hover:text-blue-700
+                        text-sm
+                        font-medium
+                      "
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {link.name}
+                    </a>
+                  ) : (
+                    <Link
+                      key={link.name}
+                      to={link.to}
+                      className="
+                        text-gray-800
+                        hover:text-blue-700
+                        text-sm
+                        font-medium
+                      "
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {link.name}
+                    </Link>
+                  )
+                )}
 
                 <button
                   onClick={() => {
