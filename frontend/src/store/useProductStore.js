@@ -9,12 +9,47 @@ export const useProductStore = create((set, get) => ({
   adminProducts: [],
   product: null,
   featuredShowcase: [],
+  homeShowcase: [],
+  homeShowcaseLoading: false,
   loading: false,
   categoryProductsLoading: false,
   error: null,
   totalProducts: 0,
   categoryProducts: [],
   categoryData: null,
+
+  // =========================
+  // CLIENT: FETCH ULTRA-FAST STRUCTURED HOME SHOWCASE
+  // =========================
+  fetchHomeShowcase: async () => {
+    const current = get().homeShowcase;
+    if (current && current.length > 0) {
+      // Background revalidate without blocking UI
+      productService.getHomeShowcase().then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          set({ homeShowcase: data });
+        }
+      }).catch(() => {});
+      return current;
+    }
+
+    try {
+      set({ homeShowcaseLoading: true, error: null });
+      const data = await productService.getHomeShowcase();
+      const showcaseList = Array.isArray(data) ? data : [];
+      set({
+        homeShowcase: showcaseList,
+        homeShowcaseLoading: false,
+      });
+      return showcaseList;
+    } catch (err) {
+      console.error("Fetch home showcase failed:", err);
+      set({
+        error: err.response?.data?.message || "Failed to load home showcase",
+        homeShowcaseLoading: false,
+      });
+    }
+  },
 
   // =========================
   // CLIENT: FETCH FEATURED SHOWCASE FOR HOME

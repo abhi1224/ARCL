@@ -39,6 +39,22 @@ const howItWorksStepSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const generalSpecificationSchema = new mongoose.Schema(
+  {
+    key: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    value: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+  },
+  { _id: false }
+);
+
 const categorySchema = new mongoose.Schema(
   {
     name: {
@@ -85,6 +101,9 @@ const categorySchema = new mongoose.Schema(
       },
     ],
 
+    // General Technical Specifications for all products in this category
+    generalSpecifications: [generalSpecificationSchema],
+
     equipmentType: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "EquipmentType",
@@ -105,5 +124,9 @@ const categorySchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// High-performance compound indexes
+categorySchema.index({ isActive: 1, equipmentType: 1 });
+categorySchema.index({ equipmentType: 1, isFeatured: -1 });
 
 export default mongoose.model("Category", categorySchema);

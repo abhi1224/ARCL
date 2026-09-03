@@ -216,6 +216,27 @@ const CategoryDetailsModal = ({ isOpen, onClose, category }) => {
 
           </div>
 
+          {/* GENERAL TECHNICAL SPECIFICATIONS */}
+          {category.generalSpecifications && category.generalSpecifications.length > 0 && (
+            <div className="bg-indigo-50/50 p-4.5 rounded-2xl border border-indigo-100 space-y-3">
+              <h4 className="text-xs font-bold text-indigo-950 uppercase tracking-wider flex items-center gap-1.5">
+                <FaCogs className="text-indigo-600" />
+                General Technical Specifications ({category.generalSpecifications.length})
+              </h4>
+              <div className="grid sm:grid-cols-2 gap-2">
+                {category.generalSpecifications.map((spec, i) => (
+                  <div
+                    key={i}
+                    className="bg-white p-2.5 rounded-xl border border-indigo-100 flex items-center justify-between text-xs gap-2 shadow-2xs"
+                  >
+                    <span className="font-semibold text-gray-600">{spec.key}:</span>
+                    <span className="font-bold text-[#021C57] text-right">{spec.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
         </div>
 
         {/* MODAL FOOTER */}

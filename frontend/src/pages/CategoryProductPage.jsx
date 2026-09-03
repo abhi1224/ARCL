@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { useProductStore } from "../store/useProductStore.js";
 import ProductCard from "../components/products/ProductCard.jsx";
 import ProductToolbar from "../components/products/ProductToolbar.jsx";
-import { Filter, X, RotateCcw, ChevronRight, Layers, SlidersHorizontal, Cog } from "lucide-react";
+import { Filter, X, RotateCcw, ChevronRight, Layers, SlidersHorizontal, Cog, CheckCircle2 } from "lucide-react";
 import { formatTitleCase } from "../utils/stringUtils.js";
 
 /**
@@ -203,6 +203,64 @@ const CategoryProductPage = () => {
                         )}
                       </div>
                     ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* General Technical Specifications (Category Master Specs) */}
+            {categoryData?.generalSpecifications && categoryData.generalSpecifications.length > 0 && (
+              <div className="mt-5 bg-indigo-50/50 border border-indigo-200/80 p-5 rounded-2xl max-w-4xl space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-950 flex items-center gap-1.5">
+                  <SlidersHorizontal size={14} className="text-indigo-600" /> General Technical Specifications
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 pt-1">
+                  {categoryData.generalSpecifications.map((spec, idx) => (
+                    <div
+                      key={idx}
+                      className="bg-white p-3 rounded-xl border border-indigo-100 flex flex-col justify-between shadow-2xs text-xs"
+                    >
+                      <span className="font-semibold text-gray-500 text-[11px]">{spec.key}</span>
+                      <span className="font-bold text-[#021C57] mt-0.5">{spec.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Key Features & Applications */}
+            {((categoryData?.features && categoryData.features.length > 0) ||
+              (categoryData?.applications && categoryData.applications.length > 0)) && (
+              <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl">
+                {categoryData.features && categoryData.features.length > 0 && (
+                  <div className="bg-blue-50/50 border border-blue-200/80 p-4.5 rounded-2xl space-y-2.5">
+                    <h4 className="text-xs font-bold text-[#021C57] uppercase tracking-wider">
+                      Key Features
+                    </h4>
+                    <ul className="space-y-1.5 text-xs text-gray-700">
+                      {categoryData.features.map((feat, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <CheckCircle2 size={13} className="text-blue-600 shrink-0 mt-0.5" />
+                          <span>{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {categoryData.applications && categoryData.applications.length > 0 && (
+                  <div className="bg-emerald-50/50 border border-emerald-200/80 p-4.5 rounded-2xl space-y-2.5">
+                    <h4 className="text-xs font-bold text-emerald-950 uppercase tracking-wider">
+                      Industrial & Lab Applications
+                    </h4>
+                    <ul className="space-y-1.5 text-xs text-gray-700">
+                      {categoryData.applications.map((app, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <CheckCircle2 size={13} className="text-emerald-600 shrink-0 mt-0.5" />
+                          <span>{app}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 )}
               </div>

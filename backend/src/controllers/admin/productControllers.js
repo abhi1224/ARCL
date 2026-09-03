@@ -57,6 +57,15 @@ const resolveProductInheritance = (prodDoc) => {
     prod.specifications = {};
   }
 
+  // If product specifications are empty and category has general specifications, auto-inherit them
+  if (Object.keys(prod.specifications).length === 0 && prod.category?.generalSpecifications?.length > 0) {
+    const catSpecs = {};
+    prod.category.generalSpecifications.forEach((s) => {
+      if (s.key && s.value) catSpecs[s.key] = s.value;
+    });
+    prod.specifications = catSpecs;
+  }
+
   if ((!prod.description || !prod.description.trim()) && prod.category?.description) {
     prod.description = prod.category.description;
   }
@@ -73,6 +82,11 @@ const resolveProductInheritance = (prodDoc) => {
     prod.category?.applications?.length > 0
   ) {
     prod.applications = prod.category.applications;
+  }
+
+  // Ensure completeSetIncludes is an array
+  if (!Array.isArray(prod.completeSetIncludes)) {
+    prod.completeSetIncludes = [];
   }
 
   // Inherit category's "How It Works" working principle and process steps to the product
@@ -107,6 +121,7 @@ export const createProduct = async (req, res) => {
       specifications,
       applications,
       features,
+      completeSetIncludes,
       category,
       isFeatured,
       isActive,
@@ -161,12 +176,24 @@ export const createProduct = async (req, res) => {
       }
     }
 
+    if (typeof completeSetIncludes === "string" && completeSetIncludes.trim()) {
+      try {
+        completeSetIncludes = JSON.parse(completeSetIncludes);
+      } catch (e) {
+        completeSetIncludes = completeSetIncludes.split("\n").map((s) => s.trim()).filter(Boolean);
+      }
+    }
+
     let cleanFeatures = Array.isArray(features)
       ? features.filter((f) => f && String(f).trim().length > 0)
       : [];
 
     let cleanApplications = Array.isArray(applications)
       ? applications.filter((a) => a && String(a).trim().length > 0)
+      : [];
+
+    let cleanCompleteSetIncludes = Array.isArray(completeSetIncludes)
+      ? completeSetIncludes.filter((item) => item && String(item).trim().length > 0)
       : [];
 
     // AUTO-INHERIT from Category if not provided for this specific product
@@ -222,6 +249,7 @@ export const createProduct = async (req, res) => {
       specifications: specifications || {},
       applications: cleanApplications,
       features: cleanFeatures,
+      completeSetIncludes: cleanCompleteSetIncludes,
       category,
       images: imageUrl ? [imageUrl] : [],
       isFeatured,
@@ -381,6 +409,7 @@ export const updateProduct = async (req, res) => {
       specifications,
       applications,
       features,
+      completeSetIncludes,
       category,
       images,
       isFeatured,
@@ -411,6 +440,13 @@ export const updateProduct = async (req, res) => {
       try {
         features = JSON.parse(features);
       } catch (e) {}
+    }
+    if (typeof completeSetIncludes === "string" && completeSetIncludes.trim()) {
+      try {
+        completeSetIncludes = JSON.parse(completeSetIncludes);
+      } catch (e) {
+        completeSetIncludes = completeSetIncludes.split("\n").map((s) => s.trim()).filter(Boolean);
+      }
     }
     if (typeof images === "string" && images.trim()) {
       try {
@@ -457,6 +493,11 @@ export const updateProduct = async (req, res) => {
     if (Array.isArray(applications))
       product.applications = applications.filter(Boolean);
     if (Array.isArray(features)) product.features = features.filter(Boolean);
+    if (typeof completeSetIncludes !== "undefined") {
+      product.completeSetIncludes = Array.isArray(completeSetIncludes)
+        ? completeSetIncludes.filter((item) => item && String(item).trim().length > 0)
+        : [];
+    }
     if (category) product.category = category;
     if (images && images.length > 0) product.images = images;
     if (typeof isFeatured !== "undefined") product.isFeatured = isFeatured;

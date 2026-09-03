@@ -272,6 +272,26 @@ const ProductDetailsModal = ({ isOpen, onClose, product }) => {
 
           </div>
 
+          {/* COMPLETE SET INCLUDES */}
+          {product.completeSetIncludes && product.completeSetIncludes.length > 0 && (
+            <div className="bg-emerald-50/50 p-4.5 rounded-2xl border border-emerald-200/80 space-y-3">
+              <h4 className="text-xs font-bold text-emerald-950 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="w-4 h-4 rounded-full bg-emerald-600 text-white text-[9px] flex items-center justify-center font-black">
+                  ✓
+                </span>
+                Complete Set Includes / Standard Supply Outfit ({product.completeSetIncludes.length} Items)
+              </h4>
+              <ul className="grid sm:grid-cols-2 gap-2 text-xs text-gray-800">
+                {product.completeSetIncludes.map((item, idx) => (
+                  <li key={idx} className="flex items-start gap-2 bg-white p-2.5 rounded-xl border border-emerald-100 shadow-2xs">
+                    <span className="font-bold text-emerald-600">{idx + 1}.</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
         </div>
 
         {/* MODAL FOOTER */}

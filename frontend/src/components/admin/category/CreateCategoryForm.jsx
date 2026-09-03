@@ -26,6 +26,7 @@ const CreateCategoryForm = () => {
     ],
     features: [""],
     applications: [""],
+    generalSpecifications: [{ key: "", value: "" }],
     equipmentType: "",
     filters: [
       {
@@ -135,6 +136,38 @@ const CreateCategoryForm = () => {
     setForm((prev) => ({ ...prev, applications: updated }));
   };
 
+  // GENERAL SPECIFICATIONS
+  const addGeneralSpec = () =>
+    setForm((prev) => ({
+      ...prev,
+      generalSpecifications: [
+        ...prev.generalSpecifications,
+        { key: "", value: "" },
+      ],
+    }));
+
+  const removeGeneralSpec = (i) => {
+    if (form.generalSpecifications.length === 1) {
+      setForm((prev) => ({
+        ...prev,
+        generalSpecifications: [{ key: "", value: "" }],
+      }));
+      return;
+    }
+    setForm((prev) => ({
+      ...prev,
+      generalSpecifications: prev.generalSpecifications.filter(
+        (_, idx) => idx !== i
+      ),
+    }));
+  };
+
+  const handleGeneralSpecChange = (i, field, value) => {
+    const updated = [...form.generalSpecifications];
+    updated[i] = { ...updated[i], [field]: value };
+    setForm((prev) => ({ ...prev, generalSpecifications: updated }));
+  };
+
   // DYNAMIC SPECIFICATION FILTERS
   const addFilter = () => {
     setForm((prev) => ({
@@ -205,6 +238,12 @@ const CreateCategoryForm = () => {
 
       const cleanFeatures = form.features.filter((f) => f && f.trim());
       const cleanApplications = form.applications.filter((a) => a && a.trim());
+      const cleanGeneralSpecs = form.generalSpecifications
+        .filter((s) => s && (s.key?.trim() || s.value?.trim()))
+        .map((s) => ({
+          key: s.key ? s.key.trim() : "",
+          value: s.value ? s.value.trim() : "",
+        }));
 
       const payload = {
         name: form.name.trim(),
@@ -213,6 +252,7 @@ const CreateCategoryForm = () => {
         howItWorksSteps: cleanSteps,
         features: cleanFeatures,
         applications: cleanApplications,
+        generalSpecifications: cleanGeneralSpecs,
         equipmentType: form.equipmentType,
         isFeatured: form.isFeatured,
         isActive: true,
@@ -474,6 +514,62 @@ const CreateCategoryForm = () => {
                   >
                     <MdClose size={18} />
                   </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* GENERAL TECHNICAL SPECIFICATIONS */}
+          <div className="bg-indigo-50/40 p-6 rounded-2xl border border-indigo-100 space-y-4">
+            <div className="flex justify-between items-center flex-wrap gap-2">
+              <div>
+                <h3 className="text-base font-bold text-gray-800 flex items-center gap-2">
+                  <FaCogs className="text-indigo-600" />
+                  General Technical Specifications
+                </h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Standard technical parameters that apply to all instruments in this category (e.g. Standard, Power Supply, Motor Power, Accuracy, etc.).
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={addGeneralSpec}
+                className="text-xs font-bold text-indigo-700 hover:text-indigo-900 cursor-pointer bg-white px-3.5 py-1.5 rounded-xl border border-indigo-200 shadow-2xs"
+              >
+                + Add Specification Row
+              </button>
+            </div>
+
+            <div className="space-y-2.5">
+              {form.generalSpecifications.map((spec, i) => (
+                <div key={i} className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center bg-white p-2.5 rounded-xl border border-indigo-100/70 shadow-2xs">
+                  <div className="sm:col-span-5">
+                    <input
+                      value={spec.key}
+                      placeholder="Parameter (e.g. IS Standard, Power Supply)"
+                      className="border border-gray-200 p-2.5 w-full rounded-lg text-xs bg-gray-50/50 outline-none focus:border-indigo-500 font-semibold text-gray-700"
+                      onChange={(e) => handleGeneralSpecChange(i, "key", e.target.value)}
+                    />
+                  </div>
+                  <div className="sm:col-span-6">
+                    <input
+                      value={spec.value}
+                      placeholder="Value (e.g. IS: 516 / BS: 1881, 220V AC)"
+                      className="border border-gray-200 p-2.5 w-full rounded-lg text-xs bg-gray-50/50 outline-none focus:border-indigo-500 text-gray-800"
+                      onChange={(e) => handleGeneralSpecChange(i, "value", e.target.value)}
+                    />
+                  </div>
+                  <div className="sm:col-span-1 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() => removeGeneralSpec(i)}
+                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                      title="Remove row"
+                    >
+                      <MdClose size={18} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

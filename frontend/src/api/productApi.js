@@ -35,3 +35,6 @@ export const getProductsByCategory = (slug, params = {}) =>
 
 export const getFeaturedShowcase = () =>
   API.get("/client/categories/featured-showcase");
+
+export const getHomeShowcase = () =>
+  API.get("/client/products/home-showcase");

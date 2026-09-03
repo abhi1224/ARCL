@@ -199,15 +199,22 @@ const ProductDetailsPage = () => {
     .filter((p) => p._id !== product._id)
     .slice(0, 3);
 
-  const categoryHowItWorks = product.category?.howItWorks;
-  const categoryHowItWorksSteps = product.category?.howItWorksSteps;
+  const categoryHowItWorks = product.category?.howItWorks || product.howItWorks;
+  const categoryHowItWorksSteps = product.category?.howItWorksSteps || product.howItWorksSteps;
   const hasHowItWorks = Boolean(
     categoryHowItWorks || (categoryHowItWorksSteps && categoryHowItWorksSteps.length > 0)
+  );
+
+  const hasCompleteSet = Boolean(
+    product.completeSetIncludes && product.completeSetIncludes.length > 0
   );
 
   // Tabs configuration
   const tabsList = [
     { id: "specs", label: "Technical Specifications", count: Object.keys(product.specifications || {}).length },
+    ...(hasCompleteSet
+      ? [{ id: "completeSet", label: "Complete Set Includes", count: product.completeSetIncludes.length }]
+      : []),
     { id: "features", label: "Key Features", count: product.features?.length || 0 },
     { id: "applications", label: "Lab Applications", count: product.applications?.length || 0 },
     ...(hasHowItWorks ? [{ id: "howItWorks", label: "How It Works / Principle" }] : []),
@@ -602,6 +609,62 @@ const ProductDetailsPage = () => {
                 ) : (
                   <div className="p-8 text-center text-gray-400 bg-gray-50 rounded-2xl">
                     Standard laboratory specifications apply. Contact our engineering desk or request a quote for customized parameters.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* TAB: COMPLETE SET INCLUDES (STANDARD SUPPLY OUTFIT) */}
+            {activeTab === "completeSet" && (
+              <div className="space-y-6 animate-fade-in">
+                <div>
+                  <h3 className="text-xl font-bold text-[#021C57] flex items-center gap-2">
+                    <span className="w-7 h-7 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-sm font-black shadow-md">
+                      ✓
+                    </span>
+                    Complete Set Includes (Standard Supply Outfit)
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Standard components, accessories, cables, and calibration documentation provided when purchasing this instrument.
+                  </p>
+                </div>
+
+                {product.completeSetIncludes && product.completeSetIncludes.length > 0 ? (
+                  <div className="bg-gradient-to-br from-emerald-50/60 to-teal-50/40 p-6 rounded-3xl border border-emerald-200/80 shadow-xs space-y-5">
+                    <div className="grid sm:grid-cols-2 gap-3.5">
+                      {product.completeSetIncludes.map((item, idx) => (
+                        <div
+                          key={idx}
+                          className="bg-white p-4 rounded-2xl border border-emerald-100 shadow-2xs hover:shadow-md hover:border-emerald-300 transition flex items-start gap-3.5"
+                        >
+                          <span className="w-7 h-7 rounded-xl bg-emerald-100 text-emerald-800 font-extrabold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                            {idx + 1}
+                          </span>
+                          <div>
+                            <p className="text-sm font-bold text-gray-800 leading-snug">
+                              {item}
+                            </p>
+                            <span className="inline-block mt-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+                              Included in Standard Outfit
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="pt-3 border-t border-emerald-200/60 flex items-center justify-between flex-wrap gap-3 text-xs text-emerald-900 font-medium">
+                      <span className="flex items-center gap-1.5 font-bold">
+                        <CheckCircle2 size={15} className="text-emerald-600" />
+                        All listed standard accessories are included in dispatch.
+                      </span>
+                      <span className="text-emerald-700">
+                        Optional / customized accessories available on request.
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-8 text-center text-gray-400 bg-gray-50 rounded-2xl">
+                    Standard laboratory complete outfit details available on request.
                   </div>
                 )}
               </div>

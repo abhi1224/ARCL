@@ -1,13 +1,10 @@
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import Carousel from "../components/Carousel.jsx";
 import trustImg from "../assets/why-us/trust.png";
 import qualityImg from "../assets/why-us/quality.png";
 import supportImg from "../assets/why-us/support.png";
 import { NavLink, Link } from "react-router-dom";
 import { useProductStore } from "../store/useProductStore.js";
-import { useCategoryStore } from "../store/useCategoryStore.js";
-import { useEquipmentTypeStore } from "../store/useEquipmentTypeStore.js";
-import ProductCard from "../components/products/ProductCard.jsx";
 import EquipmentTypeProductRow from "../components/products/EquipmentTypeProductRow.jsx";
 import NewsletterSubscription from "../components/common/NewsletterSubscription.jsx";
 import FaqSection from "../components/home/FaqSection.jsx";
@@ -22,95 +19,17 @@ import {
 
 const Home = () => {
   const {
-    products: storeProducts,
-    fetchProducts,
-    loading: productsLoading,
+    homeShowcase,
+    homeShowcaseLoading,
+    fetchHomeShowcase,
   } = useProductStore();
-  const {
-    categories: storeCategories,
-    fetchCategories,
-    loading: categoriesLoading,
-  } = useCategoryStore();
-  const { equipmentTypes: storeEquipmentTypes, fetchEquipmentTypes } =
-    useEquipmentTypeStore();
-
-  const products = Array.isArray(storeProducts) ? storeProducts : [];
-  const categories = Array.isArray(storeCategories) ? storeCategories : [];
-  const equipmentTypes = Array.isArray(storeEquipmentTypes)
-    ? storeEquipmentTypes
-    : [];
 
   useEffect(() => {
-    // Fetch all active entities in parallel
-    Promise.all([
-      fetchProducts(),
-      fetchCategories(),
-      fetchEquipmentTypes(),
-    ]).catch((err) => console.error("Home data fetch error:", err));
-  }, [fetchProducts, fetchCategories, fetchEquipmentTypes]);
+    fetchHomeShowcase();
+  }, [fetchHomeShowcase]);
 
-  const loading = productsLoading || categoriesLoading;
-
-  // Build Featured Equipment Types Structure:
-  // For each featured Equipment Type -> for each of its Categories -> pick exactly 1 representative product!
-  const featuredEquipmentSections = useMemo(() => {
-    if (!equipmentTypes || equipmentTypes.length === 0) return [];
-
-    // Prefer featured equipment types; if none are featured, show the first 3 available types.
-    let targetTypes = equipmentTypes.filter(
-      (eq) => eq && eq.isFeatured && eq.isActive !== false,
-    );
-    if (targetTypes.length === 0) {
-      targetTypes = equipmentTypes.slice(0, 3);
-    }
-
-    return targetTypes
-      .map((eqType) => {
-        // Find categories belonging to this Equipment Type
-        const eqCategories = categories.filter((cat) => {
-          const catEqId = cat.equipmentType?._id || cat.equipmentType;
-          return (
-            cat &&
-            cat.isActive !== false &&
-            catEqId &&
-            String(catEqId) === String(eqType._id)
-          );
-        });
-
-        // For each category, select only 1 representative product
-        const representativeProducts = [];
-
-        eqCategories.forEach((cat) => {
-          const catProducts = products.filter((p) => {
-            const pCatId = p.category?._id || p.category;
-            return (
-              p &&
-              p.isActive !== false &&
-              pCatId &&
-              String(pCatId) === String(cat._id)
-            );
-          });
-
-          if (catProducts.length > 0) {
-            // Prefer featured product in category if available, otherwise first product
-            const repProduct =
-              catProducts.find((p) => p.isFeatured) || catProducts[0];
-            representativeProducts.push({
-              ...repProduct,
-              category: cat,
-              equipmentTypeName: eqType.name,
-            });
-          }
-        });
-
-        return {
-          equipmentType: eqType,
-          categoriesCount: eqCategories.length,
-          products: representativeProducts,
-        };
-      })
-      .filter((sec) => sec.products.length > 0);
-  }, [equipmentTypes, categories, products]);
+  const featuredEquipmentSections = Array.isArray(homeShowcase) ? homeShowcase : [];
+  const loading = homeShowcaseLoading && featuredEquipmentSections.length === 0;
 
   const features = [
     {
@@ -294,7 +213,7 @@ const Home = () => {
             to="/products"
             className="inline-flex items-center justify-center gap-2 bg-[#021C57] hover:bg-[#043399] text-white text-xs sm:text-sm font-bold px-7 py-3.5 rounded-2xl transition duration-200 shadow-md shrink-0 self-start md:self-auto cursor-pointer"
           >
-            Browse All Catalogue ({products.length})
+            Browse All Catalogue
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>

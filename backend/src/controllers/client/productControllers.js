@@ -7,7 +7,7 @@ import EquipmentType from "../../models/equipmentType.js";
  */
 const categoryPopulateConfig = {
   path: "category",
-  select: "name slug description howItWorks howItWorksSteps features applications filters equipmentType",
+  select: "name slug description howItWorks howItWorksSteps features applications generalSpecifications filters equipmentType",
   populate: {
     path: "equipmentType",
     select: "name slug",
@@ -20,6 +20,22 @@ const categoryPopulateConfig = {
 const resolveProductInheritance = (prodDoc) => {
   if (!prodDoc) return null;
   const prod = prodDoc.toObject ? prodDoc.toObject() : { ...prodDoc };
+
+  // Convert ES6 Map -> Plain Object if needed
+  if (prod.specifications instanceof Map) {
+    prod.specifications = Object.fromEntries(prod.specifications);
+  } else if (!prod.specifications || typeof prod.specifications !== "object") {
+    prod.specifications = {};
+  }
+
+  // If product specifications are empty and category has general specifications, auto-inherit them
+  if (Object.keys(prod.specifications).length === 0 && prod.category?.generalSpecifications?.length > 0) {
+    const catSpecs = {};
+    prod.category.generalSpecifications.forEach((s) => {
+      if (s.key && s.value) catSpecs[s.key] = s.value;
+    });
+    prod.specifications = catSpecs;
+  }
 
   if ((!prod.description || !prod.description.trim()) && prod.category?.description) {
     prod.description = prod.category.description;
@@ -37,6 +53,11 @@ const resolveProductInheritance = (prodDoc) => {
     prod.category?.applications?.length > 0
   ) {
     prod.applications = prod.category.applications;
+  }
+
+  // Ensure completeSetIncludes is an array
+  if (!Array.isArray(prod.completeSetIncludes)) {
+    prod.completeSetIncludes = [];
   }
 
   // Inherit category's "How It Works" working principle and process steps to the product
@@ -329,3 +350,109 @@ export const getFeaturedProducts = async (req, res) => {
     });
   }
 };
+
+// In-memory cache for ultra-fast Home Page rendering (60s TTL)
+let homeShowcaseCache = null;
+let homeShowcaseCacheTime = 0;
+const CACHE_TTL_MS = 60 * 1000;
+
+/**
+ * @desc    Get Ultra-Fast Structured Home Showcase (Client)
+ * @route   GET /api/v1/client/products/home-showcase
+ * @access  Public
+ */
+export const getHomeShowcase = async (req, res) => {
+  try {
+    const now = Date.now();
+    if (homeShowcaseCache && now - homeShowcaseCacheTime < CACHE_TTL_MS) {
+      return res.status(200).json({
+        success: true,
+        cached: true,
+        data: homeShowcaseCache,
+      });
+    }
+
+    // 1. Fetch active equipment types
+    const equipmentTypes = await EquipmentType.find({ isActive: true })
+      .sort({ isFeatured: -1, createdAt: 1 })
+      .lean();
+
+    if (!equipmentTypes || equipmentTypes.length === 0) {
+      return res.status(200).json({ success: true, data: [] });
+    }
+
+    let targetTypes = equipmentTypes.filter((eq) => eq.isFeatured);
+    if (targetTypes.length === 0) {
+      targetTypes = equipmentTypes.slice(0, 3);
+    }
+
+    const eqIds = targetTypes.map((t) => t._id);
+
+    // 2. Fetch categories for target equipment types
+    const categories = await Category.find({
+      equipmentType: { $in: eqIds },
+      isActive: true,
+    })
+      .select("name slug description equipmentType")
+      .lean();
+
+    const catIds = categories.map((c) => c._id);
+
+    // 3. Fetch products with projection only
+    const products = await Product.find({
+      category: { $in: catIds },
+      isActive: true,
+    })
+      .select("name slug productCode hsnCode images isFeatured specifications completeSetIncludes category createdAt")
+      .sort({ isFeatured: -1, createdAt: -1 })
+      .lean();
+
+    // 4. Map and group structure
+    const sections = targetTypes
+      .map((eqType) => {
+        const eqCategories = categories.filter(
+          (cat) => String(cat.equipmentType) === String(eqType._id)
+        );
+
+        const representativeProducts = [];
+
+        eqCategories.forEach((cat) => {
+          const catProducts = products.filter(
+            (p) => String(p.category) === String(cat._id)
+          );
+
+          if (catProducts.length > 0) {
+            const repProduct =
+              catProducts.find((p) => p.isFeatured) || catProducts[0];
+            representativeProducts.push({
+              ...repProduct,
+              category: cat,
+              equipmentTypeName: eqType.name,
+            });
+          }
+        });
+
+        return {
+          equipmentType: eqType,
+          categoriesCount: eqCategories.length,
+          products: representativeProducts,
+        };
+      })
+      .filter((sec) => sec.products.length > 0);
+
+    homeShowcaseCache = sections;
+    homeShowcaseCacheTime = now;
+
+    return res.status(200).json({
+      success: true,
+      data: sections,
+    });
+  } catch (error) {
+    console.error("Home Showcase Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to load home showcase",
+    });
+  }
+};
+

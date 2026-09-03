@@ -11,6 +11,9 @@ export const getAdminCategories = (params = {}) =>
 
 export const getCategoryById = (id) => API.get(`/admin/categories/id/${id}`);
 
+export const getAdminCategoryBySlug = (slug) =>
+  API.get(`/admin/categories/${slug}`);
+
 export const updateCategory = (id, data) =>
   API.put(`/admin/categories/${id}`, data);
 

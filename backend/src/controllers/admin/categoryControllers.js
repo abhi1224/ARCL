@@ -41,6 +41,7 @@ export const createCategory = async (req, res) => {
       howItWorksSteps,
       features,
       applications,
+      generalSpecifications,
       equipmentType,
       filters,
       isFeatured,
@@ -102,6 +103,29 @@ export const createCategory = async (req, res) => {
       ? applications.filter((a) => a && String(a).trim().length > 0)
       : [];
 
+    // Format generalSpecifications
+    let cleanGeneralSpecs = [];
+    if (typeof generalSpecifications === "string") {
+      try {
+        generalSpecifications = JSON.parse(generalSpecifications);
+      } catch (e) {
+        cleanGeneralSpecs = [];
+      }
+    }
+    if (Array.isArray(generalSpecifications)) {
+      cleanGeneralSpecs = generalSpecifications
+        .filter((s) => s && (s.key?.trim() || s.value?.trim()))
+        .map((s) => ({
+          key: s.key ? String(s.key).trim() : "",
+          value: s.value ? String(s.value).trim() : "",
+        }));
+    } else if (generalSpecifications && typeof generalSpecifications === "object") {
+      cleanGeneralSpecs = Object.entries(generalSpecifications).map(([k, v]) => ({
+        key: String(k).trim(),
+        value: String(v).trim(),
+      }));
+    }
+
     // Format filters
     const formattedFilters = Array.isArray(filters)
       ? filters.map((f) => ({
@@ -130,6 +154,7 @@ export const createCategory = async (req, res) => {
       howItWorksSteps: formattedSteps,
       features: cleanFeatures,
       applications: cleanApplications,
+      generalSpecifications: cleanGeneralSpecs,
       equipmentType,
       filters: formattedFilters,
       isFeatured: isFeatured === true || isFeatured === "true",
@@ -318,6 +343,7 @@ export const updateCategory = async (req, res) => {
       howItWorksSteps,
       features,
       applications,
+      generalSpecifications,
       equipmentType,
       filters,
       isFeatured,
@@ -409,6 +435,31 @@ export const updateCategory = async (req, res) => {
       category.applications = Array.isArray(applications)
         ? applications.filter((a) => a && String(a).trim().length > 0)
         : [];
+    }
+
+    if (typeof generalSpecifications !== "undefined") {
+      let cleanGeneralSpecs = [];
+      if (typeof generalSpecifications === "string") {
+        try {
+          generalSpecifications = JSON.parse(generalSpecifications);
+        } catch (e) {
+          cleanGeneralSpecs = [];
+        }
+      }
+      if (Array.isArray(generalSpecifications)) {
+        cleanGeneralSpecs = generalSpecifications
+          .filter((s) => s && (s.key?.trim() || s.value?.trim()))
+          .map((s) => ({
+            key: s.key ? String(s.key).trim() : "",
+            value: s.value ? String(s.value).trim() : "",
+          }));
+      } else if (generalSpecifications && typeof generalSpecifications === "object") {
+        cleanGeneralSpecs = Object.entries(generalSpecifications).map(([k, v]) => ({
+          key: String(k).trim(),
+          value: String(v).trim(),
+        }));
+      }
+      category.generalSpecifications = cleanGeneralSpecs;
     }
 
     if (filters) {

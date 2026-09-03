@@ -29,6 +29,7 @@ const ProductForm = () => {
     category: "",
     features: [""],
     applications: [""],
+    completeSetIncludes: [""],
     isFeatured: false,
     isActive: true,
   });
@@ -116,6 +117,10 @@ const ProductForm = () => {
                 : matchedCategory?.applications?.length > 0
                 ? matchedCategory.applications
                 : [""],
+            completeSetIncludes:
+              Array.isArray(prod.completeSetIncludes) && prod.completeSetIncludes.length > 0
+                ? prod.completeSetIncludes
+                : [""],
             isFeatured: prod.isFeatured || false,
             isActive: typeof prod.isActive === "boolean" ? prod.isActive : true,
           });
@@ -139,6 +144,16 @@ const ProductForm = () => {
 
     // Clear previous filter selections (let admin select the specific value for THIS product)
     setCategoryFilterSelections({});
+
+    // Auto-inherit general specifications from category if current specs are empty
+    if (category?.generalSpecifications && category.generalSpecifications.length > 0 && generalSpecsList.length === 0) {
+      setGeneralSpecsList(
+        category.generalSpecifications.map((s) => ({
+          key: s.key || "",
+          value: s.value || "",
+        }))
+      );
+    }
 
     // Auto-inherit description, features, applications from the selected category
     const inheritedDesc = category?.description || form.description || "";
@@ -233,6 +248,32 @@ const ProductForm = () => {
     const updated = [...form.applications];
     updated[i] = value;
     setForm({ ...form, applications: updated });
+  };
+
+  // COMPLETE SET INCLUDES (STANDARD MACHINE SUPPLY OUTFIT)
+  const addCompleteSetItem = () =>
+    setForm((prev) => ({
+      ...prev,
+      completeSetIncludes: [...prev.completeSetIncludes, ""],
+    }));
+
+  const removeCompleteSetItem = (i) => {
+    if (form.completeSetIncludes.length === 1) {
+      setForm((prev) => ({ ...prev, completeSetIncludes: [""] }));
+      return;
+    }
+    setForm((prev) => ({
+      ...prev,
+      completeSetIncludes: prev.completeSetIncludes.filter(
+        (_, index) => index !== i
+      ),
+    }));
+  };
+
+  const handleCompleteSetChange = (i, value) => {
+    const updated = [...form.completeSetIncludes];
+    updated[i] = value;
+    setForm((prev) => ({ ...prev, completeSetIncludes: updated }));
   };
 
   // IMAGE
@@ -343,6 +384,9 @@ const ProductForm = () => {
             : selectedCategory?.applications || []
         )
       );
+
+      const cleanCompleteSet = form.completeSetIncludes.filter((item) => item && item.trim());
+      formData.append("completeSetIncludes", JSON.stringify(cleanCompleteSet));
 
       if (image) {
         formData.append("image", image);
@@ -563,86 +607,62 @@ const ProductForm = () => {
             </div>
           </div>
 
-          {/* STEP 4: GENERAL TECHNICAL SPECIFICATIONS (UNLIMITED DYNAMIC ROWS: 5, 10, 20 SPECS) */}
-          <div className="bg-slate-50/80 p-5 rounded-2xl border border-gray-200/80 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          {/* STEP 4: COMPLETE SET INCLUDES (STANDARD SUPPLY OUTFIT) */}
+          <div className="bg-emerald-50/40 p-6 rounded-2xl border border-emerald-200/70 space-y-4">
+            <div className="flex justify-between items-center flex-wrap gap-2">
               <div>
-                <h3 className="text-sm font-bold text-[#021C57] flex items-center gap-2">
-                  <SlidersHorizontal size={15} className="text-blue-600" />
-                  General Technical Specifications ({generalSpecsList.length})
-                  <span className="text-[11px] font-normal text-gray-500">(Optional)</span>
+                <h3 className="text-sm sm:text-base font-bold text-gray-800 flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-lg bg-emerald-600 text-white text-xs flex items-center justify-center font-black">
+                    ✓
+                  </span>
+                  Complete Set Includes (Standard Supply Outfit)
                 </h3>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  Add full technical specification parameters.
+                  Specify all components, platens, cables, accessories, and calibration certificates supplied with this machine when delivered.
                 </p>
               </div>
 
               <button
                 type="button"
-                onClick={addGeneralSpecRow}
-                className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition cursor-pointer shadow-2xs self-start sm:self-auto"
+                onClick={addCompleteSetItem}
+                className="text-xs font-bold text-emerald-800 hover:text-emerald-950 cursor-pointer bg-white px-3.5 py-1.5 rounded-xl border border-emerald-300 shadow-2xs transition"
               >
-                <FaPlus size={10} /> Add Specification Row
+                + Add Item to Complete Set
               </button>
             </div>
 
-            {generalSpecsList.length > 0 ? (
-              <div className="space-y-3">
-                {generalSpecsList.map((spec, index) => (
-                  <div
-                    key={index}
-                    className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center bg-white p-3.5 rounded-xl border border-gray-200/80 shadow-2xs"
-                  >
-                    <div className="sm:col-span-5">
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">
-                        Parameter / Attribute
-                      </label>
-                      <input
-                        type="text"
-                        value={spec.key}
-                        placeholder="e.g. Motor Power / Speed / Weight"
-                        className="w-full border border-gray-200 p-2.5 rounded-lg text-xs bg-gray-50/40 focus:bg-white outline-none focus:border-blue-500"
-                        onChange={(e) =>
-                          handleGeneralSpecChange(index, "key", e.target.value)
-                        }
-                      />
-                    </div>
-
-                    <div className="sm:col-span-6">
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">
-                        Specification Value
-                      </label>
-                      <input
-                        type="text"
-                        value={spec.value}
-                        placeholder="e.g. 3.0 HP 3-Phase / 1400 RPM"
-                        className="w-full border border-gray-200 p-2.5 rounded-lg text-xs bg-gray-50/40 focus:bg-white outline-none focus:border-blue-500"
-                        onChange={(e) =>
-                          handleGeneralSpecChange(index, "value", e.target.value)
-                        }
-                      />
-                    </div>
-
-                    <div className="sm:col-span-1 flex sm:justify-center pt-2 sm:pt-4">
-                      <button
-                        type="button"
-                        onClick={() => removeGeneralSpecRow(index)}
-                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition cursor-pointer"
-                        title="Delete parameter"
-                      >
-                        <FaTrash size={12} />
-                      </button>
-                    </div>
+            <div className="space-y-2.5">
+              {form.completeSetIncludes.map((item, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <div className="w-6 text-center text-xs font-bold text-emerald-700">
+                    {index + 1}.
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="bg-white p-6 rounded-xl border border-gray-200/70 text-center space-y-2">
-                <p className="text-xs text-gray-500">
-                  No additional technical specifications added. Click &quot;Add Specification Row&quot; above to add custom parameters.
-                </p>
-              </div>
-            )}
+                  <input
+                    type="text"
+                    value={item}
+                    placeholder={
+                      index === 0
+                        ? "e.g. 1x Digital Load Indicator with NABL Traceable Calibration Certificate"
+                        : index === 1
+                        ? "e.g. 1x Pair of Upper & Lower Platens (150mm)"
+                        : index === 2
+                        ? "e.g. 1x Connecting Hydraulic Hose with Quick Couplers"
+                        : "e.g. 1x User Manual & Standard Tool Kit"
+                    }
+                    className="w-full border border-gray-200 p-2.5 rounded-xl text-xs bg-white outline-none focus:border-emerald-500 text-gray-800"
+                    onChange={(e) => handleCompleteSetChange(index, e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeCompleteSetItem(index)}
+                    className="p-2.5 text-red-500 hover:bg-red-50 rounded-xl transition cursor-pointer shrink-0"
+                    title="Remove item"
+                  >
+                    <MdClose size={18} />
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* STEP 5: IMAGE UPLOAD */}
@@ -711,7 +731,7 @@ const ProductForm = () => {
             >
               <span className="flex items-center gap-2">
                 <Sparkles size={14} className="text-blue-600" />
-                Customize Description, Features & Applications (Optional Overrides)
+                Customize Description, Features, Applications & Specifications (Optional Overrides)
               </span>
               <span className="text-xs text-blue-600 font-semibold flex items-center gap-1">
                 {showAdvancedOverrides ? "Hide Details" : "Show Details"}
@@ -811,6 +831,80 @@ const ProductForm = () => {
                       </div>
                     ))}
                   </div>
+                </div>
+
+                {/* GENERAL TECHNICAL SPECIFICATIONS (OPTIONAL OVERRIDES) */}
+                <div className="pt-2 border-t border-gray-100">
+                  <div className="flex justify-between items-center mb-2 flex-wrap gap-2">
+                    <div>
+                      <label className="text-xs font-bold text-gray-700 uppercase tracking-wide flex items-center gap-1.5">
+                        <SlidersHorizontal size={13} className="text-blue-600" />
+                        General Technical Specifications (Optional Overrides)
+                      </label>
+                      <p className="text-[11px] text-gray-500 mt-0.5">
+                        Auto-inherited from category master. Add or customize specific parameter rows for this product if needed.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={addGeneralSpecRow}
+                      className="text-blue-600 hover:text-blue-800 text-xs font-bold cursor-pointer bg-blue-50/80 px-2.5 py-1 rounded-lg border border-blue-200"
+                    >
+                      + Add Specification Row
+                    </button>
+                  </div>
+
+                  {generalSpecsList.length > 0 ? (
+                    <div className="space-y-2.5">
+                      {generalSpecsList.map((spec, index) => (
+                        <div
+                          key={index}
+                          className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center bg-gray-50/70 p-3 rounded-xl border border-gray-200/80"
+                        >
+                          <div className="sm:col-span-5">
+                            <input
+                              type="text"
+                              value={spec.key}
+                              placeholder="Parameter (e.g. Motor Power, Platen Size)"
+                              className="w-full border border-gray-200 p-2.5 rounded-lg text-xs bg-white outline-none focus:border-blue-500 font-semibold text-gray-700"
+                              onChange={(e) =>
+                                handleGeneralSpecChange(index, "key", e.target.value)
+                              }
+                            />
+                          </div>
+
+                          <div className="sm:col-span-6">
+                            <input
+                              type="text"
+                              value={spec.value}
+                              placeholder="Value (e.g. 3.0 HP / 150x150 mm)"
+                              className="w-full border border-gray-200 p-2.5 rounded-lg text-xs bg-white outline-none focus:border-blue-500 text-gray-800"
+                              onChange={(e) =>
+                                handleGeneralSpecChange(index, "value", e.target.value)
+                              }
+                            />
+                          </div>
+
+                          <div className="sm:col-span-1 flex justify-center">
+                            <button
+                              type="button"
+                              onClick={() => removeGeneralSpecRow(index)}
+                              className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                              title="Delete parameter"
+                            >
+                              <MdClose size={15} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="bg-gray-50/60 p-4 rounded-xl border border-dashed border-gray-300 text-center">
+                      <p className="text-xs text-gray-500">
+                        No custom specification overrides added. Category master technical specifications will apply automatically.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
               </div>

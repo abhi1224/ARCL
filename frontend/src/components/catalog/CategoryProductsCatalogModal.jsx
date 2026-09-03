@@ -8,6 +8,7 @@ import {
   Sparkles,
   Package,
   Cog,
+  SlidersHorizontal,
 } from "lucide-react";
 import { formatTitleCase } from "../../utils/stringUtils.js";
 
@@ -112,6 +113,26 @@ const CategoryProductsCatalogModal = ({
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* General Technical Specifications (Category Master) */}
+          {category.generalSpecifications && category.generalSpecifications.length > 0 && (
+            <div className="bg-indigo-50/50 border border-indigo-200/80 p-4.5 rounded-2xl space-y-2.5">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-950 flex items-center gap-1.5">
+                <SlidersHorizontal size={14} className="text-indigo-600" /> General Technical Specifications
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                {category.generalSpecifications.map((spec, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-white p-2.5 rounded-xl border border-indigo-100 flex flex-col justify-between shadow-2xs text-xs"
+                  >
+                    <span className="font-semibold text-gray-500 text-[11px]">{spec.key}</span>
+                    <span className="font-bold text-[#021C57] mt-0.5">{spec.value}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 

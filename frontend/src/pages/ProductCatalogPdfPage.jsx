@@ -356,6 +356,29 @@ const ProductCatalogPdfPage = () => {
           )}
         </div>
 
+        {/* COMPLETE SET INCLUDES (STANDARD SUPPLY OUTFIT) */}
+        {product.completeSetIncludes && product.completeSetIncludes.length > 0 && (
+          <div className="bg-emerald-50/50 border border-emerald-200 rounded-2xl p-5 space-y-3">
+            <h3 className="text-sm font-bold text-emerald-950 uppercase tracking-wider flex items-center gap-2">
+              <span className="w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] flex items-center justify-center font-bold">
+                ✓
+              </span>
+              Complete Set Includes (Standard Supply Outfit)
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs text-gray-800">
+              {product.completeSetIncludes.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="bg-white p-2.5 rounded-xl border border-emerald-100 flex items-start gap-2 shadow-2xs"
+                >
+                  <span className="font-bold text-emerald-700 shrink-0">{idx + 1}.</span>
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* QUALITY ASSURANCE & FOOTER */}
         <div className="border-t-2 border-gray-200 pt-6 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center md:text-left text-xs text-gray-600 bg-gray-50 rounded-2xl p-4 border border-gray-200">

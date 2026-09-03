@@ -57,6 +57,14 @@ const productSchema = new mongoose.Schema(
       },
     ],
 
+    // Complete Set Includes (Accessories, items & components supplied with the machine)
+    completeSetIncludes: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
@@ -77,5 +85,10 @@ const productSchema = new mongoose.Schema(
   },
   { timestamps: true, minimize: false }
 );
+
+// High-performance compound indexes
+productSchema.index({ isActive: 1, isFeatured: -1, createdAt: -1 });
+productSchema.index({ category: 1, isActive: 1 });
+productSchema.index({ isActive: 1, name: 1 });
 
 export default mongoose.model("Product", productSchema);

@@ -10,6 +10,7 @@ import {
   toggleProductFeatured,
   getProductsByCategory,
   getFeaturedShowcase,
+  getHomeShowcase,
 } from "../api/productApi.js";
 
 export const productService = {
@@ -46,6 +47,12 @@ export const productService = {
   // CLIENT GET FEATURED SHOWCASE
   getFeaturedShowcase: async () => {
     const res = await getFeaturedShowcase();
+    return res.data?.data || res.data;
+  },
+
+  // CLIENT GET ULTRA-FAST HOME SHOWCASE
+  getHomeShowcase: async () => {
+    const res = await getHomeShowcase();
     return res.data?.data || res.data;
   },
 
