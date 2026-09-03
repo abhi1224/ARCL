@@ -73,6 +73,7 @@ const NewsletterSubscription = () => {
               <div className="relative flex-1">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
+                  suppressHydrationWarning
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -83,6 +84,7 @@ const NewsletterSubscription = () => {
               </div>
 
               <button
+                suppressHydrationWarning
                 type="submit"
                 disabled={loading}
                 className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-gray-950 font-bold px-8 py-4 rounded-2xl transition duration-200 shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 text-sm cursor-pointer shrink-0"

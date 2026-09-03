@@ -3,6 +3,7 @@ import {
   deleteEquipmentType,
   getAdminEquipmentTypes,
   getEquipmentTypes,
+  reorderEquipmentTypes,
   toggleEquipmentTypeFeatured,
   toggleEquipmentTypeStatus,
   updateEquipmentType,
@@ -48,6 +49,12 @@ export const equipmentTypeService = {
   // TOGGLE FEATURED (Admin)
   toggleFeatured: async (id) => {
     const res = await toggleEquipmentTypeFeatured(id);
+    return res.data?.data || res.data;
+  },
+
+  // REORDER (Admin)
+  reorder: async (data) => {
+    const res = await reorderEquipmentTypes(data);
     return res.data?.data || res.data;
   },
 };

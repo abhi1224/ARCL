@@ -143,4 +143,25 @@ export const useEquipmentTypeStore = create((set) => ({
       throw err;
     }
   },
+
+  // =========================
+  // REORDER EQUIPMENT TYPES (Admin)
+  // =========================
+  reorderEquipmentTypes: async (orderedList) => {
+    try {
+      set({ error: null });
+      // Optimistic update
+      set({ equipmentTypes: orderedList, adminEquipmentTypes: orderedList });
+
+      const orderedIds = orderedList.map((item) => item._id);
+      const data = await equipmentTypeService.reorder({ orderedIds });
+      const updatedList = Array.isArray(data) ? data : orderedList;
+
+      set({ equipmentTypes: updatedList, adminEquipmentTypes: updatedList });
+      return updatedList;
+    } catch (err) {
+      set({ error: err.message || "Reorder failed" });
+      throw err;
+    }
+  },
 }));

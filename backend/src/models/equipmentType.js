@@ -25,11 +25,16 @@ const equipmentTypeSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    displayOrder: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );
 
 // High-performance compound indexes
-equipmentTypeSchema.index({ isActive: 1, isFeatured: -1 });
+equipmentTypeSchema.index({ isActive: 1, displayOrder: 1, isFeatured: -1 });
 
 export default mongoose.model("EquipmentType", equipmentTypeSchema);

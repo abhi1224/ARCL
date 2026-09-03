@@ -209,23 +209,38 @@ export const getProducts = async (req, res) => {
 export const getProductsByCategory = async (req, res) => {
   try {
     const { slug } = req.params;
+    if (!slug) {
+      return res.status(200).json({
+        success: true,
+        category: null,
+        products: [],
+        count: 0,
+      });
+    }
 
+    const cleanSlug = String(slug).trim();
     let category = null;
-    if (slug.match(/^[0-9a-fA-F]{24}$/)) {
+
+    if (cleanSlug.match(/^[0-9a-fA-F]{24}$/)) {
       category = await Category.findOne({
-        _id: slug,
-        isActive: true,
-      }).populate("equipmentType", "name slug");
-    } else {
-      category = await Category.findOne({
-        slug,
+        _id: cleanSlug,
         isActive: true,
       }).populate("equipmentType", "name slug");
     }
 
     if (!category) {
-      return res.status(404).json({
-        success: false,
+      category = await Category.findOne({
+        slug: { $regex: new RegExp(`^${cleanSlug.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") },
+        isActive: true,
+      }).populate("equipmentType", "name slug");
+    }
+
+    if (!category) {
+      return res.status(200).json({
+        success: true,
+        category: null,
+        products: [],
+        count: 0,
         message: "Category not found",
       });
     }
@@ -361,6 +376,11 @@ const CACHE_TTL_MS = 60 * 1000;
  * @route   GET /api/v1/client/products/home-showcase
  * @access  Public
  */
+export const clearHomeShowcaseCache = () => {
+  homeShowcaseCache = null;
+  homeShowcaseCacheTime = 0;
+};
+
 export const getHomeShowcase = async (req, res) => {
   try {
     const now = Date.now();
@@ -372,9 +392,9 @@ export const getHomeShowcase = async (req, res) => {
       });
     }
 
-    // 1. Fetch active equipment types
+    // 1. Fetch active equipment types sorted by custom displayOrder
     const equipmentTypes = await EquipmentType.find({ isActive: true })
-      .sort({ isFeatured: -1, createdAt: 1 })
+      .sort({ displayOrder: 1, isFeatured: -1, createdAt: 1 })
       .lean();
 
     if (!equipmentTypes || equipmentTypes.length === 0) {

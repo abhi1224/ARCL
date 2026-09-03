@@ -3,6 +3,7 @@ import EquipmentType from "../../models/equipmentType.js";
 import Category from "../../models/category.js";
 import Product from "../../models/product.js";
 import mongoose from "mongoose";
+import { clearHomeShowcaseCache } from "../client/productControllers.js";
 
 /**
  * @desc    Create Equipment Type
@@ -43,13 +44,19 @@ export const createEquipmentType = async (req, res) => {
       });
     }
 
+    // Determine default displayOrder (next in sequence)
+    const count = await EquipmentType.countDocuments();
+
     // Create equipment type
     const equipmentType = await EquipmentType.create({
       name: name.trim(),
       slug,
       isActive: true,
       isFeatured: isFeatured === true || isFeatured === "true",
+      displayOrder: count + 1,
     });
+
+    clearHomeShowcaseCache();
 
     return res.status(201).json({
       success: true,
@@ -72,7 +79,11 @@ export const createEquipmentType = async (req, res) => {
  */
 export const getAllEquipmentTypes = async (req, res) => {
   try {
-    const equipmentTypes = await EquipmentType.find().sort({ createdAt: -1 });
+    const equipmentTypes = await EquipmentType.find().sort({
+      displayOrder: 1,
+      isFeatured: -1,
+      createdAt: 1,
+    });
 
     return res.status(200).json({
       success: true,
@@ -242,6 +253,8 @@ export const toggleEquipmentTypeFeatured = async (req, res) => {
     equipmentType.isFeatured = !equipmentType.isFeatured;
     await equipmentType.save();
 
+    clearHomeShowcaseCache();
+
     return res.status(200).json({
       success: true,
       message: `Equipment type ${equipmentType.isFeatured ? "marked as featured" : "removed from featured"} successfully! ⭐`,
@@ -253,6 +266,68 @@ export const toggleEquipmentTypeFeatured = async (req, res) => {
       success: false,
       message: "Internal server error.",
       error: error.message,
+    });
+  }
+};
+
+/**
+ * @desc    Reorder Equipment Types (Drag and Drop / Ordering)
+ * @route   PUT /api/v1/admin/equipment-types/reorder
+ * @access  Admin
+ */
+export const reorderEquipmentTypes = async (req, res) => {
+  try {
+    const { items, orderedIds } = req.body;
+
+    if (Array.isArray(orderedIds) && orderedIds.length > 0) {
+      // Bulk update based on ordered array of IDs
+      const bulkOps = orderedIds.map((id, index) => ({
+        updateOne: {
+          filter: { _id: id },
+          update: { $set: { displayOrder: index + 1 } },
+        },
+      }));
+
+      if (bulkOps.length > 0) {
+        await EquipmentType.bulkWrite(bulkOps);
+      }
+    } else if (Array.isArray(items) && items.length > 0) {
+      // Bulk update based on array of { id, displayOrder }
+      const bulkOps = items.map((item, index) => ({
+        updateOne: {
+          filter: { _id: item.id || item._id },
+          update: { $set: { displayOrder: typeof item.displayOrder === "number" ? item.displayOrder : index + 1 } },
+        },
+      }));
+
+      if (bulkOps.length > 0) {
+        await EquipmentType.bulkWrite(bulkOps);
+      }
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "Array of ordered IDs or items is required for reordering.",
+      });
+    }
+
+    clearHomeShowcaseCache();
+
+    const updatedTypes = await EquipmentType.find().sort({
+      displayOrder: 1,
+      isFeatured: -1,
+      createdAt: 1,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Equipment types reordered successfully.",
+      data: updatedTypes,
+    });
+  } catch (error) {
+    console.error("Reorder Equipment Types Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to reorder equipment types.",
     });
   }
 };
@@ -289,6 +364,8 @@ export const deleteEquipmentType = async (req, res) => {
     }
 
     await EquipmentType.findByIdAndDelete(id);
+
+    clearHomeShowcaseCache();
 
     return res.status(200).json({
       success: true,

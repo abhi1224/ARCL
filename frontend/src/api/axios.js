@@ -1,19 +1,24 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1",
+  baseURL:
+    (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_URL) ||
+    (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL) ||
+    "http://localhost:3000/api/v1",
 });
 
 // Request interceptor to attach Bearer token
 API.interceptors.request.use(
   (config) => {
-    try {
-      const token = localStorage.getItem("arcl_admin_token");
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+    if (typeof window !== "undefined") {
+      try {
+        const token = localStorage.getItem("arcl_admin_token");
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+      } catch (err) {
+        console.error("Failed to retrieve token from storage:", err);
       }
-    } catch (err) {
-      console.error("Failed to retrieve token from storage:", err);
     }
     return config;
   },
@@ -24,7 +29,7 @@ API.interceptors.request.use(
 API.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (typeof window !== "undefined" && error.response?.status === 401) {
       const isAuthRoute = error.config?.url?.includes("/auth/");
       const isAdminRoute = window.location.pathname.startsWith("/admin");
 

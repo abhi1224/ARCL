@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import {
   ChevronDown,
@@ -7,7 +9,7 @@ import {
   ArrowRight,
   ShieldCheck,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "../../utils/navigation.jsx";
 
 const faqData = [
   {
@@ -97,6 +99,7 @@ const FaqSection = () => {
                 }`}
               >
                 <button
+                  suppressHydrationWarning
                   onClick={() => toggleAccordion(index)}
                   className="w-full text-left p-5 sm:p-6 flex items-center justify-between gap-4 cursor-pointer select-none transition"
                 >

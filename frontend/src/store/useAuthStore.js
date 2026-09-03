@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { googleLoginApi, getMeApi } from "../api/authApi";
 
 const getSavedToken = () => {
+  if (typeof window === "undefined") return null;
   try {
     return localStorage.getItem("arcl_admin_token") || null;
   } catch {
@@ -10,6 +11,7 @@ const getSavedToken = () => {
 };
 
 const getSavedUser = () => {
+  if (typeof window === "undefined") return null;
   try {
     const userStr = localStorage.getItem("arcl_admin_user");
     return userStr ? JSON.parse(userStr) : null;

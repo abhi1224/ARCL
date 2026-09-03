@@ -4,6 +4,7 @@ import {
   deleteEquipmentType,
   getAllEquipmentTypes,
   getSingleEquipmentType,
+  reorderEquipmentTypes,
   toggleEquipmentTypeFeatured,
   toggleEquipmentTypeStatus,
   updateEquipmentType,
@@ -13,6 +14,7 @@ const router = express.Router();
 
 router.post("/", createEquipmentType);
 router.get("/", getAllEquipmentTypes);
+router.put("/reorder", reorderEquipmentTypes);
 router.get("/:id", getSingleEquipmentType);
 router.put("/:id", updateEquipmentType);
 router.patch("/:id/toggle", toggleEquipmentTypeStatus);

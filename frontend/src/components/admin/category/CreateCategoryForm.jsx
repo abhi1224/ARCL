@@ -1,7 +1,9 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { FaPlus, FaTrash, FaCogs } from "react-icons/fa";
 import { MdClose } from "react-icons/md";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "../../../utils/navigation.jsx";
 import { toast } from "react-toastify";
 import { createCategory } from "../../../api/categoryApi.js";
 import { getAdminEquipmentTypes } from "../../../api/equipmentTypeApi.js";

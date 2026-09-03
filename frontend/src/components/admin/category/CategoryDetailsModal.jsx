@@ -1,4 +1,6 @@
-import { Link } from "react-router-dom";
+"use client";
+
+import { Link } from "../../../utils/navigation.jsx";
 import {
   FaEdit,
   FaStar,

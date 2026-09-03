@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 
-import image1 from '../assets/Slider/CalibrationMaintenanceService.jpg';
-import image2 from '../assets/Slider/CivilAndMechanicalLabEqu.jpg';
-import image3 from '../assets/Slider/MedicalAndScientificInstruments.jpg';
+const image1 = '/assets/Slider/CalibrationMaintenanceService.jpg';
+const image2 = '/assets/Slider/CivilAndMechanicalLabEqu.jpg';
+const image3 = '/assets/Slider/MedicalAndScientificInstruments.jpg';
 
 
 
@@ -78,14 +78,18 @@ const Carousel = () => {
 
       {/* Navigation Arrows */}
       <button
+        suppressHydrationWarning
         className="absolute hidden md:block left-4 top-1/2 transform -translate-y-1/2 bg-black/30 text-white p-2 rounded-full hover:bg-black/50 z-30"
         onClick={prevSlide}
+        aria-label="Previous Slide"
       >
         ❮
       </button>
       <button
+        suppressHydrationWarning
         className="absolute hidden md:block right-4 top-1/2 transform -translate-y-1/2 bg-black/30 text-white p-2 rounded-full hover:bg-black/50 z-30"
         onClick={nextSlide}
+        aria-label="Next Slide"
       >
         ❯
       </button>
@@ -95,9 +99,11 @@ const Carousel = () => {
         {images.map((_, index) => (
           <button
             key={index}
+            suppressHydrationWarning
             onClick={() => goToSlide(index)}
-            className={`w-3 h-3 rounded-full ${
-              index === currentIndex ? 'bg-white' : 'bg-gray-400'
+            aria-label={`Go to slide ${index + 1}`}
+            className={`w-3 h-3 rounded-full transition-all ${
+              index === currentIndex ? 'bg-white scale-110' : 'bg-gray-400'
             }`}
           ></button>
         ))}

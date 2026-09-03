@@ -1,4 +1,6 @@
-import { Link } from "react-router-dom";
+"use client";
+
+import { Link } from "../../utils/navigation.jsx";
 import { Layers, ChevronRight, X, Sparkles } from "lucide-react";
 import { formatTitleCase } from "../../utils/stringUtils.js";
 

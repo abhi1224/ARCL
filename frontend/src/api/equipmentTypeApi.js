@@ -24,6 +24,9 @@ export const toggleEquipmentTypeStatus = (id) =>
 export const toggleEquipmentTypeFeatured = (id) =>
   API.patch(`/admin/equipment-types/${id}/toggle-featured`);
 
+export const reorderEquipmentTypes = (data) =>
+  API.put("/admin/equipment-types/reorder", data);
+
 // =========================
 // CLIENT EQUIPMENT TYPE APIS
 // =========================

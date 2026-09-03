@@ -1,7 +1,9 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { FaPlus, FaTrash, FaCogs } from "react-icons/fa";
 import { MdClose } from "react-icons/md";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "../../../utils/navigation.jsx";
 import { toast } from "react-toastify";
 import {
   getAdminCategoryBySlug,
@@ -10,9 +12,10 @@ import {
 import { getAdminEquipmentTypes } from "../../../api/equipmentTypeApi.js";
 import { formatTitleCase } from "../../../utils/stringUtils.js";
 
-const EditCategoryForm = () => {
+const EditCategoryForm = ({ initialSlug }) => {
   const navigate = useNavigate();
-  const { slug } = useParams();
+  const routeParams = useParams();
+  const slug = initialSlug || routeParams.slug;
 
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);

@@ -40,8 +40,15 @@ export const productService = {
 
   // CLIENT GET BY CATEGORY
   getByCategory: async (slug, params = {}) => {
-    const res = await getProductsByCategory(slug, params);
-    return res.data;
+    try {
+      const res = await getProductsByCategory(slug, params);
+      return res.data;
+    } catch (error) {
+      if (error.response?.status === 404) {
+        return { success: true, category: null, products: [], count: 0 };
+      }
+      throw error;
+    }
   },
 
   // CLIENT GET FEATURED SHOWCASE

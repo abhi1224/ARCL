@@ -1,6 +1,8 @@
+"use client";
+
 import React from "react";
-import { Link, NavLink } from "react-router-dom";
-import logo from "../assets/LOGO.png";
+import { Link, NavLink } from "../utils/navigation.jsx";
+const logo = "/assets/LOGO.png";
 import {
   TbBrandLinkedin,
   TbMapPin,
@@ -20,7 +22,7 @@ const Footer = () => {
     { name: "Catalog", to: "/catalog" },
     { name: "Calibration Services", to: "/calibration-services" },
     { name: "About Us", to: "/about" },
-    { name: "Company Profile", to: "/company-profile" },
+    { name: "Company Profile", to: "/arclcompany.pdf", isExternal: true },
     { name: "Contact Us", to: "/contact" },
   ];
 
@@ -117,19 +119,31 @@ const Footer = () => {
             <ul className="grid grid-cols-1 gap-2 text-xs">
               {navLinks.map((link) => (
                 <li key={link.name}>
-                  <NavLink
-                    to={link.to}
-                    className={({ isActive }) =>
-                      `flex items-center gap-2 transition-colors duration-150 ${
-                        isActive
-                          ? "text-blue-400 font-semibold"
-                          : "text-gray-400 hover:text-white"
-                      }`
-                    }
-                  >
-                    <span className="h-1 w-1 rounded-full bg-slate-600" />
-                    <span>{link.name}</span>
-                  </NavLink>
+                  {link.isExternal ? (
+                    <a
+                      href={link.to}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 transition-colors duration-150 text-gray-400 hover:text-white"
+                    >
+                      <span className="h-1 w-1 rounded-full bg-slate-600" />
+                      <span>{link.name}</span>
+                    </a>
+                  ) : (
+                    <NavLink
+                      to={link.to}
+                      className={({ isActive }) =>
+                        `flex items-center gap-2 transition-colors duration-150 ${
+                          isActive
+                            ? "text-blue-400 font-semibold"
+                            : "text-gray-400 hover:text-white"
+                        }`
+                      }
+                    >
+                      <span className="h-1 w-1 rounded-full bg-slate-600" />
+                      <span>{link.name}</span>
+                    </NavLink>
+                  )}
                 </li>
               ))}
             </ul>

@@ -1,5 +1,7 @@
-import logo from "../../../assets/LOGO.png";
-import { Link, useNavigate } from "react-router-dom";
+"use client";
+
+const logo = "/assets/LOGO.png";
+import { Link, useNavigate } from "../../../utils/navigation.jsx";
 import { useAuthStore } from "../../../store/useAuthStore.js";
 import { FaSignOutAlt, FaUserCircle } from "react-icons/fa";
 import { toast } from "react-toastify";

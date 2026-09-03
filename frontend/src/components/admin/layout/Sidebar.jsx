@@ -1,4 +1,6 @@
-import { NavLink } from "react-router-dom";
+"use client";
+
+import { NavLink } from "../../../utils/navigation.jsx";
 import {
   FaHome,
   FaLayerGroup,

@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 const STORAGE_KEY = "arcl_quote_basket";
 
 const getSavedItems = () => {
+  if (typeof window === "undefined") return [];
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     return saved ? JSON.parse(saved) : [];
@@ -14,6 +15,7 @@ const getSavedItems = () => {
 };
 
 const saveItems = (items) => {
+  if (typeof window === "undefined") return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   } catch (e) {

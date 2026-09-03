@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import {
   X,
@@ -17,7 +19,7 @@ import {
   ArrowRight,
   Layers,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "../../utils/navigation.jsx";
 import { useQuoteCartStore } from "../../store/useQuoteCartStore.js";
 import { useInquiryStore } from "../../store/useInquiryStore.js";
 import { toast } from "react-toastify";

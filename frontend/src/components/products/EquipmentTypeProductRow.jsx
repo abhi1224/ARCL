@@ -1,10 +1,20 @@
+"use client";
+
 import React, { useRef, useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
-import { Layers, ChevronLeft, ChevronRight } from "lucide-react";
+import { Link } from "../../utils/navigation.jsx";
+import { Layers, ChevronLeft, ChevronRight, GripVertical, ArrowUp, ArrowDown } from "lucide-react";
 import ProductCard from "./ProductCard.jsx";
 import { formatTitleCase } from "../../utils/stringUtils.js";
 
-const EquipmentTypeProductRow = ({ section }) => {
+const EquipmentTypeProductRow = ({
+  section,
+  canReorder = false,
+  onMoveUp,
+  onMoveDown,
+  isFirst = false,
+  isLast = false,
+  dragHandleProps,
+}) => {
   const scrollRef = useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -49,11 +59,22 @@ const EquipmentTypeProductRow = ({ section }) => {
   const typeName = formatTitleCase(section.equipmentType?.name || "Equipment");
 
   return (
-    <div className="bg-white rounded-3xl border border-gray-200/80 p-5 sm:p-7 md:p-8 space-y-6 shadow-xs relative">
+    <div className="bg-white rounded-3xl border border-gray-200/80 p-5 sm:p-7 md:p-8 space-y-6 shadow-xs relative group">
       
       {/* 1. SECTION HEADER */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100">
         <div className="flex items-center gap-3.5">
+          {/* DRAG HANDLE FOR REORDERING */}
+          {canReorder && (
+            <div
+              {...dragHandleProps}
+              className="p-2 rounded-xl bg-gray-100 hover:bg-[#021C57] text-gray-500 hover:text-white transition cursor-grab active:cursor-grabbing shrink-0"
+              title="Drag section to reorder"
+            >
+              <GripVertical size={18} />
+            </div>
+          )}
+
           <div className="w-11 h-11 rounded-2xl bg-[#021C57] text-white flex items-center justify-center shadow-md shrink-0">
             <Layers size={20} />
           </div>
@@ -68,6 +89,30 @@ const EquipmentTypeProductRow = ({ section }) => {
         </div>
 
         <div className="flex items-center gap-3 self-start sm:self-auto">
+          {/* UP / DOWN REORDER BUTTONS */}
+          {canReorder && (
+            <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-xl border border-gray-200">
+              <button
+                type="button"
+                onClick={onMoveUp}
+                disabled={isFirst}
+                className="p-1.5 rounded-lg text-gray-500 hover:text-[#021C57] hover:bg-white disabled:opacity-20 transition cursor-pointer disabled:cursor-not-allowed"
+                title="Move Section Up"
+              >
+                <ArrowUp size={14} />
+              </button>
+              <button
+                type="button"
+                onClick={onMoveDown}
+                disabled={isLast}
+                className="p-1.5 rounded-lg text-gray-500 hover:text-[#021C57] hover:bg-white disabled:opacity-20 transition cursor-pointer disabled:cursor-not-allowed"
+                title="Move Section Down"
+              >
+                <ArrowDown size={14} />
+              </button>
+            </div>
+          )}
+
           <Link
             to="/products"
             className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-800 transition cursor-pointer"

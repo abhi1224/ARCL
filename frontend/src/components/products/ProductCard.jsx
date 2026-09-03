@@ -1,4 +1,6 @@
-import { Link } from "react-router-dom";
+"use client";
+
+import { Link } from "../../utils/navigation.jsx";
 import { ArrowRight, MessageCircle, FileText, Sparkles, ArrowUpRight, Layers, ShoppingBag } from "lucide-react";
 import { formatTitleCase } from "../../utils/stringUtils.js";
 import { useQuoteCartStore } from "../../store/useQuoteCartStore.js";
